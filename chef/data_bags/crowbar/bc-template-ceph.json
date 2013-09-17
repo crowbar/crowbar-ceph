@@ -1,0 +1,52 @@
+{
+  "id": "bc-template-ceph",
+  "description": "Installation for Ceph <span style='color: red;'>(For SUSE Cloud 2.0, Ceph is included as a technology preview)</span>",
+  "attributes": {
+    "ceph": {
+      "config": {
+        "fsid" : "11dd315a-2cab-4130-a760-b285324ef622"
+      },
+      "monitor-secret": "AQAkTzBSQIGsLRAATtjTpJ1RgdviJz1S0byJBA==",
+      "admin-secret": "AQAkTzBSmGKZFhAATjC+lKfxOxL1Wn+rgwbWpg==",
+      "osd_devices": [
+        {
+          "device": "/dev/vdb"
+        },
+        {
+          "device": "/dev/vdc"
+        },
+        {
+          "device": "/dev/sdd",
+          "dmcrypt": true,
+          "journal": "/dev/sdd"
+        }
+      ],
+      "clustername": "ceph"
+    }
+  },
+  "deployment": {
+    "ceph": {
+      "crowbar-revision": 0,
+      "element_states": {
+        "ceph-mon": [ "readying", "ready", "applying" ],
+        "ceph-osd": [ "readying", "ready", "applying" ]
+      },
+      "elements": {},
+      "element_order": [
+        [ "ceph-mon" ],
+        [ "ceph-osd" ]
+      ],
+      "element_run_list_order": {
+        "ceph-mon": 80,
+        "ceph-osd": 81
+      },
+      "config": {
+        "environment": "ceph-base-config",
+        "mode": "full",
+        "transitions": false,
+        "transition_list": [
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,147 @@
+[global]
+        ; enable secure authentication
+        auth cluster required = cephx
+        auth service required = cephx
+        auth client required = cephx
+
+        ; allow ourselves to open a lot of files
+        max open files = 131072
+
+        ; set log file
+        log file = /var/log/ceph/$name.log
+        ; log_to_syslog = true        ; uncomment this line to log to syslog
+
+        ; set up pid files
+        pid file = /var/run/ceph/$name.pid
+
+        fsid =  <%= node["ceph"]["config"]["fsid"] %>
+        mon initial members = <%= @mon_initial.join(' ') %>
+        mon host = <%= @mon_addresses.join(', ') %>    
+
+; monitors
+;  You need at least one.  You need at least three if you want to
+;  tolerate any node failures.  Always create an odd number.
+[mon]
+    mon data = /var/lib/ceph/mon/ceph-$id
+
+        ; If you are using for example the RADOS Gateway and want to have your newly created
+        ; pools a higher replication level, you can set a default
+        ;osd pool default size = 3
+
+        ; You can also specify a CRUSH rule for new pools
+        ; Wiki: http://ceph.newdream.net/wiki/Custom_data_placement_with_CRUSH
+        ;osd pool default crush rule = 0
+
+        ; Timing is critical for monitors, but if you want to allow the clocks to drift a
+        ; bit more, you can specify the max drift.
+        ;mon clock drift allowed = 1
+
+        ; Tell the monitor to backoff from this warning for 30 seconds
+        ;mon clock drift warn backoff = 30
+
+    ; logging, for debugging monitor crashes, in order of
+    ; their likelihood of being helpful :)
+    ;debug ms = 1
+    ;debug mon = 20
+    ;debug paxos = 20
+    ;debug auth = 20
+
+; mds
+;  You need at least one.  Define two to get a standby.
+[mds]
+    ; where the mds keeps it's secret encryption keys
+    keyring = /etc/ceph/$name.keyring
+
+    ; mds logging to debug issues.
+    ;debug ms = 1
+    ;debug mds = 20
+
+; osd
+;  You need at least one.  Two if you want data to be replicated.
+;  Define as many as you like.
+[osd]
+    ; This is where the osd expects its data
+    osd data = /var/lib/ceph/osd/ceph-$id
+
+    ; Ideally, make the journal a separate disk or partition.
+    ; 1-10GB should be enough; more if you have fast or many
+    ; disks.  You can use a file under the osd data dir if need be
+    ; (e.g. /data/$name/journal), but it will be slower than a
+    ; separate disk or partition.
+        ; This is an example of a file-based journal.
+    osd journal = /var/lib/ceph/osd/ceph-$id/journal
+    osd journal size = 1000
+
+        ; If you want to run the journal on a tmpfs (don't), disable DirectIO
+        ;journal dio = false
+
+        ; You can change the number of recovery operations to speed up recovery
+        ; or slow it down if your machines can't handle it
+        ; osd recovery max active = 3
+
+    ; osd logging to debug osd issues, in order of likelihood of being
+    ; helpful
+    ;debug ms = 1
+    ;debug osd = 20
+    ;debug filestore = 20
+    ;debug journal = 20
+
+    fstype = xfs
+
+    ; ### The below options only apply if you're using mkcephfs
+    ; ### and the devs options
+        ; The filesystem used on the volumes
+        osd mkfs type = xfs
+        ; If you want to specify some other mount options, you can do so.
+        ; for other filesystems use 'osd mount options $fstype'
+    osd mount options xfs = rw,noatime
+    ; The options used to format the filesystem via mkfs.$fstype
+        ; for other filesystems use 'osd mkfs options $fstype'
+    ; osd mkfs options btrfs =
+
+<% if (! node['ceph']['config']['global'].nil?) -%>
+  <% node['ceph']['config']['global'].each do |k, v| %>
+  <%= k %> = <%= v %>
+  <% end %>
+
+<% end -%>
+<% if (! node['ceph']['config']['osd'].nil?) -%>
+[osd]
+  <% node['ceph']['config']['osd'].each do |k, v| %>
+  <%= k %> = <%= v %>
+  <% end %>
+
+<% end -%>
+<% if (! node['ceph']['config']['mon'].nil?) -%>
+[mon]
+  <% node['ceph']['config']['mon'].each do |k, v| %>
+  <%= k %> = <%= v %>
+  <% end %>
+
+<% end -%>
+<% if (! node['ceph']['config']['mds'].nil?) -%>
+[mds]
+  <% node['ceph']['config']['mds'].each do |key, value| -%>
+  <%= key %> = <%= value %>
+  <%   end -%>
+
+<% end -%>
+<% if (@is_rgw) -%>
+[client.radosgw.<%= node['hostname'] %>]
+  host = <%= node['hostname'] %>
+  rgw socket path = /var/run/ceph/radosgw.<%= node['hostname'] %>
+  keyring = /etc/ceph/ceph.client.radosgw.<%= node['hostname'] %>.keyring
+  log file = /var/log/ceph/radosgw.log
+<% if (! node['ceph']['config']['rgw'].nil?) -%>
+  <% node['ceph']['config']['rgw'].each do |k, v| %>
+  <%= k %> = <%= v %>
+  <% end %>
+<% end -%>
+
+<% end -%>
+<% node['ceph']['config-sections'].each do |name, sect| %>
+[<%= name %>]
+  <% sect.each do |k, v| %>
+  <%= k %> = <%= v %>
+  <% end %>
+<% end %>

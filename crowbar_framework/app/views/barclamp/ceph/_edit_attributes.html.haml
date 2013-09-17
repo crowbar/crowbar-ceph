@@ -1,0 +1,19 @@
+%input#proposal_attributes{:type => "hidden", :name => "proposal_attributes", :value => @proposal.raw_data['attributes'][@proposal.barclamp].to_json}
+%h3.page-header
+  = t('.attributes')
+  = link_to t('raw'), proposal_barclamp_path(:id => @proposal.name, :controller => @proposal.barclamp, :dep_raw => @dep_raw, :attr_raw => true), :class => "pull-right"
+.page-header-bottom
+
+%div
+  %p 
+    %label{ :for => :ceph_fsid }= t('.ceph_fsid')
+    = text_field_tag :ceph_fsid, @proposal.raw_data['attributes'][@proposal.barclamp]["config"]["fsid"], :size => "80", :onchange => "update_value('config/fsid', 'ceph_fsid', 'string')"
+  %p
+    %label{ :for => :ceph_mon_key }= t('.ceph_mon_key')
+    = text_field_tag :ceph_mon_key, @proposal.raw_data['attributes'][@proposal.barclamp]["monitor-secret"], :size => "80", :onchange => "update_value('monitor-secret', 'ceph_mon_key', 'string')"
+  %p
+    %label{ :for => :ceph_adm_key }= t('.ceph_adm_key')
+    = text_field_tag :ceph_adm_key, @proposal.raw_data['attributes'][@proposal.barclamp]["admin-secret"], :size => "80", :onchange => "update_value('admin-secret', 'ceph_adm_key', 'string')"
+  %p
+    %label{ :for => :ceph_devices }= t('.ceph_devices')
+    = text_field_tag :ceph_devices, @proposal.raw_data['attributes'][@proposal.barclamp]["osd_devices"][0]["device"], :size => "80", :onchange => "update_value('osd_devices/0/device', 'ceph_devices', 'string')"
