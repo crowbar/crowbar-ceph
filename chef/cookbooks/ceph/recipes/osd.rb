@@ -88,39 +88,7 @@ else
     command "ceph auth caps client.bootstrap-osd osd 'allow *' mon 'allow *'"
   end
 
-#  if is_crowbar?
-#    ruby_block "select new disks for ceph osd" do
-#      block do
-#        do_trigger = false
-#        node["crowbar"]["disks"].each do |disk, data|
-#          if node["crowbar"]["disks"][disk]["usage"] == "Storage"
-#            puts "Disk: #{disk} should be used for ceph"
-#            puts "Disk: vdb should be used for ceph"
-
-#            system 'ceph-disk-prepare', \
-#              "/dev/#{disk}"
-#            system 'ceph-disk-prepare', \
-#              "/dev/vdb"
-#            raise 'ceph-disk-prepare failed' unless $?.exitstatus == 0
-
-#            do_trigger = true
-
-#            node["crowbar"]["disks"][disk]["usage"] = "ceph-osd"
-#            node.save
-#          end
-#        end
-
-#        if do_trigger
-#          system 'udevadm', \
-#            "trigger", \
-#            "--subsystem-match=block", \
-#            "--action=add"
-#          raise 'udevadm trigger failed' unless $?.exitstatus == 0
-#        end
-
-#      end
-#    end
-#  else
+  if is_crowbar?
     # Calling ceph-disk-prepare is sufficient for deploying an OSD
     # After ceph-disk-prepare finishes, the new device will be caught
     # by udev which will run ceph-disk-activate on it (udev will map
@@ -153,38 +121,31 @@ else
         else 
           create_cmd << " && ceph-disk-activate #{osd_device['device']}1"
         end 
+
         osd_devices[index] = Hash.new
         osd_devices[index]["device"] = osd_device['device']
         osd_devices[index]["status"] = "deployed"
-       
-#        execute "Activating Ceph OSD on #{osd_device['device']}" do
-#          command create_cmd
-#          action :run
-#          notifies :create, "ruby_block[save osd_device status]"
-#        end
- 
-        ruby_block "Activating Ceph OSD on #{osd_device['device']}" do
+
+        execute "Activating Ceph OSD on #{osd_device['device']}" do
+          command create_cmd
+          action :run
+        end
+
+        ruby_block "Get Ceph OSD ID for #{osd_device['device']}" do
           block do
-            %x{#{create_cmd}}
+            osd_id = ""
+            while osd_id.empty?
+              osd_id = get_osd_id(osd_device['device'])
+              sleep 1
+            end
+            %x{ceph osd crush set #{osd_id} 1.00 root=default rack=susecloud host=#{node[:hostname]}}
             exitstatus = $?.exitstatus
-            Chef::Log.info("\"#{create_cmd}\" exited with #{exitstatus}.")
+            Chef::Log.info("Ceph OSD crush set exited with #{exitstatus}.")
+            node.normal["ceph"]["osd_devices"] = osd_devices
+            node.save
           end
         end
 
-        osd_id = get_osd_id(osd_device['device'])
-        execute "add osd to crushmap" do
-          command "ceph osd crush set #{osd_id} 1.00 root=default rack=susecloud host=#{node[:hostname]}"
-          action :run
-          notifies :create, "ruby_block[save osd_device status]"
-        end
-        
-      end
-      ruby_block "save osd_device status" do
-        block do
-          node.normal["ceph"]["osd_devices"] = osd_devices
-          node.save
-        end
-        action :nothing
       end
 
       service "ceph_osd" do
@@ -201,5 +162,5 @@ else
     else
       Log.info('node["ceph"]["osd_devices"] empty')
     end
-#  end
+  end
 end

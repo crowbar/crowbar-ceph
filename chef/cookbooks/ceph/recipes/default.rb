@@ -19,7 +19,7 @@
 
 packages = []
 
-case node['platform_family']
+case node[:platform]
 when "debian"
   packages = %w{
       ceph
