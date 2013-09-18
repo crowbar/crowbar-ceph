@@ -13,12 +13,12 @@
           "device": "/dev/vdb"
         },
         {
-          "device": "/dev/vdc"
+          "device": "/dev/vdc",
+          "status": "deployed"
         },
         {
           "device": "/dev/sdd",
-          "dmcrypt": true,
-          "journal": "/dev/sdd"
+          "status": "deployed"
         }
       ],
       "clustername": "ceph"

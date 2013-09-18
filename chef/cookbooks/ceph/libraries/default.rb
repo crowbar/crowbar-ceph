@@ -119,3 +119,9 @@ def have_quorum?()
     state = JSON.parse(mon_status)['state']
     return QUORUM_STATES.include?(state)
 end
+
+def get_osd_id(device)
+  osd_path = %x[mount | grep /dev/vdb | awk '{print $3}'].tr("\n","")
+  osd_id = %x[cat #{osd_path}/whoami].tr("\n","")
+  return osd_id
+end

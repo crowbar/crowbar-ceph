@@ -131,6 +131,7 @@ else
     #  - $cluster should always be ceph
     #  - The --dmcrypt option will be available starting w/ Cuttlefish
     unless node["ceph"]["osd_devices"].nil?
+      osd_devices = []
       node["ceph"]["osd_devices"].each_with_index do |osd_device,index|
         if !osd_device["status"].nil?
           Log.info("osd: osd_device #{osd_device} has already been setup.")
@@ -140,8 +141,8 @@ else
         if osd_device["encrypted"] == true
           dmcrypt = "--dmcrypt"
         end
-#        create_cmd = "ceph-disk-prepare #{dmcrypt} #{osd_device['device']} #{osd_device['journal']}"
         create_cmd = "ceph-disk-prepare #{osd_device['device']}1 #{osd_device['device']}2"
+
         if osd_device["type"] == "directory"
           directory osd_device["device"] do
             owner "root"
@@ -151,24 +152,41 @@ else
           create_cmd << " && ceph-disk-activate #{osd_device['device']}"
         else 
           create_cmd << " && ceph-disk-activate #{osd_device['device']}1"
+        end 
+        osd_devices[index] = Hash.new
+        osd_devices[index]["device"] = osd_device['device']
+        osd_devices[index]["status"] = "deployed"
+       
+#        execute "Activating Ceph OSD on #{osd_device['device']}" do
+#          command create_cmd
+#          action :run
+#          notifies :create, "ruby_block[save osd_device status]"
+#        end
+ 
+        ruby_block "Activating Ceph OSD on #{osd_device['device']}" do
+          block do
+            %x{#{create_cmd}}
+            exitstatus = $?.exitstatus
+            Chef::Log.info("\"#{create_cmd}\" exited with #{exitstatus}.")
+          end
         end
-        execute "Creating Ceph OSD on #{osd_device['device']}" do
-          command create_cmd
+
+        osd_id = get_osd_id(osd_device['device'])
+        execute "add osd to crushmap" do
+          command "ceph osd crush set #{osd_id} 1.00 root=default rack=susecloud host=#{node[:hostname]}"
           action :run
           notifies :create, "ruby_block[save osd_device status]"
         end
-        # we add this status to the node env
-        # so that we can implement recreate
-        # and/or delete functionalities in the
-        # future.
-        ruby_block "save osd_device status" do
-          block do
-            node.normal["ceph"]["osd_devices"][index]["status"] = "deployed"
-            node.save
-          end
-          action :nothing
-        end
+        
       end
+      ruby_block "save osd_device status" do
+        block do
+          node.normal["ceph"]["osd_devices"] = osd_devices
+          node.save
+        end
+        action :nothing
+      end
+
       service "ceph_osd" do
         case service_type
         when "upstart"

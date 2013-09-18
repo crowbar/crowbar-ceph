@@ -28,7 +28,8 @@
                 "type": "map",
                 "required": true,
                 "mapping": { 
-                  "device": { "type": "str", "required": true }
+                  "device": { "type": "str", "required": true },
+                  "status": { "type": "str", "required": false }
                 }
               } ]
             },
