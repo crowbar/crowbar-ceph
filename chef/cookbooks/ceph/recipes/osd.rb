@@ -109,9 +109,7 @@ else
         if osd_device["encrypted"] == true
           dmcrypt = "--dmcrypt"
         end
-        #create_cmd = "ceph-disk-prepare #{osd_device['device']}1 #{osd_device['device']}2"
         create_cmd = "ceph-disk prepare --zap #{osd_device['device']}"
-        create_cmd << " && ceph-disk prepare #{osd_device['device']}1 #{osd_device['device']}2"
 
         if osd_device["type"] == "directory"
           directory osd_device["device"] do
@@ -133,7 +131,7 @@ else
           action :run
         end
 
-        ruby_block "Get Ceph OSD ID for #{osd_device['device']}" do
+        ruby_block "Getting Ceph OSD ID for #{osd_device['device']}" do
           block do
             osd_id = ""
             while osd_id.empty?
