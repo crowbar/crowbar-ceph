@@ -109,7 +109,9 @@ else
         if osd_device["encrypted"] == true
           dmcrypt = "--dmcrypt"
         end
-        create_cmd = "ceph-disk-prepare #{osd_device['device']}1 #{osd_device['device']}2"
+        #create_cmd = "ceph-disk-prepare #{osd_device['device']}1 #{osd_device['device']}2"
+        create_cmd = "ceph-disk prepare --zap #{osd_device['device']}"
+        create_cmd << " && ceph-disk prepare #{osd_device['device']}1 #{osd_device['device']}2"
 
         if osd_device["type"] == "directory"
           directory osd_device["device"] do
