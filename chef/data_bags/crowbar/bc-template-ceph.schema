@@ -16,7 +16,8 @@
               "type": "map",
               "required": true,
               "mapping": {
-                "fsid": { "type": "str", "required": true }
+                "fsid": { "type": "str", "required": true },
+                "public-network": { "type": "str", "required": true }
               }
             },
             "monitor-secret": { "type": "str", "required": true },

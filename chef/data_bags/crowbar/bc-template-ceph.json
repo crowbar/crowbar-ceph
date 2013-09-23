@@ -4,7 +4,8 @@
   "attributes": {
     "ceph": {
       "config": {
-        "fsid" : "11dd315a-2cab-4130-a760-b285324ef622"
+        "fsid" : "11dd315a-2cab-4130-a760-b285324ef622",
+        "public-network" : "192.168.124.0/24"
       },
       "monitor-secret": "AQAkTzBSQIGsLRAATtjTpJ1RgdviJz1S0byJBA==",
       "admin-secret": "AQAkTzBSmGKZFhAATjC+lKfxOxL1Wn+rgwbWpg==",

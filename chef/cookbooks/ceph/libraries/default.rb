@@ -23,7 +23,7 @@ def get_mon_nodes(extra_search=nil)
   return mons
 end
 
-# If public_network is specified
+# If public-network is specified
 # we need to search for the monitor IP
 # in the node environment.
 # 1. We look if the network is IPv6 or IPv4
@@ -81,8 +81,8 @@ def get_mon_addresses()
     if is_crowbar?
       mon_ips = mons.map { |node| Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address }
     else
-      if node['ceph']['config']['global'] && node['ceph']['config']['global']['public_network']
-        mon_ips = mons.map { |nodeish| find_node_ip_in_network(node['ceph']['config']['global']['public_network'], nodeish) }
+      if node['ceph']['config'] && node['ceph']['config']['public-network']
+        mon_ips = mons.map { |nodeish| find_node_ip_in_network(node['ceph']['config']['public-network'], nodeish) }
       else
         mon_ips = mons.map { |node| node['ipaddress'] + ":6789" }
       end
