@@ -21,18 +21,6 @@
             },
             "monitor-secret": { "type": "str", "required": true },
             "admin-secret": { "type": "str", "required": true },
-            "osd_devices": {
-              "type": "seq",
-              "required": true,
-              "sequence": [ {
-                "type": "map",
-                "required": true,
-                "mapping": { 
-                  "device": { "type": "str", "required": true },
-                  "status": { "type": "str", "required": false }
-                }
-              } ]
-            },
             "clustername": { "type": "str", "required": true }
           }
         }

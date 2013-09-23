@@ -89,6 +89,28 @@ else
   end
 
   if is_crowbar?
+    if node["ceph"]["osd_devices"].empty?
+      unclaimed_disks = BarclampLibrary::Barclamp::Inventory::Disk.unclaimed(node)
+      claimed_disks = BarclampLibrary::Barclamp::Inventory::Disk.claimed(node,"Ceph")
+        if (unclaimed_disks.empty? && claimed_disks.empty?)
+          Chef::Log.fatal("There is no suitable disks for ceph")
+	        raise "There is no suitable disks for ceph"
+        else
+          # Now, we have the final list of devices to claim, so claim them
+          claimed_disks = [unclaimed_disks.first].select do |d|
+            if d.claim("Ceph")
+              Chef::Log.info("Ceph: Claimed #{d.name}")
+              node["ceph"]["osd_devices"] = []
+              node["ceph"]["osd_devices"][0] = Hash.new
+              node["ceph"]["osd_devices"][0]["device"] = d.name
+            else
+              Chef::Log.info("Ceph: Ignoring #{d.name}")
+              node["ceph"]["osd_devices"] = []
+            end
+            node.save
+          end
+        end
+    end
     # Calling ceph-disk-prepare is sufficient for deploying an OSD
     # After ceph-disk-prepare finishes, the new device will be caught
     # by udev which will run ceph-disk-activate on it (udev will map
@@ -122,16 +144,12 @@ else
           create_cmd << " && ceph-disk-activate #{osd_device['device']}1"
         end 
 
-        osd_devices[index] = Hash.new
-        osd_devices[index]["device"] = osd_device['device']
-        osd_devices[index]["status"] = "deployed"
-
         execute "Activating Ceph OSD on #{osd_device['device']}" do
           command create_cmd
           action :run
         end
 
-        ruby_block "Getting Ceph OSD ID for #{osd_device['device']}" do
+        ruby_block "Get Ceph OSD ID for #{osd_device['device']}" do
           block do
             osd_id = ""
             while osd_id.empty?
@@ -141,7 +159,7 @@ else
             %x{ceph osd crush set #{osd_id} 1.00 root=default rack=susecloud host=#{node[:hostname]}}
             exitstatus = $?.exitstatus
             Chef::Log.info("Ceph OSD crush set exited with #{exitstatus}.")
-            node.normal["ceph"]["osd_devices"] = osd_devices
+            node["ceph"]["osd_devices"][index]["status"] = "deployed"
             node.save
           end
         end

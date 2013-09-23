@@ -8,19 +8,6 @@
       },
       "monitor-secret": "AQAkTzBSQIGsLRAATtjTpJ1RgdviJz1S0byJBA==",
       "admin-secret": "AQAkTzBSmGKZFhAATjC+lKfxOxL1Wn+rgwbWpg==",
-      "osd_devices": [
-        {
-          "device": "/dev/vdb"
-        },
-        {
-          "device": "/dev/vdc",
-          "status": "deployed"
-        },
-        {
-          "device": "/dev/sdd",
-          "status": "deployed"
-        }
-      ],
       "clustername": "ceph"
     }
   },
