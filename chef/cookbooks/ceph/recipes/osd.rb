@@ -127,22 +127,8 @@ else
           Log.info("osd: osd_device #{osd_device} has already been setup.")
           next
         end
-        dmcrypt = ""
-        if osd_device["encrypted"] == true
-          dmcrypt = "--dmcrypt"
-        end
-        create_cmd = "ceph-disk prepare --zap #{osd_device['device']}"
-
-        if osd_device["type"] == "directory"
-          directory osd_device["device"] do
-            owner "root"
-            group "root"
-            recursive true
-          end
-          create_cmd << " && ceph-disk-activate #{osd_device['device']}"
-        else 
-          create_cmd << " && ceph-disk-activate #{osd_device['device']}1"
-        end 
+        create_cmd = "ceph-disk prepare --zap #{osd_device['device']}" +
+                      " && ceph-disk-activate #{osd_device['device']}1"
 
         execute "Activating Ceph OSD on #{osd_device['device']}" do
           command create_cmd
