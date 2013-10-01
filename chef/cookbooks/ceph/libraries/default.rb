@@ -125,3 +125,35 @@ def get_osd_id(device)
   osd_id = %x[cat #{osd_path}/whoami].tr("\n","")
   return osd_id
 end
+
+def get_osd_nodes()
+  osds = []
+  if is_crowbar?
+    osd_roles = search(:role, 'name:crowbar-* AND run_list:role\[ceph-osd\]')
+    if not osd_roles.empty?
+      search_string = osd_roles.map { |role_object| "roles:"+role_object.name }.join(' OR ')
+      search_string = "(#{search_string}) AND ceph_config_environment:#{node['ceph']['config']['environment']}"
+    end
+  else
+    search_string = "roles:ceph-osd AND chef_environment:#{node.chef_environment}"
+  end
+
+  search(:node, search_string).each do |node|
+    port_counter = 6799
+    cluster_addr = ''
+    public_addr = ''
+
+    public_addr = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
+    cluster_addr = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "storage").address    
+
+    osd = {} 
+    osd[:hostname] = node.name.split('.')[0]
+    osd[:cluster_addr] = cluster_addr
+    osd[:cluster_port] = (port_counter += 1)
+    osd[:public_addr] = public_addr
+    osd[:public_port] = (port_counter += 1)
+    osds << osd    
+  end
+
+  return osds
+end
