@@ -1,6 +1,6 @@
 {
   "id": "bc-template-ceph",
-  "description": "Installation for Ceph <span style='color: red;'>(For SUSE Cloud 2.0, Ceph is included as a technology preview)</span>",
+  "description": "Distributed object store and file system",
   "attributes": {
     "ceph": {
       "config": {
@@ -17,22 +17,16 @@
       "crowbar-revision": 0,
       "element_states": {
         "ceph-mon": [ "readying", "ready", "applying" ],
-        "ceph-osd": [ "readying", "ready", "applying" ],
-        "ceph-glance": [ "readying", "ready", "applying" ],
-        "ceph-cinder": [ "readying", "ready", "applying" ]
+        "ceph-osd": [ "readying", "ready", "applying" ]
       },
       "elements": {},
       "element_order": [
         [ "ceph-mon" ],
-        [ "ceph-osd" ],
-        [ "ceph-glance" ],
-        [ "ceph-cinder" ]
+        [ "ceph-osd" ]
       ],
       "element_run_list_order": {
         "ceph-mon": 80,
-        "ceph-osd": 81,
-        "ceph-glance": 82,
-        "ceph-cinder": 83
+        "ceph-osd": 81
       },
       "config": {
         "environment": "ceph-base-config",

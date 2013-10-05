@@ -5,9 +5,7 @@
 :javascript
   $(document).ready(function(){
     var constraints = { "ceph-mon": { "unique": false, "count": 3 }, 
-                        "ceph-osd": { "unique": false, "count": 8 },
-                        "ceph-glance": { "unique": false, "count": 1 },
-                        "ceph-cinder": { "unique": false, "count": 1 }  };
+                        "ceph-osd": { "unique": false, "count": 8 } };
     node_selector($('#drag_drop'), constraints);
   });
 

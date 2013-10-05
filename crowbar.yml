@@ -1,6 +1,7 @@
 barclamp:
   name: ceph
   display: Ceph
+  description: Distributed object store and file system
   version: 0
   member:
     - openstack
