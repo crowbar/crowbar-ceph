@@ -1,46 +1,63 @@
 include_recipe "ceph::default"
 include_recipe "ceph::conf"
 
-# TODO cluster name
-cluster = 'ceph'
-
 package "python-ceph" do
   action :install
 end
 
-admin_secret = node["ceph"]["admin-secret"]
+# TODO cluster name
+cluster = 'ceph'
 
-execute "create admin keyring" do
-  command "ceph-authtool --create-keyring /etc/ceph/keyring --name=client.admin --add-key='#{admin_secret}'"
+group "ceph" do
+  action :create
 end
 
-ruby_block "save glance key in node attributes" do
+group "ceph" do
+  members "openstack-glance"
+  action :modify
+  append true
+end
+
+if !File.exists?("/etc/ceph/keyring")
+
+  file "/etc/ceph/keyring" do
+    owner "root"
+    group "ceph"
+    mode 0640
+    action :create
+  end
+
+  admin_secret = node["ceph"]["admin-secret"]
+
+  execute "create admin keyring" do
+    command "ceph-authtool --create-keyring /etc/ceph/keyring --name=client.admin --add-key='#{admin_secret}'"
+  end
+end
+
+ruby_block "save #{node[:glance][:rbd][:store_user]} key in node attributes" do
   block do
     client_key = %x[
       ceph \
-        auth get-or-create-key client.glance mon 'allow r' \
-        osd 'allow class-read object_prefix rbd_children, allow rwx pool=images'
+        auth get-or-create-key client.#{node[:glance][:rbd][:store_user]} mon 'allow r' \
+        osd 'allow class-read object_prefix rbd_children, allow rwx pool=#{node[:glance][:rbd][:store_pool]}'
     ].tr("\n","")
-    raise 'adding or getting client.glance key failed' unless $?.exitstatus == 0
+    raise 'adding or getting glance client key failed' unless $?.exitstatus == 0
+    %x[ ceph-authtool /etc/ceph/ceph.client.#{node[:glance][:rbd][:store_user]}.keyring --create-keyring \
+          --name=client.#{node[:glance][:rbd][:store_user]} --add-key='#{client_key}' ]
+    raise 'creating glance keyring failed' unless $?.exitstatus == 0
     node.normal['ceph']['glance-secret'] = client_key
     node.save
   end
   not_if { node['ceph']['glance-secret'] }
 end
 
-glance_secret = node["ceph"]["glance-secret"]
-
-file "/etc/ceph/ceph.client.glance.keyring" do
+file "/etc/ceph/ceph.client.#{node[:glance][:rbd][:store_user]}.keyring" do
   owner "root"
   group "openstack-glance"
   mode 0640
-  action :create
+  action :touch
 end
 
-execute "format as keyring" do
-  command "ceph-authtool /etc/ceph/ceph.client.glance.keyring --create-keyring --name=client.glance --add-key='#{glance_secret}'"
-end
-
-execute "create new pool" do
-  command "ceph osd pool create images 64"
+execute "create new pool #{node['glance']['rbd']['store_pool']}" do
+  command "ceph osd pool create #{node['glance']['rbd']['store_pool']} 64"
 end
