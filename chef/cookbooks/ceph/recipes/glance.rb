@@ -34,16 +34,19 @@ if !File.exists?("/etc/ceph/keyring")
   end
 end
 
-ruby_block "save #{node[:glance][:rbd][:store_user]} key in node attributes" do
+glance_user = node[:glance][:rbd][:store_user]
+glance_pool = node[:glance][:rbd][:store_pool]
+
+ruby_block "save #{glance_user} key in node attributes" do
   block do
     client_key = %x[
       ceph \
-        auth get-or-create-key client.#{node[:glance][:rbd][:store_user]} mon 'allow r' \
-        osd 'allow class-read object_prefix rbd_children, allow rwx pool=#{node[:glance][:rbd][:store_pool]}'
+        auth get-or-create-key client.#{glance_user} mon 'allow r' \
+        osd 'allow class-read object_prefix rbd_children, allow rwx pool=#{glance_pool}'
     ].tr("\n","")
     raise 'adding or getting glance client key failed' unless $?.exitstatus == 0
-    %x[ ceph-authtool /etc/ceph/ceph.client.#{node[:glance][:rbd][:store_user]}.keyring --create-keyring \
-          --name=client.#{node[:glance][:rbd][:store_user]} --add-key='#{client_key}' ]
+    %x[ ceph-authtool /etc/ceph/ceph.client.#{glance_user}.keyring --create-keyring \
+          --name=client.#{glance_user} --add-key='#{client_key}' ]
     raise 'creating glance keyring failed' unless $?.exitstatus == 0
     node.normal['ceph']['glance-secret'] = client_key
     node.save
@@ -51,13 +54,13 @@ ruby_block "save #{node[:glance][:rbd][:store_user]} key in node attributes" do
   not_if { node['ceph']['glance-secret'] }
 end
 
-file "/etc/ceph/ceph.client.#{node[:glance][:rbd][:store_user]}.keyring" do
+file "/etc/ceph/ceph.client.#{glance_user}.keyring" do
   owner "root"
   group "openstack-glance"
   mode 0640
   action :touch
 end
 
-execute "create new pool #{node['glance']['rbd']['store_pool']}" do
-  command "ceph osd pool create #{node['glance']['rbd']['store_pool']} 64"
+execute "create new pool #{glance_pool}" do
+  command "ceph osd pool create #{glance_pool} 64"
 end
