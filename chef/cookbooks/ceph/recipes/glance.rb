@@ -8,30 +8,14 @@ end
 # TODO cluster name
 cluster = 'ceph'
 
-group "ceph" do
-  action :create
-end
-
-group "ceph" do
-  members "openstack-glance"
-  action :modify
-  append true
-end
-
 if !File.exists?("/etc/ceph/keyring")
-
-  file "/etc/ceph/keyring" do
-    owner "root"
-    group "ceph"
-    mode 0640
-    action :create
-  end
 
   admin_secret = node["ceph"]["admin-secret"]
 
   execute "create admin keyring" do
     command "ceph-authtool --create-keyring /etc/ceph/keyring --name=client.admin --add-key='#{admin_secret}'"
   end
+
 end
 
 glance_user = node[:glance][:rbd][:store_user]

@@ -38,6 +38,16 @@ package 'gdisk' do
   action :upgrade
 end
 
+if !File.exists?("/etc/ceph/keyring")
+
+  admin_secret = node["ceph"]["admin-secret"]
+
+  execute "create admin keyring" do
+    command "ceph-authtool --create-keyring /etc/ceph/keyring --name=client.admin --add-key='#{admin_secret}'"
+  end
+
+end
+
 if !search(:node,"hostname:#{node['hostname']} AND dmcrypt:true").empty?
     package 'cryptsetup' do
       action :upgrade
@@ -51,22 +61,44 @@ if mons.empty? then
   puts "No ceph-mon found."
 else
 
+  directory "/var/run/ceph" do
+    owner "root"
+    group "root"
+    mode 00755
+    recursive true
+    action :create
+  end
+
+  directory "/var/log/ceph" do
+    owner "root"
+    group "root"
+    mode 00755
+    recursive true
+    action :create
+  end
+
   directory "/var/lib/ceph/bootstrap-osd" do
     owner "root"
     group "root"
     mode "0755"
+    recursive true
+    action :create
   end
 
   directory "/var/lib/ceph/tmp" do
     owner "root"
     group "root"
     mode "0755"
+    recursive true
+    action :create
   end
 
   directory "/var/lib/ceph/osd" do
     owner "root"
     group "root"
     mode "0755"
+    recursive true
+    action :create
   end
 
   # TODO cluster name
