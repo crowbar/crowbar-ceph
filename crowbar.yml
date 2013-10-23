@@ -38,12 +38,6 @@ locale_additions:
       ceph:
         edit_attributes:
           attributes: Attributes
-          ceph_mon_key: Monitor secret
-          ceph_adm_key: Admin secret
-          ceph_fsid: Filesystem ID
-          ceph_device: Device Name
-          ceph_devices: Storage Device List
-          ceph_add_dev: Add device
-          ceph_devices_hint: (Space-separated) to use on ceph-store nodes
+          ceph_disk_mode: Disk selection method
         edit_deployment:
           deployment: Deployment

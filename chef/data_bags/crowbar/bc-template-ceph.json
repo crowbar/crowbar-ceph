@@ -3,6 +3,7 @@
   "description": "Distributed object store and file system",
   "attributes": {
     "ceph": {
+      "disk-mode": "first",
       "config": {
         "fsid" : "11dd315a-2cab-4130-a760-b285324ef622",
         "public-network" : "192.168.124.0/24"

@@ -96,17 +96,23 @@ else
           Chef::Log.fatal("There is no suitable disks for ceph")
 	        raise "There is no suitable disks for ceph"
         else
+          if node["ceph"]["disk-mode"] == "first"         
+            disk_list = [unclaimed_disks.first]
+          else
+            disk_list = unclaimed_disks
+          end
+          node["ceph"]["osd_devices"] = []
+          index = 0 
           # Now, we have the final list of devices to claim, so claim them
-          claimed_disks = [unclaimed_disks.first].select do |d|
+          claimed_disks = disk_list.select do |d|
             if d.claim("Ceph")
               Chef::Log.info("Ceph: Claimed #{d.name}")
-              node["ceph"]["osd_devices"] = []
-              node["ceph"]["osd_devices"][0] = Hash.new
-              node["ceph"]["osd_devices"][0]["device"] = d.name
+              node["ceph"]["osd_devices"][index] = Hash.new
+              node["ceph"]["osd_devices"][index]["device"] = d.name
             else
               Chef::Log.info("Ceph: Ignoring #{d.name}")
-              node["ceph"]["osd_devices"] = []
             end
+            index += 1
             node.save
           end
         end
