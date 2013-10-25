@@ -201,6 +201,11 @@ else
         action [ :enable, :start ]
         supports :restart => true
       end
+
+      execute "Writing Ceph OSD device mappings to fstab" do
+        command "tail /etc/mtab | grep ceph >> /etc/fstab"
+        action :run
+      end
     else
       Log.info('node["ceph"]["osd_devices"] empty')
     end
