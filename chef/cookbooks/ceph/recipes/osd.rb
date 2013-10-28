@@ -122,19 +122,19 @@ else
 
   if is_crowbar?
     if node["ceph"]["osd_devices"].empty?
-      unclaimed_disks = BarclampLibrary::Barclamp::Inventory::Disk.unclaimed(node)
-      claimed_disks = BarclampLibrary::Barclamp::Inventory::Disk.claimed(node,"Ceph")
+      unclaimed_disks = BarclampLibrary::Barclamp::Inventory::Disk.unclaimed(node).sort
+      claimed_disks = BarclampLibrary::Barclamp::Inventory::Disk.claimed(node,"Ceph").sort
         if (unclaimed_disks.empty? && claimed_disks.empty?)
           Chef::Log.fatal("There is no suitable disks for ceph")
 	        raise "There is no suitable disks for ceph"
         else
-          if node["ceph"]["disk-mode"] == "first"         
+          if node["ceph"]["disk-mode"] == "first"
             disk_list = [unclaimed_disks.first]
           else
             disk_list = unclaimed_disks
           end
           node["ceph"]["osd_devices"] = []
-          index = 0 
+          index = 0
           # Now, we have the final list of devices to claim, so claim them
           claimed_disks = disk_list.select do |d|
             if d.claim("Ceph")
@@ -183,12 +183,17 @@ else
             %x{ceph osd crush set #{osd_id} 1.00 root=default rack=susecloud host=#{node[:hostname]}}
             exitstatus = $?.exitstatus
             Chef::Log.info("Ceph OSD crush set exited with #{exitstatus}.")
-            node["ceph"]["osd_devices"][index]["status"] = "deployed"
-            node.save
           end
+        end
+        node["ceph"]["osd_devices"][index]["status"] = "deployed"
+
+        execute "Writing Ceph OSD device mappings to fstab" do
+          command "tail -n1 /etc/mtab >> /etc/fstab"
+          action :run
         end
 
       end
+      node.save
 
       service "ceph_osd" do
         case service_type
@@ -202,10 +207,6 @@ else
         supports :restart => true
       end
 
-      execute "Writing Ceph OSD device mappings to fstab" do
-        command "tail /etc/mtab | grep ceph >> /etc/fstab"
-        action :run
-      end
     else
       Log.info('node["ceph"]["osd_devices"] empty')
     end
