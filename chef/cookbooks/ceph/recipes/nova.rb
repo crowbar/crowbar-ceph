@@ -50,8 +50,6 @@ if cinder_controller.length > 0
   ruby_block "save nova key in node attributes" do
     block do
     
-      Chef::Log.info("BACADebug cinder_pool #{cinder_pool} nova_user #{nova_user}")
-     
       client_key = %x[
         ceph \
           auth get-or-create-key client.'#{nova_user}' mon 'allow r' \
