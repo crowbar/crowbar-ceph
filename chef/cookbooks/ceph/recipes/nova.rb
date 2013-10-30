@@ -1,8 +1,20 @@
 include_recipe "ceph::default"
 include_recipe "ceph::conf"
 
-package "python-ceph" do
-  action :install
+packages = []
+
+case node[:platform]
+when "suse"
+  packages = %w{
+      python-ceph
+      kvm-rbd-plugin
+  }
+end
+
+packages.each do |pkg|
+  package pkg do
+    action :install
+  end
 end
 
 # TODO cluster name
