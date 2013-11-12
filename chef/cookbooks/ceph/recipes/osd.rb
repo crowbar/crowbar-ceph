@@ -35,7 +35,7 @@ include_recipe "ceph::default"
 include_recipe "ceph::conf"
 
 package 'gdisk' do
-  action :upgrade
+  action :install
 end
 
 if !File.exists?("/etc/ceph/keyring")
@@ -50,7 +50,7 @@ end
 
 if !search(:node,"hostname:#{node['hostname']} AND dmcrypt:true").empty?
     package 'cryptsetup' do
-      action :upgrade
+      action :install
     end
 end
 
