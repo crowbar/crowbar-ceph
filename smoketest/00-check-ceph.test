@@ -1,0 +1,16 @@
+#!/bin/bash
+
+CLUSTER='ceph'
+ENTITY='admin'
+KEYRING='/etc/ceph/keyring'
+
+HEALTH=$(ceph --cluster "$CLUSTER" --id "$ENTITY" --keyring "$KEYRING" health)
+
+echo "Ceph $HEALTH"
+if echo $HEALTH | grep -q OK; then
+        echo "Ceph cluster is running - OK"
+        exit 0
+else
+        echo "Ceph cluster is not running - FAILED"
+        exit 2
+fi
