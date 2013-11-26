@@ -7,7 +7,7 @@ barclamp:
     - openstack
 
   os_support:
-    - ubuntu-10.10
+    - ubuntu-12.04
 
 crowbar:
   layout: 1
@@ -19,12 +19,21 @@ crowbar:
 # TODO crowbar *and* chef cookbooks don't really need -dbg
 debs:
   repos:
-    - deb http://ceph.newdream.net/debian/ maverick main
+    - deb http://debian-bobtail precise main
   pkgs:
     - ceph
-    - ceph-common
-    - libceph1
     - ceph-dbg
+    - ceph-common
+    - ceph-common-dbg
+    - ceph-test
+    - ceph-mds
+    - ceph-fs-common
+    - radosgw
+    - radosgw-agent
+    - libcephfs1
+    - gdisk
+    - cryptsetup
+    - libgoogle-perftools0
 
 gems:
   pkgs:
