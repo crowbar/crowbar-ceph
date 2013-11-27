@@ -33,7 +33,7 @@ debs:
     - libcephfs1
     - gdisk
     - cryptsetup
-    - libgoogle-perftools
+    - libgoogle-perftools0
 
 gems:
   pkgs:
