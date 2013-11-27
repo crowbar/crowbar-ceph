@@ -19,7 +19,7 @@ crowbar:
 # TODO crowbar *and* chef cookbooks don't really need -dbg
 debs:
   repos:
-    - deb http://debian-bobtail precise main
+    - deb http://ceph.com/debian-bobtail precise main
   pkgs:
     - ceph
     - ceph-dbg
@@ -33,7 +33,7 @@ debs:
     - libcephfs1
     - gdisk
     - cryptsetup
-    - libgoogle-perftools0
+    - libgoogle-perftools
 
 gems:
   pkgs:
