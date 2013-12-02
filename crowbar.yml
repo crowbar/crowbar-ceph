@@ -29,7 +29,6 @@ debs:
     - ceph-mds
     - ceph-fs-common
     - radosgw
-    - radosgw-agent
     - libcephfs1
     - gdisk
     - cryptsetup
