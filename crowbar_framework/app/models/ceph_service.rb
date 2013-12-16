@@ -51,7 +51,7 @@ class CephService < ServiceObject
 
     # accept proposal with no allocated node -- ie, initial state
     if ((not elements.has_key?("ceph-mon") or elements["ceph-mon"].length == 0) and
-        (not elements.has_key?("ceph-osd") or elements["ceph-osd"].length == 0)):
+        (not elements.has_key?("ceph-osd") or elements["ceph-osd"].length == 0))
        return
     end
 
