@@ -24,6 +24,15 @@ class CephService < ServiceObject
   def create_proposal
     @logger.debug("Ceph create_proposal: entering")
     base = super
+
+    nodes        = NodeObject.all
+    storage_nodes = nodes.select { |n| n.intended_role == "storage" }
+
+    base["deployment"]["ceph"]["elements"] = {
+        "ceph-mon" =>  storage_nodes.map { |x| x.name },
+        "ceph-osd" =>  storage_nodes.map { |x| x.name },
+    } unless storage_nodes.nil?
+
     @logger.debug("Ceph create_proposal: exiting")
     base
   end
