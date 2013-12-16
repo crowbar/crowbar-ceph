@@ -1,12 +1,6 @@
+= attributes_for @proposal do
+  .panel-sub
+    = header @dep_raw, true
 
-%input#proposal_attributes{:type => "hidden", :name => "proposal_attributes", :value => @proposal.raw_data['attributes'][@proposal.barclamp].to_json}
-%h3.page-header
-  = t('.attributes')
-  = link_to t('raw'), proposal_barclamp_path(:id => @proposal.name, :controller => @proposal.barclamp, :dep_raw => @dep_raw, :attr_raw => true), :class => "pull-right"
-.page-header-bottom
-
-%div
-  %div.container
-    %p
-      %label{ :for => :ceph_disk_mode }= t('.ceph_disk_mode')
-      = select_tag :ceph_disk_mode, options_for_select([['first','first'], ['all', 'all']], @proposal.raw_data['attributes'][@proposal.barclamp]["disk-mode"].to_s), :onchange => "update_value('disk-mode', 'ceph_disk_mode', 'string')"
+  .panel-body
+    = select_field :disk_mode, :collection => :diskmodes_for_ceph
