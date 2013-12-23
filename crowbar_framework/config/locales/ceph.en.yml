@@ -4,7 +4,4 @@ en:
   barclamp:
     ceph:
       edit_attributes:
-        attributes: Attributes
-        ceph_disk_mode: Disk selection method
-      edit_deployment:
-        deployment: Deployment
+        disk_mode: Disk selection method
