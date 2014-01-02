@@ -27,9 +27,10 @@ class CephService < ServiceObject
 
     nodes        = NodeObject.all
     storage_nodes = nodes.select { |n| n.intended_role == "storage" }
+    controller  = nodes.detect { |n| n.intended_role == "controller" } || storage_nodes.first || nodes.first
 
     base["deployment"]["ceph"]["elements"] = {
-        "ceph-mon" =>  storage_nodes.map { |x| x.name },
+        "ceph-mon" =>  [ controller.name ],
         "ceph-osd" =>  storage_nodes.map { |x| x.name },
     } unless storage_nodes.nil?
 
