@@ -18,13 +18,6 @@ if !File.exists?("/etc/ceph/keyring")
 
 end
 
-file "/etc/ceph/keyring" do
-  owner "root"
-  group "openstack-cinder"
-  mode 0640
-  action :touch
-end
-
 cinder_user = node[:cinder][:volume][:rbd][:user]
 cinder_pool = node[:cinder][:volume][:rbd][:pool]
 
