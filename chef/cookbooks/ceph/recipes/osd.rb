@@ -128,7 +128,7 @@ else
           Chef::Log.fatal("There is no suitable disks for ceph")
 	        raise "There is no suitable disks for ceph"
         else
-          if node["ceph"]["disk-mode"] == "first"
+          if node["ceph"]["disk_mode"] == "first"
             disk_list = [unclaimed_disks.first]
           else
             disk_list = unclaimed_disks
