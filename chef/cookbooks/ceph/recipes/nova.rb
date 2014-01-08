@@ -30,13 +30,12 @@ if !File.exists?("/etc/ceph/keyring")
 
 end
 
-
 cinder_controller = search(:node, "roles:cinder-controller")
 if cinder_controller.length > 0
   cinder_user = cinder_controller[0][:cinder][:volume][:rbd][:user]
   cinder_pool = cinder_controller[0][:cinder][:volume][:rbd][:pool]
-  cinder_uuid = cinder_controller[0][:cinder][:volume][:rbd][:secret_uuid]
-  nova_user = node['nova']['ceph']['user']
+  nova_uuid = node["ceph"]["config"]["fsid"]
+  nova_user = 'nova'
 
   secret_file_path = "/etc/ceph/ceph-secret.xml"
 
@@ -44,7 +43,7 @@ if cinder_controller.length > 0
     owner "root"
     group "root"
     mode "0640"
-    content "<secret ephemeral='no' private='no'> <uuid>#{cinder_uuid}</uuid><usage type='ceph'> <name>client.#{nova_user} secret</name> </usage> </secret>"
+    content "<secret ephemeral='no' private='no'> <uuid>#{nova_uuid}</uuid><usage type='ceph'> <name>client.#{nova_user} secret</name> </usage> </secret>"
   end #file secret_file_path
 
   ruby_block "save nova key in node attributes" do
@@ -61,17 +60,16 @@ if cinder_controller.length > 0
             --name=client.'#{nova_user}' --add-key='#{client_key}' ]
       raise 'creating nova keyring failed' unless $?.exitstatus == 0
 
-      FileUtils.chown('root','openstack-nova',"etc/ceph/#{cluster}.client.#{nova_user}.keyring")
-      FileUtils.chmod(0640,"/etc/ceph/#{cluster}.client.#{nova_user}.keyring")
-      
-      node['ceph']['nova-secret'] = client_key
+      node['ceph']['nova-user'] = nova_user
+      node['ceph']['nova-uuid'] = nova_uuid
+      node.normal['ceph']['nova-secret'] = client_key
       node.save
 
       if File.exists?("/usr/bin/virsh")
         %x[ virsh secret-define --file '#{secret_file_path}' ]
         raise 'generating secret file failed' unless $?.exitstatus == 0
 
-        %x[ virsh secret-set-value --secret '#{cinder_uuid}' --base64 '#{client_key}' ]
+        %x[ virsh secret-set-value --secret '#{nova_uuid}' --base64 '#{client_key}' ]
         raise 'importing secret file failed' unless $?.exitstatus == 0
       end
 
