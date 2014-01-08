@@ -54,7 +54,6 @@ ruby_block "save cinder key in node attributes" do
     node.save
 
   end
-  not_if { node['ceph']['cinder-secret'] }
 end
 
 file "/etc/ceph/ceph.client.#{cinder_user}.keyring" do

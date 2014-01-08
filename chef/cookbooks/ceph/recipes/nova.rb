@@ -76,7 +76,6 @@ if cinder_controller.length > 0
       end
 
     end
-    not_if { node['ceph']['nova-secret'] }
   end
 
 end
