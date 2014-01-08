@@ -39,7 +39,7 @@ end
 
 file "/etc/ceph/ceph.client.#{glance_user}.keyring" do
   owner "root"
-  group "openstack-glance"
+  group node[:glance][:group]
   mode 0640
   action :touch
 end

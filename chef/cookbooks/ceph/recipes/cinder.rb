@@ -58,7 +58,7 @@ end
 
 file "/etc/ceph/ceph.client.#{cinder_user}.keyring" do
   owner "root"
-  group "openstack-cinder"
+  group node[:cinder][:group]
   mode 0640
   action :create
 end

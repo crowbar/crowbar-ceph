@@ -79,3 +79,10 @@ if cinder_controller.length > 0
   end
 
 end
+
+file "/etc/ceph/ceph.client.#{nova_user}.keyring" do
+  owner "root"
+  group node[:nova][:group]
+  mode 0640
+  action :touch
+end
