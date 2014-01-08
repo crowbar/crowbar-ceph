@@ -47,7 +47,7 @@ when "rhel", "fedora"
 when "suse"
   packages = %w{
       ceph
-      ceph-kmp-default
+      python-ceph
   }
 end
 
