@@ -26,11 +26,16 @@ class CephService < ServiceObject
     base = super
 
     nodes        = NodeObject.all
+    nodes.delete_if { |n| n.nil? }
+    nodes.delete_if { |n| n.admin? } if nodes.size > 1
     storage_nodes = nodes.select { |n| n.intended_role == "storage" }
-    controller  = nodes.detect { |n| n.intended_role == "controller" } || storage_nodes.first || nodes.first
+    controller_nodes = nodes.select { |n| n.intended_role == "controller"}
+    # Pick up to 3 monitors, first among storage nodes, then controller nodes, then all other nodes
+    nodes_by_pref = [ storage_nodes, controller_nodes, nodes ].flatten.uniq{|n| n.name}
+    monitor_nodes = nodes_by_pref.take(3)
 
     base["deployment"]["ceph"]["elements"] = {
-        "ceph-mon" =>  [ controller.name ],
+        "ceph-mon" =>  monitor_nodes.map { |x| x.name },
         "ceph-osd" =>  storage_nodes.map { |x| x.name },
     } unless storage_nodes.nil?
 
@@ -55,7 +60,7 @@ class CephService < ServiceObject
   end
 
   def validate_proposal_after_save proposal
-    validate_at_least_n_for_role proposal, "ceph-mon", 2
+    validate_at_least_n_for_role proposal, "ceph-mon", 1
     validate_at_least_n_for_role proposal, "ceph-osd", 2
 
     super
