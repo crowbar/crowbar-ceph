@@ -17,8 +17,8 @@ require 'chef'
 class CephService < ServiceObject
 
   def initialize(thelogger)
+    super(thelogger)
     @bc_name = "ceph"
-    @logger = thelogger
   end
 
   def create_proposal
@@ -55,45 +55,9 @@ class CephService < ServiceObject
   end
 
   def validate_proposal_after_save proposal
+    validate_at_least_n_for_role proposal, "ceph-mon", 2
+    validate_at_least_n_for_role proposal, "ceph-osd", 2
+
     super
-
-    elements = proposal["deployment"]["ceph"]["elements"]
-
-    # accept proposal with no allocated node -- ie, initial state
-    if ((not elements.has_key?("ceph-mon") or elements["ceph-mon"].length == 0) and
-        (not elements.has_key?("ceph-osd") or elements["ceph-osd"].length == 0))
-       return
-    end
-
-    errors = []
-
-    if not elements.has_key?("ceph-mon") or elements["ceph-mon"].length < 2
-      errors << "Need at least two ceph-mon nodes."
-    end
-
-    if not elements.has_key?("ceph-osd") or elements["ceph-osd"].length < 2
-      errors << "Need at least two ceph-osd nodes."
-    end
-
-    if elements.has_key?("ceph-osd")
-      elements["ceph-osd"].each do |n|
-        node = NodeObject.find_node_by_name(n)
-        roles = node.roles()
-
-        role = "nova-multi-controller"
-        if roles.include?(role) and node["nova"]["volume"]["type"] != "rados"
-          errors << "Node #{n} already has the #{role} role; nodes cannot have both ceph-osd and #{role} roles if Ceph is not used for volume storage in Nova."
-        end
-
-        role = "swift-storage"
-        if roles.include?(role)
-          errors << "Node #{n} already has the #{role} role; nodes cannot have both ceph-store and #{role} roles."
-        end
-      end
-    end
-
-    if errors.length > 0
-      raise Chef::Exceptions::ValidationFailed.new(errors.join("\n"))
-    end
   end
 end
