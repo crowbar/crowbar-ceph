@@ -12,7 +12,7 @@
           "type": "map",
           "required": true,
           "mapping": {
-            "disk-mode": { "type": "str", "required": true },
+            "disk_mode": { "type": "str", "required": true },
             "config": {
               "type": "map",
               "required": true,
@@ -37,6 +37,7 @@
           "required": true,
           "mapping": {
             "crowbar-revision": { "type": "int", "required": true },
+            "schema-revision": { "type": "int" },
             "crowbar-committing": { "type": "bool" },
             "crowbar-status": { "type": "str" },
             "crowbar-failed": { "type": "str" },

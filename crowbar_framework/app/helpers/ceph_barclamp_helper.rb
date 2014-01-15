@@ -34,8 +34,8 @@ module CephBarclampHelper
   def diskmodes_for_ceph(selected)
     options_for_select(
       [
-        ["first","first"], 
-        ["all", "all"]
+        ["First Available","first"], 
+        ["All Available", "all"]
       ],
       selected.to_s
     )

@@ -35,12 +35,11 @@ ruby_block "save #{glance_user} key in node attributes" do
     node.normal['ceph']['glance-secret'] = client_key
     node.save
   end
-  not_if { node['ceph']['glance-secret'] }
 end
 
 file "/etc/ceph/ceph.client.#{glance_user}.keyring" do
   owner "root"
-  group "openstack-glance"
+  group node[:glance][:group]
   mode 0640
   action :touch
 end

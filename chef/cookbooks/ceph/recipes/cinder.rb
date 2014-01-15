@@ -18,13 +18,6 @@ if !File.exists?("/etc/ceph/keyring")
 
 end
 
-file "/etc/ceph/keyring" do
-  owner "root"
-  group "openstack-cinder"
-  mode 0640
-  action :touch
-end
-
 cinder_user = node[:cinder][:volume][:rbd][:user]
 cinder_pool = node[:cinder][:volume][:rbd][:pool]
 
@@ -61,12 +54,11 @@ ruby_block "save cinder key in node attributes" do
     node.save
 
   end
-  not_if { node['ceph']['cinder-secret'] }
 end
 
 file "/etc/ceph/ceph.client.#{cinder_user}.keyring" do
   owner "root"
-  group "openstack-cinder"
+  group node[:cinder][:group]
   mode 0640
   action :create
 end
