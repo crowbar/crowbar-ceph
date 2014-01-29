@@ -50,10 +50,10 @@ class CephService < ServiceObject
 
     @logger.debug("monitors: #{monitors.inspect}")
     @logger.debug("osd_nodes: #{osd_nodes.inspect}")
-    
+
     # Make sure to use the storage network
     net_svc = NetworkService.new @logger
-           
+
     all_nodes.each do |n|
       net_svc.allocate_ip "default", "storage", "host", n
     end
