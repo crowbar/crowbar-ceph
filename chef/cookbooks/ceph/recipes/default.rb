@@ -20,7 +20,7 @@
 packages = []
 
 case node[:platform]
-when "debian"
+when "debian", "ubuntu"
   packages = %w{
       ceph
       ceph-common

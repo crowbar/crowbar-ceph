@@ -15,11 +15,11 @@ crowbar:
   run_order: 80
   chef_order: 80
 
-# TODO shouldn't hardcode maverick, crowbar is not flexible enough yet
 # TODO crowbar *and* chef cookbooks don't really need -dbg
 debs:
-  repos:
-    - deb http://ceph.com/debian-bobtail precise main
+  ubuntu-12.04:
+    repos:
+      - deb http://ceph.com/debian-emperor precise main
   pkgs:
     - ceph
     - ceph-dbg
@@ -31,8 +31,11 @@ debs:
     - radosgw
     - libcephfs1
     - gdisk
-    - cryptsetup
-    - libgoogle-perftools0
+    - google-perftools2
+    - libgoogle-perftools4
+    - libaio1
+    - libsnappy1
+    - libleveldb1
 
 gems:
   pkgs:
