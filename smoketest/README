@@ -1,0 +1,12 @@
+- Check Ceph cluster health
+- Basic checks required pools, RADOS
+
+
+TBD:
+
+- Check OSD, Monitors detailed health info
+- Check Cinder, Glance, Nova config parameters
+- Upload image to Ceph storage
+- Boot from volume
+- Check RADOS gateway functionality
+- Check quotas

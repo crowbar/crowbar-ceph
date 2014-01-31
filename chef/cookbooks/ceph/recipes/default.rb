@@ -20,7 +20,7 @@
 packages = []
 
 case node[:platform]
-when "debian"
+when "debian", "ubuntu"
   packages = %w{
       ceph
       ceph-common
@@ -33,14 +33,14 @@ when "debian"
     }
     packages += packages_dbg
   end
-when "rhel", "fedora"
+when "redhat", "centos", "fedora"
   packages = %w{
       ceph
   }
 
   if node['ceph']['install_debug']
     packages_dbg = %w{
-      ceph-debug
+      ceph-debuginfo
     }
     packages += packages_dbg
   end

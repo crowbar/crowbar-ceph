@@ -8,6 +8,8 @@ barclamp:
 
   os_support:
     - ubuntu-12.04
+    - centos-6.4
+    - redhat-6.4
 
 crowbar:
   layout: 1
@@ -15,11 +17,11 @@ crowbar:
   run_order: 80
   chef_order: 80
 
-# TODO shouldn't hardcode maverick, crowbar is not flexible enough yet
 # TODO crowbar *and* chef cookbooks don't really need -dbg
 debs:
-  repos:
-    - deb http://ceph.com/debian-bobtail precise main
+  ubuntu-12.04:
+    repos:
+      - deb http://ceph.com/debian-emperor precise main
   pkgs:
     - ceph
     - ceph-dbg
@@ -31,8 +33,27 @@ debs:
     - radosgw
     - libcephfs1
     - gdisk
-    - cryptsetup
-    - libgoogle-perftools0
+    - google-perftools2
+    - libgoogle-perftools4
+    - libaio1
+    - libsnappy1
+    - libleveldb1
+
+rpms:
+  centos-6.4:
+    repos:
+      - bare ceph emperor http://ceph.com/rpm-emperor/rhel6/x86_64/
+  redhat-6.4:
+    repos:
+      - bare ceph emperor http://ceph.com/rpm-emperor/rhel6/x86_64/
+  pkgs:
+    - ceph
+    - ceph-debuginfo
+    - snappy
+    - leveldb
+    - gdisk
+    - python-argparse
+    - gperftools-libs
 
 gems:
   pkgs:

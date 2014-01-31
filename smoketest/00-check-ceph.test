@@ -1,16 +1,56 @@
 #!/bin/bash
 
+die() {
+    res=$1
+    shift
+    echo "$@"
+    exit $res
+}
+
 CLUSTER='ceph'
 ENTITY='admin'
 KEYRING='/etc/ceph/keyring'
 
-HEALTH=$(ceph --cluster "$CLUSTER" --id "$ENTITY" --keyring "$KEYRING" health)
-
-echo "Ceph $HEALTH"
-if echo $HEALTH | grep -q OK; then
-        echo "Ceph cluster is running - OK"
-        exit 0
-else
-        echo "Ceph cluster is not running - FAILED"
-        exit 2
+echo "Searching for Ceph servers..."
+ceph_mon_ip=$(knife_node_find 'roles:ceph-mon' IP | head -n 1 )
+if [[ ! $ceph_mon_ip ]]; then
+    die 1 "Couldn't find Ceph server"
 fi
+
+echo "Ceph found at $ceph_mon_ip"
+
+echo "Checking Ceph cluster health status..."
+if `ssh $ceph_mon_ip ceph --cluster "$CLUSTER" --id "$ENTITY" --keyring "$KEYRING" health | grep -q 'OK'`; then
+    echo "Ceph cluster health check - OK"
+else
+    die 1 "Ceph cluster health check - FAILED"
+fi
+
+echo "Checking RADOS pools..."
+ssh $ceph_mon_ip rados lspools > /dev/null
+status=$?
+if [ $status -ne 0 ]; then
+  die 1 "RADOS pool not configured properly - FAILED"
+else
+  echo "Check RADOS pool- OK"
+fi
+
+echo "Getting Ceph pool volumes list..."
+ssh $ceph_mon_ip rbd -p volumes ls
+if [ $status -ne 0 ]; then
+  die 1 "Ceph pool volumes not found - FAILED"
+else
+  echo "Check Ceph pool volumes - OK"
+fi
+
+echo "Getting Ceph pool images list..."
+ssh $ceph_mon_ip rbd -p images ls
+if [ $status -ne 0 ]; then
+  die 1 "Ceph pool images not found - FAILED"
+else
+  echo "Check Ceph pool images - OK"
+fi
+
+echo "Ceph smoketest PASSED"
+
+exit 0
