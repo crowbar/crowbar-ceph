@@ -26,17 +26,23 @@ class CephService < ServiceObject
     base = super
 
     nodes        = NodeObject.all
-    nodes.delete_if { |n| n.nil? }
-    nodes.delete_if { |n| n.admin? } if nodes.size > 1
-    storage_nodes = nodes.select { |n| n.intended_role == "storage" }
+    nodes.delete_if { |n| n.nil? or n.admin? }
+
     controller_nodes = nodes.select { |n| n.intended_role == "controller"}
-    # Pick up to 3 monitors, first among storage nodes, then controller nodes, then all other nodes
-    nodes_by_pref = [ storage_nodes, controller_nodes, nodes ].flatten.uniq{|n| n.name}
-    monitor_nodes = nodes_by_pref.take(3)
+    if controller_nodes.size < 3
+      controller_nodes = [ controller_nodes, storage_nodes, nodes ].flatten.uniq{|n| n.name}
+      controller_nodes = controller_nodes.take(3)
+    end
+
+    storage_nodes = nodes.select { |n| n.intended_role == "storage" }
+    if storage_nodes.size < 2
+      storage_nodes = [ storage_nodes, controller_nodes, nodes ].flatten.uniq{|n| n.name}
+      storage_nodes = storage_nodes.take(2)
+    end
 
     base["deployment"]["ceph"]["elements"] = {
-        "ceph-mon" =>  monitor_nodes.map { |x| x.name },
-        "ceph-osd" =>  storage_nodes.map { |x| x.name },
+        "ceph-mon" => controller_nodes.map { |x| x.name },
+        "ceph-osd" => storage_nodes.map{ |x| x.name },
     } unless storage_nodes.nil?
 
     @logger.debug("Ceph create_proposal: exiting")
@@ -50,10 +56,10 @@ class CephService < ServiceObject
 
     @logger.debug("monitors: #{monitors.inspect}")
     @logger.debug("osd_nodes: #{osd_nodes.inspect}")
-    
+
     # Make sure to use the storage network
     net_svc = NetworkService.new @logger
-           
+
     all_nodes.each do |n|
       net_svc.allocate_ip "default", "storage", "host", n
     end
