@@ -28,13 +28,13 @@ class CephService < ServiceObject
     nodes        = NodeObject.all
     nodes.delete_if { |n| n.nil? or n.admin? }
 
+    storage_nodes = nodes.select { |n| n.intended_role == "storage" }
     controller_nodes = nodes.select { |n| n.intended_role == "controller"}
     if controller_nodes.size < 3
       controller_nodes = [ controller_nodes, storage_nodes, nodes ].flatten.uniq{|n| n.name}
       controller_nodes = controller_nodes.take(3)
     end
 
-    storage_nodes = nodes.select { |n| n.intended_role == "storage" }
     if storage_nodes.size < 2
       storage_nodes = [ storage_nodes, controller_nodes, nodes ].flatten.uniq{|n| n.name}
       storage_nodes = storage_nodes.take(2)
