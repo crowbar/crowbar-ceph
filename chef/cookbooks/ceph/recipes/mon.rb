@@ -123,7 +123,7 @@ unless node['ceph']['encrypted_data_bags']
     block do
       run_out = ""
       while run_out.empty?
-        run_out = Mixlib::ShellOut.new("ceph auth get-or-create-key client.bootstrap-osd").run_command.stdout.strip
+        run_out = Mixlib::ShellOut.new("ceph auth get-key client.bootstrap-osd").run_command.stdout.strip
         sleep 2
       end
       node.normal['ceph']['bootstrap_osd_key'] = run_out

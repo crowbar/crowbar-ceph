@@ -116,10 +116,6 @@ else
     creates "/var/lib/ceph/bootstrap-osd/#{cluster}.keyring"
   end
 
-  execute "add bootstrap-osd caps" do
-    command "ceph auth caps client.bootstrap-osd osd 'allow *' mon 'allow *'"
-  end
-
   if is_crowbar?
     if node["ceph"]["osd_devices"].empty?
       unclaimed_disks = BarclampLibrary::Barclamp::Inventory::Disk.unclaimed(node).sort
