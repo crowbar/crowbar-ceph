@@ -65,7 +65,7 @@ if cinder_controller.length > 0
       node.normal['ceph']['nova-secret'] = client_key
       node.save
 
-      if File.exists?("/usr/bin/virsh")
+      if system("virsh hostname &> /dev/null")
         %x[ virsh secret-define --file '#{secret_file_path}' ]
         raise 'generating secret file failed' unless $?.exitstatus == 0
 
