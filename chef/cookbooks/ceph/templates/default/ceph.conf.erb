@@ -101,7 +101,7 @@
         osd mkfs type = xfs
         ; If you want to specify some other mount options, you can do so.
         ; for other filesystems use 'osd mount options $fstype'
-    osd mount options xfs = rw,noatime,inode64
+    osd mount options xfs = rw,noatime,inode64,logbsize=256k,delaylog
     ; The options used to format the filesystem via mkfs.$fstype
         ; for other filesystems use 'osd mkfs options $fstype'
     ; osd mkfs options btrfs =
