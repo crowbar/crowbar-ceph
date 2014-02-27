@@ -82,6 +82,7 @@ class CephService < ServiceObject
 
   def validate_proposal_after_save proposal
     validate_at_least_n_for_role proposal, "ceph-mon", 1
+    validate_count_as_odd_for_role proposal, "ceph-mon"
     validate_at_least_n_for_role proposal, "ceph-osd", 2
 
     super
