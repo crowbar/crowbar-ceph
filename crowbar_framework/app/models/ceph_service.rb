@@ -43,6 +43,10 @@ class CephService < ServiceObject
     @logger.debug("Ceph create_proposal: entering")
     base = super
 
+    if base["attributes"]["ceph"]["config"]["fsid"].empty?
+      base["attributes"]["ceph"]["config"]["fsid"] = generate_uuid
+    end
+
     nodes        = NodeObject.all
     nodes.delete_if { |n| n.nil? or n.admin? }
 
@@ -122,5 +126,12 @@ class CephService < ServiceObject
     end
 
     super
+  end
+
+  def generate_uuid
+    ary = SecureRandom.random_bytes(16).unpack("NnnnnN")
+    ary[2] = (ary[2] & 0x0fff) | 0x4000
+    ary[3] = (ary[3] & 0x3fff) | 0x8000
+    "%08x-%04x-%04x-%04x-%04x%08x" % ary
   end
 end
