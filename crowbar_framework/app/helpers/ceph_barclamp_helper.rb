@@ -18,19 +18,6 @@
 #
 
 module CephBarclampHelper
-  def ceph_role_contraints
-    {
-      "ceph-mon" => {
-        "unique" => false,
-        "count" => 3
-      },
-      "ceph-osd" => {
-        "unique" => false,
-        "count" => 8
-      }
-    }
-  end
-  
   def diskmodes_for_ceph(selected)
     options_for_select(
       [
