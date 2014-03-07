@@ -21,7 +21,8 @@ crowbar:
 debs:
   ubuntu-12.04:
     repos:
-      - deb http://ceph.com/debian-emperor precise main
+      - deb http://ceph.com/debian-dumpling precise main
+      - deb http://ceph.com/packages/ceph-extras/debian precise main
   pkgs:
     - ceph
     - ceph-dbg
@@ -33,7 +34,7 @@ debs:
     - radosgw
     - libcephfs1
     - gdisk
-    - google-perftools2
+    - google-perftools
     - libgoogle-perftools4
     - libaio1
     - libsnappy1
@@ -42,10 +43,12 @@ debs:
 rpms:
   centos-6.4:
     repos:
-      - bare ceph emperor http://ceph.com/rpm-emperor/rhel6/x86_64/
+      - bare ceph-dumpling 10 http://ceph.com/rpm-dumpling/centos-6.4/x86_64/
+      - bare ceph-extras 2 http://ceph.com/packages/ceph-extras/rpm/centos-6.4/x86_64/
   redhat-6.4:
     repos:
-      - bare ceph emperor http://ceph.com/rpm-emperor/rhel6/x86_64/
+      - bare ceph-dumpling 10 http://ceph.com/rpm-dumpling/rhel6.4/x86_64/
+      - bare ceph-extras 2 http://ceph.com/packages/ceph-extras/rpm/rhel6.4/x86_64/
   pkgs:
     - ceph
     - ceph-debuginfo
