@@ -21,6 +21,23 @@ class CephService < ServiceObject
     @bc_name = "ceph"
   end
 
+  class << self
+    def role_constraints
+      @role_constraints ||= begin
+        {
+          "ceph-mon" => {
+            "unique" => false,
+            "count" => 3
+          },
+          "ceph-osd" => {
+            "unique" => false,
+            "count" => 8
+          }
+        }
+      end
+    end
+  end
+
   def create_proposal
     @logger.debug("Ceph create_proposal: entering")
     base = super
