@@ -1,7 +1,0 @@
-en:
-  nav:
-    ceph: Ceph
-  barclamp:
-    ceph:
-      edit_attributes:
-        disk_mode: Disk selection method
