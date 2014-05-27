@@ -14,7 +14,10 @@
 #
 
 class CephController < BarclampController
-  def initialize
+
+  protected
+
+  def initialize_service
     @service_object = CephService.new logger
   end
 end
