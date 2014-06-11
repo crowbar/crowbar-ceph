@@ -117,10 +117,9 @@ else
   end
 
   if is_crowbar?
-    if node["ceph"]["osd_devices"].empty?
       unclaimed_disks = BarclampLibrary::Barclamp::Inventory::Disk.unclaimed(node).sort
       claimed_disks = BarclampLibrary::Barclamp::Inventory::Disk.claimed(node,"Ceph").sort
-        if (unclaimed_disks.empty? && claimed_disks.empty?)
+        if (node["ceph"]["osd_devices"].empty? && unclaimed_disks.empty? && claimed_disks.empty?)
           Chef::Log.fatal("There is no suitable disks for ceph")
 	        raise "There is no suitable disks for ceph"
         else
@@ -144,7 +143,6 @@ else
             node.save
           end
         end
-    end
     # Calling ceph-disk-prepare is sufficient for deploying an OSD
     # After ceph-disk-prepare finishes, the new device will be caught
     # by udev which will run ceph-disk-activate on it (udev will map
