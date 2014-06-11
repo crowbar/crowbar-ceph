@@ -117,32 +117,32 @@ else
   end
 
   if is_crowbar?
-      unclaimed_disks = BarclampLibrary::Barclamp::Inventory::Disk.unclaimed(node).sort
-      claimed_disks = BarclampLibrary::Barclamp::Inventory::Disk.claimed(node,"Ceph").sort
-        if (node["ceph"]["osd_devices"].empty? && unclaimed_disks.empty? && claimed_disks.empty?)
-          Chef::Log.fatal("There is no suitable disks for ceph")
-	        raise "There is no suitable disks for ceph"
+    unclaimed_disks = BarclampLibrary::Barclamp::Inventory::Disk.unclaimed(node).sort
+    claimed_disks = BarclampLibrary::Barclamp::Inventory::Disk.claimed(node,"Ceph").sort
+    if (node["ceph"]["osd_devices"].empty? && unclaimed_disks.empty? && claimed_disks.empty?)
+      Chef::Log.fatal("There is no suitable disks for ceph")
+      raise "There is no suitable disks for ceph"
+    else
+      if node["ceph"]["disk_mode"] == "first"
+        disk_list = [unclaimed_disks.first]
+      else
+        disk_list = unclaimed_disks
+      end
+      node["ceph"]["osd_devices"] = []
+      index = 0
+      # Now, we have the final list of devices to claim, so claim them
+      claimed_disks = disk_list.select do |d|
+        if d.claim("Ceph")
+          Chef::Log.info("Ceph: Claimed #{d.name}")
+          node["ceph"]["osd_devices"][index] = Hash.new
+          node["ceph"]["osd_devices"][index]["device"] = d.name
         else
-          if node["ceph"]["disk_mode"] == "first"
-            disk_list = [unclaimed_disks.first]
-          else
-            disk_list = unclaimed_disks
-          end
-          node["ceph"]["osd_devices"] = []
-          index = 0
-          # Now, we have the final list of devices to claim, so claim them
-          claimed_disks = disk_list.select do |d|
-            if d.claim("Ceph")
-              Chef::Log.info("Ceph: Claimed #{d.name}")
-              node["ceph"]["osd_devices"][index] = Hash.new
-              node["ceph"]["osd_devices"][index]["device"] = d.name
-            else
-              Chef::Log.info("Ceph: Ignoring #{d.name}")
-            end
-            index += 1
-            node.save
-          end
+          Chef::Log.info("Ceph: Ignoring #{d.name}")
         end
+        index += 1
+        node.save
+      end
+    end
     # Calling ceph-disk-prepare is sufficient for deploying an OSD
     # After ceph-disk-prepare finishes, the new device will be caught
     # by udev which will run ceph-disk-activate on it (udev will map
