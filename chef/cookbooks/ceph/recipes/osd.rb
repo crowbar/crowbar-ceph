@@ -117,32 +117,32 @@ else
   end
 
   if is_crowbar?
+    node["ceph"]["osd_devices"] = [] if node["ceph"]["osd_devices"].nil?
     unclaimed_disks = BarclampLibrary::Barclamp::Inventory::Disk.unclaimed(node).sort
-    claimed_disks = BarclampLibrary::Barclamp::Inventory::Disk.claimed(node,"Ceph").sort
-    if (node["ceph"]["osd_devices"].empty? && unclaimed_disks.empty? && claimed_disks.empty?)
-      Chef::Log.fatal("There is no suitable disks for ceph")
-      raise "There is no suitable disks for ceph"
-    else
-      if node["ceph"]["disk_mode"] == "first"
-        disk_list = [unclaimed_disks.first]
+    if node["ceph"]["disk_mode"] == "first" && node["ceph"]["osd_devices"].empty?
+      if unclaimed_disks.empty?
+        Chef::Log.fatal("There is no suitable disks for ceph")
+        raise "There is no suitable disks for ceph"
       else
-        disk_list = unclaimed_disks
+        disk_list = [unclaimed_disks.first]
       end
-      node["ceph"]["osd_devices"] = []
-      index = 0
-      # Now, we have the final list of devices to claim, so claim them
-      claimed_disks = disk_list.select do |d|
-        if d.claim("Ceph")
-          Chef::Log.info("Ceph: Claimed #{d.name}")
-          node["ceph"]["osd_devices"][index] = Hash.new
-          node["ceph"]["osd_devices"][index]["device"] = d.name
-        else
-          Chef::Log.info("Ceph: Ignoring #{d.name}")
-        end
-        index += 1
+    elsif node["ceph"]["disk_mode"] == "all"
+      disk_list = unclaimed_disks
+    else
+      disk_list = ''
+    end
+
+    # Now, we have the final list of devices to claim, so claim them
+    disk_list.select do |d|
+      if d.claim("Ceph")
+        Chef::Log.info("Ceph: Claimed #{d.name}")
+        node["ceph"]["osd_devices"].push("device" => d.name)
         node.save
+      else
+        Chef::Log.info("Ceph: Ignoring #{d.name}")
       end
     end
+
     # Calling ceph-disk-prepare is sufficient for deploying an OSD
     # After ceph-disk-prepare finishes, the new device will be caught
     # by udev which will run ceph-disk-activate on it (udev will map
@@ -152,7 +152,7 @@ else
     # osd/$cluster-$id)
     #  - $cluster should always be ceph
     #  - The --dmcrypt option will be available starting w/ Cuttlefish
-    unless node["ceph"]["osd_devices"].nil?
+    unless disk_list.empty?
       osd_devices = []
       node["ceph"]["osd_devices"].each_with_index do |osd_device,index|
         if !osd_device["status"].nil?
@@ -208,8 +208,6 @@ else
         supports :restart => true
       end
 
-    else
-      Log.info('node["ceph"]["osd_devices"] empty')
     end
   end
 end
