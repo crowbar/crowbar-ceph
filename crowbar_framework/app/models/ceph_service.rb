@@ -81,6 +81,31 @@ class CephService < ServiceObject
     all_nodes.each do |n|
       net_svc.allocate_ip "default", "storage", "host", n
     end
+
+    # electing master ceph
+    unless monitors.empty?
+      mons = monitors.map {|n| NodeObject.find_node_by_name n}
+
+      master = nil
+      mons.each do |mon|
+        if mon[:ceph].nil?
+          mon[:ceph] = {}
+          mon[:ceph][:master] = false
+        end
+        if mon[:ceph][:master] && master.nil?
+          master = mon
+        else
+          mon[:ceph][:master] = false
+          mon.save
+        end
+      end
+      if master.nil?
+        master = mons.first
+        master[:ceph][:master] = true
+        master.save
+      end
+    end
+
   end
 
   def validate_proposal_after_save proposal

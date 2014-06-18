@@ -1,7 +1,7 @@
 raise "fsid must be set in config" if node["ceph"]["config"]['fsid'].nil?
 
-mon_nodes = get_mon_nodes()
-mon_addresses = get_mon_addresses()
+mon_nodes = get_mon_nodes
+mon_addresses = get_mon_addresses
 
 mon_init = []
 mon_nodes.each do |monitor|
@@ -49,4 +49,18 @@ template '/etc/ceph/ceph.conf' do
     :cluster_network => cluster_network
   )
   mode '0644'
+end
+
+directory "/var/run/ceph" do
+  owner "root"
+  group "root"
+  mode "0755"
+  action :create
+end
+
+directory "/var/log/ceph" do
+  owner "root"
+  group "root"
+  mode "0755"
+  action :create
 end

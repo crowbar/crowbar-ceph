@@ -19,26 +19,10 @@ include_recipe "ceph::conf"
 
 service_type = node["ceph"]["mon"]["init_style"]
 
-directory "/var/run/ceph" do
-  owner "root"
-  group "root"
-  mode 00755
-  recursive true
-  action :create
-end
-
-directory "/var/log/ceph" do
-  owner "root"
-  group "root"
-  mode 00755
-  recursive true
-  action :create
-end
-
 directory "/var/lib/ceph/mon/ceph-#{node["hostname"]}" do
   owner "root"
   group "root"
-  mode 00755
+  mode "0755"
   recursive true
   action :create
 end
@@ -49,30 +33,56 @@ cluster = 'ceph'
 unless File.exists?("/var/lib/ceph/mon/ceph-#{node["hostname"]}/done")
   keyring = "#{Chef::Config[:file_cache_path]}/#{cluster}-#{node['hostname']}.mon.keyring"
 
-  monitor_secret = if node['ceph']['encrypted_data_bags']
-    secret = Chef::EncryptedDataBagItem.load_secret(node["ceph"]["mon"]["secret_file"])
-    Chef::EncryptedDataBagItem.load("ceph", "mon", secret)["secret"]
-  else
-    node["ceph"]["monitor-secret"]
-  end
-
   execute "format as keyring" do
-    command "ceph-authtool '#{keyring}' --create-keyring --name=mon. --add-key='#{monitor_secret}' --cap mon 'allow *'"
-    creates "#{Chef::Config[:file_cache_path]}/#{cluster}-#{node['hostname']}.mon.keyring"
+    command "ceph-authtool '#{keyring}' --create-keyring --name=mon. --add-key='#{node["ceph"]["monitor-secret"]}' --cap mon 'allow *'"
+    not_if { node['ceph']['monitor-secret'].empty? }
+    notifies :run, 'execute[ceph-mon mkfs]', :immediately
   end
 
-  admin_secret = node["ceph"]["admin-secret"]
+  ruby_block "generate monitor-secret" do
+    block do
+      gen_key = Mixlib::ShellOut.new("ceph-authtool --gen-print-key")
+      monitor_key = gen_key.run_command.stdout.strip
+      gen_key.error!
 
-  execute "create admin keyring" do
-    command "ceph-authtool --create-keyring /etc/ceph/keyring --name=client.admin --add-key='#{admin_secret}'"
+      add_key = Mixlib::ShellOut.new("ceph-authtool '#{keyring}' --create-keyring --name=mon. --add-key='#{monitor_key}' --cap mon 'allow *'")
+      add_key.run_command
+      add_key.error!
+
+      node.set['ceph']['monitor-secret'] = monitor_key
+      node.save
+    end
+    only_if { node['ceph']['monitor-secret'].empty? && node[:ceph][:master] }
+    notifies :run, 'execute[ceph-mon mkfs]', :immediately
   end
 
-  execute "add admin key to mon.keyring" do
-    command "ceph-authtool '#{keyring}' --name=client.admin --add-key='#{admin_secret}' --set-uid=0 --cap mon 'allow *' --cap osd 'allow *' --cap mds 'allow'"
+  ruby_block "get monitor-secret" do
+    block do
+      monitor_key = ''
+      while monitor_key.empty?
+        mon_nodes = get_mon_nodes
+        mon_nodes.each do |mon|
+          if mon[:ceph][:master] && !mon['ceph']['monitor-secret'].empty?
+            monitor_key = mon['ceph']['monitor-secret']
+          end
+        end
+        sleep 1
+      end
+
+      add_key = Mixlib::ShellOut.new("ceph-authtool '#{keyring}' --create-keyring --name=mon. --add-key='#{monitor_key}' --cap mon 'allow *'")
+      add_key.run_command
+      add_key.error!
+
+      node.set['ceph']['monitor-secret'] = monitor_key
+      node.save
+    end
+    only_if { node['ceph']['monitor-secret'].empty? }
+    notifies :run, 'execute[ceph-mon mkfs]', :immediately
   end
 
   execute 'ceph-mon mkfs' do
     command "ceph-mon --mkfs -i #{node['hostname']} --keyring '#{keyring}'"
+    action :nothing
   end
 
   ruby_block "finalise" do
@@ -108,27 +118,26 @@ service "ceph_mon" do
   action [ :enable, :start ]
 end
 
-get_mon_addresses().each do |addr|
+get_mon_addresses.each do |addr|
   execute "peer #{addr}" do
     command "ceph --admin-daemon '/var/run/ceph/ceph-mon.#{node['hostname']}.asok' add_bootstrap_peer_hint #{addr}"
     ignore_failure true
   end
 end
 
-# The key is going to be automatically
-# created,
-# We store it when it is created
-unless node['ceph']['encrypted_data_bags']
-  ruby_block "get osd-bootstrap keyring" do
+[ "admin", "bootstrap-osd" ].each do |auth|
+  ruby_block "get #{auth}-secret" do
     block do
-      run_out = ""
-      while run_out.empty?
-        run_out = Mixlib::ShellOut.new("ceph auth get-key client.bootstrap-osd").run_command.stdout.strip
-        sleep 2
+      auth_key = ''
+      while auth_key.empty?
+        get_key = Mixlib::ShellOut.new("ceph auth get-key client.#{auth}")
+        auth_key = get_key.run_command.stdout.strip
+        sleep 1
       end
-      node.normal['ceph']['bootstrap_osd_key'] = run_out
+
+      node.set["ceph"]["#{auth}-secret"] = auth_key
       node.save
     end
-    not_if { node['ceph']['bootstrap_osd_key'] }
+    only_if { node["ceph"]["#{auth}-secret"].empty? }
   end
 end
