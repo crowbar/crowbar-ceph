@@ -33,6 +33,7 @@ crowbar:
   order: 80
   run_order: 80
   chef_order: 80
+  proposal_schema_version: 3
 
 # TODO crowbar *and* chef cookbooks don't really need -dbg
 debs:
