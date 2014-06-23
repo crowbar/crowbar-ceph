@@ -25,6 +25,19 @@
             "admin-secret": { "type": "str", "required": true },
             "clustername": { "type": "str", "required": true },
             "keystone_instance": { "type": "str", "required": true },
+            "osd": {
+              "type": "map",
+              "required": true,
+              "mapping": {
+                  "use_ssd_for_journal": { "type" : "bool", "required" : true },
+                  "journal_size": { "type" : "int", "required" : true },
+                  "journal_devices"  : {
+                      "type": "seq",
+                      "required": false,
+                      "sequence": [ { "type": "str" } ]
+                  }
+              }
+            },
             "radosgw": {
               "type": "map",
               "required": true,
