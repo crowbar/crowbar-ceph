@@ -39,14 +39,13 @@ package 'gdisk' do
 end
 
 service_type = node["ceph"]["osd"]["init_style"]
-mons = get_mon_nodes("ceph_bootstrap-osd-secret:* AND ceph_admin-secret:*")
+mons = get_mon_nodes("ceph_bootstrap-osd-secret:*")
 
 if mons.empty? then
   Chef::Log.fatal("No ceph-mon found")
   raise "No ceph-mon found"
-elsif mons[0]["ceph"]["admin-secret"].empty? || mons[0]["ceph"]["bootstrap-osd-secret"].empty?
+elsif mons[0]["ceph"]["bootstrap-osd-secret"].empty?
   Chef::Log.fatal("No authorization keys found")
-  raise "No authorization keys found"
 else
 
   [ "tmp", "osd", "bootstrap-osd" ].each do |name|
@@ -59,23 +58,12 @@ else
     end
   end
 
-  keyring = "/etc/ceph/ceph.client.admin.keyring"
-  if !File.exists?(keyring)
-
-    admin_key = mons[0]["ceph"]["admin-secret"]
-
-    execute "create admin keyring" do
-      command "ceph-authtool '#{keyring}' --create-keyring  --name=client.admin --add-key='#{admin_key}'"
-    end
-
-  end
-
   # TODO cluster name
   cluster = 'ceph'
 
   osd_secret = mons[0]["ceph"]["bootstrap-osd-secret"]
 
-  execute "format as keyring" do
+  execute "create bootstrap-osd keyring" do
     command "ceph-authtool '/var/lib/ceph/bootstrap-osd/#{cluster}.keyring' --create-keyring --name=client.bootstrap-osd --add-key='#{osd_secret}'"
   end
 

@@ -8,12 +8,23 @@ end
 # TODO cluster name
 cluster = 'ceph'
 
-if !File.exists?("/etc/ceph/keyring")
+keyring = "/etc/ceph/ceph.client.admin.keyring"
+if !File.exists?(keyring)
 
-  admin_secret = node["ceph"]["admin-secret"]
+  mons = get_mon_nodes("ceph_admin-secret:*")
 
-  execute "create admin keyring" do
-    command "ceph-authtool --create-keyring /etc/ceph/keyring --name=client.admin --add-key='#{admin_secret}'"
+  if mons.empty? then
+    Chef::Log.fatal("No ceph-mon found")
+    raise "No ceph-mon found"
+  elsif mons[0]["ceph"]["admin-secret"].empty?
+    Chef::Log.fatal("No authorization keys found")
+    raise "No authorization keys found"
+  else
+    admin_key = mons[0]["ceph"]["admin-secret"]
+
+    execute "create admin keyring" do
+      command "ceph-authtool '#{keyring}' --create-keyring  --name=client.admin --add-key='#{admin_key}'"
+    end
   end
 
 end

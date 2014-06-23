@@ -33,7 +33,7 @@ cluster = 'ceph'
 unless File.exists?("/var/lib/ceph/mon/ceph-#{node["hostname"]}/done")
   keyring = "#{Chef::Config[:file_cache_path]}/#{cluster}-#{node['hostname']}.mon.keyring"
 
-  execute "format as keyring" do
+  execute "create monitor keyring" do
     command "ceph-authtool '#{keyring}' --create-keyring --name=mon. --add-key='#{node["ceph"]["monitor-secret"]}' --cap mon 'allow *'"
     not_if { node['ceph']['monitor-secret'].empty? }
     notifies :run, 'execute[ceph-mon mkfs]', :immediately
