@@ -38,82 +38,33 @@ package 'gdisk' do
   action :install
 end
 
-if !File.exists?("/etc/ceph/keyring")
-
-  admin_secret = node["ceph"]["admin-secret"]
-
-  execute "create admin keyring" do
-    command "ceph-authtool --create-keyring /etc/ceph/keyring --name=client.admin --add-key='#{admin_secret}'"
-  end
-
-end
-
-if !search(:node,"hostname:#{node['hostname']} AND dmcrypt:true").empty?
-    package 'cryptsetup' do
-      action :install
-    end
-end
-
 service_type = node["ceph"]["osd"]["init_style"]
-mons = node['ceph']['encrypted_data_bags'] ? get_mon_nodes : get_mon_nodes("ceph_bootstrap_osd_key:*")
+mons = get_mon_nodes("ceph_bootstrap-osd-secret:*")
 
 if mons.empty? then
-  puts "No ceph-mon found."
+  Chef::Log.fatal("No ceph-mon found")
+  raise "No ceph-mon found"
+elsif mons[0]["ceph"]["bootstrap-osd-secret"].empty?
+  Chef::Log.fatal("No authorization keys found")
 else
 
-  directory "/var/run/ceph" do
-    owner "root"
-    group "root"
-    mode 00755
-    recursive true
-    action :create
-  end
-
-  directory "/var/log/ceph" do
-    owner "root"
-    group "root"
-    mode 00755
-    recursive true
-    action :create
-  end
-
-  directory "/var/lib/ceph/bootstrap-osd" do
-    owner "root"
-    group "root"
-    mode "0755"
-    recursive true
-    action :create
-  end
-
-  directory "/var/lib/ceph/tmp" do
-    owner "root"
-    group "root"
-    mode "0755"
-    recursive true
-    action :create
-  end
-
-  directory "/var/lib/ceph/osd" do
-    owner "root"
-    group "root"
-    mode "0755"
-    recursive true
-    action :create
+  [ "tmp", "osd", "bootstrap-osd" ].each do |name|
+    directory "/var/lib/ceph/#{name}" do
+      owner "root"
+      group "root"
+      mode "0755"
+      recursive true
+      action :create
+    end
   end
 
   # TODO cluster name
   cluster = 'ceph'
 
-  osd_secret = if node['ceph']['encrypted_data_bags']
-    secret = Chef::EncryptedDataBagItem.load_secret(node["ceph"]["osd"]["secret_file"])
-    Chef::EncryptedDataBagItem.load("ceph", "osd", secret)["secret"]
-  else
-    mons[0]["ceph"]["bootstrap_osd_key"]
-  end
+  osd_secret = mons[0]["ceph"]["bootstrap-osd-secret"]
 
-  execute "format as keyring" do
+  execute "create bootstrap-osd keyring" do
     command "ceph-authtool '/var/lib/ceph/bootstrap-osd/#{cluster}.keyring' --create-keyring --name=client.bootstrap-osd --add-key='#{osd_secret}'"
-    creates "/var/lib/ceph/bootstrap-osd/#{cluster}.keyring"
   end
 
   if is_crowbar?
@@ -176,17 +127,20 @@ else
 
         ruby_block "Get Ceph OSD ID for #{osd_device['device']}" do
           block do
-            osd_id = ""
+            osd_id = ''
             while osd_id.empty?
               osd_id = get_osd_id(osd_device['device'])
               sleep 1
             end
-            %x{ceph osd crush set #{osd_id} 1.00 root=default rack=susecloud host=#{node[:hostname]}}
-            exitstatus = $?.exitstatus
-            Chef::Log.info("Ceph OSD crush set exited with #{exitstatus}.")
+
+            crush_set = Mixlib::ShellOut.new("ceph osd crush set #{osd_id} 1.00 root=default rack=susecloud host=#{node[:hostname]}")
+            crush_set.run_command
+            crush_set.error!
+            Chef::Log.info("Ceph OSD crush map has been updated")
+
           end
         end
-        node["ceph"]["osd_devices"][index]["status"] = "deployed"
+        node.set["ceph"]["osd_devices"][index]["status"] = "deployed"
 
         execute "Writing Ceph OSD device mappings to fstab" do
           command "tail -n1 /etc/mtab >> /etc/fstab"

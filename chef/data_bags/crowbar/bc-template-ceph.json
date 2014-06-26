@@ -3,20 +3,21 @@
   "description": "Distributed object store and file system",
   "attributes": {
     "ceph": {
+      "master": false,
       "disk_mode": "first",
       "config": {
         "fsid" : "11dd315a-2cab-4130-a760-b285324ef622",
         "public-network" : "192.168.124.0/24"
       },
-      "monitor-secret": "AQAkTzBSQIGsLRAATtjTpJ1RgdviJz1S0byJBA==",
-      "admin-secret": "AQAkTzBSmGKZFhAATjC+lKfxOxL1Wn+rgwbWpg==",
+      "monitor-secret": "",
+      "admin-secret": "",
       "clustername": "ceph"
     }
   },
   "deployment": {
     "ceph": {
       "crowbar-revision": 0,
-      "schema-revision": 1,
+      "schema-revision": 2,
       "element_states": {
         "ceph-mon": [ "readying", "ready", "applying" ],
         "ceph-osd": [ "readying", "ready", "applying" ]

@@ -12,6 +12,7 @@
           "type": "map",
           "required": true,
           "mapping": {
+            "master": { "type": "bool", "required": true },
             "disk_mode": { "type": "str", "required": true },
             "config": {
               "type": "map",
