@@ -27,7 +27,10 @@ def mask_to_bits(mask)
   count
 end
 
+public_mask = mask_to_bits(Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").netmask)
 cluster_mask = mask_to_bits(Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "storage").netmask)
+
+public_network = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").subnet + "/#{public_mask}"
 cluster_network = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "storage").subnet + "/#{cluster_mask}"
 
 directory "/etc/ceph" do
@@ -42,7 +45,7 @@ template '/etc/ceph/ceph.conf' do
   variables(
     :mon_initial => mon_init,
     :mon_addresses => mon_addresses,
-    :public_network => cluster_network,
+    :public_network => public_network,
     :cluster_network => cluster_network
   )
   mode '0644'
