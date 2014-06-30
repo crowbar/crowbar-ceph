@@ -155,3 +155,21 @@ def get_osd_nodes()
 
   return osds
 end
+
+def mon_secret
+  monitor_key = ''
+  if node['ceph']['monitor-secret'].empty?
+    while monitor_key.empty?
+      get_mon_nodes.each do |mon|
+        unless mon['ceph']['monitor-secret'].empty?
+          monitor_key = mon['ceph']['monitor-secret']
+          break
+        end
+      end
+    end
+  else
+    monitor_key = node['ceph']['monitor-secret']
+  end
+
+  monitor_key
+end
