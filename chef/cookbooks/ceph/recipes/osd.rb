@@ -132,12 +132,6 @@ else
               osd_id = get_osd_id(osd_device['device'])
               sleep 1
             end
-
-            crush_set = Mixlib::ShellOut.new("ceph osd crush set #{osd_id} 1.00 root=default rack=susecloud host=#{node[:hostname]}")
-            crush_set.run_command
-            crush_set.error!
-            Chef::Log.info("Ceph OSD crush map has been updated")
-
           end
         end
         node.set["ceph"]["osd_devices"][index]["status"] = "deployed"
