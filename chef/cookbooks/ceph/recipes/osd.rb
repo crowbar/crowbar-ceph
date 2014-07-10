@@ -154,6 +154,7 @@ else
         end
         action [ :enable, :start ]
         supports :restart => true
+        subscribes :restart, resources(:template => "/etc/ceph/ceph.conf")
       end
 
     end
