@@ -17,6 +17,25 @@
 
 require 'chef'
 
+def mask_to_bits(mask)
+  octets = mask.split(".")
+  count = 0
+  octets.each do |octet|
+    break if octet == "0"
+    c = 1 if octet == "128"
+    c = 2 if octet == "192"
+    c = 3 if octet == "224"
+    c = 4 if octet == "240"
+    c = 5 if octet == "248"
+    c = 6 if octet == "252"
+    c = 7 if octet == "254"
+    c = 8 if octet == "255"
+    count = count + c
+  end
+
+  count
+end
+
 class CephService < ServiceObject
 
   def initialize(thelogger)
@@ -85,6 +104,18 @@ class CephService < ServiceObject
     all_nodes.each do |n|
       net_svc.allocate_ip "default", "storage", "host", n
     end
+
+    # Save net info in attributes
+    node = NodeObject.find_node_by_name all_nodes[0]
+    admin_net = node.get_network_by_type("admin")
+    cluster_net = node.get_network_by_type("storage")
+
+    role.default_attributes["ceph"]["config"]["public-network"] =
+      "#{admin_net['subnet']}/#{mask_to_bits(admin_net['netmask'])}"
+    role.default_attributes["ceph"]["config"]["cluster-network"] =
+      "#{cluster_net['subnet']}/#{mask_to_bits(cluster_net['netmask'])}"
+
+    role.save
 
     # electing master ceph
     unless monitors.empty?
