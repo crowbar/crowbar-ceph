@@ -116,6 +116,7 @@ service "ceph_mon" do
   end
   supports :restart => true, :status => true
   action [ :enable, :start ]
+  subscribes :restart, resources(:template => "/etc/ceph/ceph.conf")
 end
 
 get_mon_addresses.each do |addr|
