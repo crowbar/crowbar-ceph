@@ -23,7 +23,8 @@ template '/etc/ceph/ceph.conf' do
     :mon_addresses => mon_addresses,
     :osd_nodes_count => osd_nodes.length,
     :public_network => node["ceph"]["config"]["public-network"],
-    :cluster_network => node["ceph"]["config"]["cluster-network"]
+    :cluster_network => node["ceph"]["config"]["cluster-network"],
+    :is_rgw => node.roles.include?("ceph-radosgw")
   )
   mode '0644'
 end
