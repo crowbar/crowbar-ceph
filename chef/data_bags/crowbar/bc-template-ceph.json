@@ -6,8 +6,7 @@
       "master": false,
       "disk_mode": "first",
       "config": {
-        "fsid" : "",
-        "public-network" : "192.168.124.0/24"
+        "fsid" : ""
       },
       "monitor-secret": "",
       "admin-secret": "",
@@ -18,7 +17,7 @@
     "ceph": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 2,
+      "schema-revision": 10,
       "element_states": {
         "ceph-mon": [ "readying", "ready", "applying" ],
         "ceph-osd": [ "readying", "ready", "applying" ]
