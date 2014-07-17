@@ -101,7 +101,7 @@ class CephService < ServiceObject
     # Make sure to use the storage network
     net_svc = NetworkService.new @logger
 
-    all_nodes.each do |n|
+    osd_nodes.each do |n|
       net_svc.allocate_ip "default", "storage", "host", n
     end
 
