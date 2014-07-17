@@ -25,11 +25,14 @@ if node['platform'] == "suse"
   default["ceph"]["radosgw"]["path"] = "/srv/www/ceph-radosgw"
 end
 
-default['ceph']['radosgw']['service_name'] = value_for_platform(
-  ['ubuntu'] => 'radosgw-all-starter',
-  ['debian'] => 'radosgw',
-  'default' => 'ceph-radosgw'
-)
+case node['platform']
+  when 'ubuntu'
+    default['ceph']['radosgw']['service_name']  = 'radosgw-all-starter'
+  when 'debian'
+    default['ceph']['radosgw']['service_name']  = 'radosgw'
+  else
+    default['ceph']['radosgw']['service_name']  = 'ceph-radosgw'
+end
 
 case node['platform_family']
   when 'debian'

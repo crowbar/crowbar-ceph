@@ -64,12 +64,12 @@ class CephService < ServiceObject
 
   def proposal_dependencies(role)
     answer = []
-    if role.default_attributes[@bc_name]["keystone_instance"]
+    radosgw_nodes  = role.override_attributes[@bc_name]["elements"]["ceph-radosgw"] || []
+    if (role.default_attributes[@bc_name]["keystone_instance"] && !radosgw_nodes.empty?)
       answer << { "barclamp" => "keystone", "inst" => role.default_attributes[@bc_name]["keystone_instance"] }
     end
     answer
   end
-
 
   def create_proposal
     @logger.debug("Ceph create_proposal: entering")
@@ -172,6 +172,14 @@ class CephService < ServiceObject
       unless osd_nodes.include? n.name
         validation_error "The ceph-osd role cannot be removed from a node '#{n.name}'"
       end
+    end
+
+    unless proposal["deployment"]["ceph"]["elements"]["ceph-radosgw"].empty?
+      ProposalObject.find_proposals("swift").each {|p|
+        if (p.status == "ready") || (p.status == "pending")
+          validation_error("Swift is already deployed. Only one of Ceph with RadosGW and Swift can be deployed at any time.")
+        end
+      }
     end
 
     super

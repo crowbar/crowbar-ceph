@@ -12,38 +12,33 @@ file "/var/log/ceph/radosgw.log" do
   group node[:apache][:group]
 end
 
-# FIXME the check for done file should not be needed: let chef run everything all the time
-if !::File.exist?("/var/lib/ceph/radosgw/ceph-radosgw.#{hostname}/done")
+directory "/var/run/ceph-radosgw" do
+  owner node[:apache][:user]
+  group node[:apache][:group]
+  mode "0755"
+  action :create
+end
 
-  include_recipe "ceph::radosgw_apache2"
+include_recipe "ceph::radosgw_apache2"
 
-  ceph_client 'radosgw' do
-    caps('mon' => 'allow rw', 'osd' => 'allow rwx')
-    group node[:apache][:group]
-  end
+ceph_client 'radosgw' do
+  caps('mon' => 'allow rw', 'osd' => 'allow rwx')
+  group node[:apache][:group]
+end
 
-  # currently, after ceph_client above, caps are visible in 'ceph auth list', but not in 'ceph-authtool -l /etc/ceph/ceph.client.radosgw.#{hostname}.keyring'
-  # FIXME check if this is really a problem and the extra call of ceph-authtool is needed
-  execute "add key capabilities" do
-    command "ceph-authtool -n client.radosgw.#{hostname} /etc/ceph/ceph.client.radosgw.#{hostname}.keyring --cap osd 'allow rwx' --cap mon 'allow rw'"
-  end
+directory "/var/lib/ceph/radosgw/ceph-radosgw.#{hostname}" do
+  recursive true
+end
 
-  directory "/var/lib/ceph/radosgw/ceph-radosgw.#{hostname}" do
-    recursive true
-  end
+file "/var/lib/ceph/radosgw/ceph-radosgw.#{hostname}/done" do
+  action :create
+end
 
-  file "/var/lib/ceph/radosgw/ceph-radosgw.#{hostname}/done" do
-    action :create
-  end
-
-  service 'radosgw' do
-    service_name node['ceph']['radosgw']['service_name']
-    supports :restart => true
-    action [:enable, :start]
-    subscribes :restart, "template[/etc/ceph/ceph.conf]"
-  end
-else
-  Log.info('Rados Gateway already deployed')
+service 'radosgw' do
+  service_name node['ceph']['radosgw']['service_name']
+  supports :restart => true
+  action [:enable, :start]
+  subscribes :restart, "template[/etc/ceph/ceph.conf]"
 end
 
 # check if keystone is deployed (not a requirement for ceph)

@@ -36,6 +36,13 @@ packages.each do |pkg|
   end
 end
 
+if node[:platform] == "suse"
+  bash "Set MPM apache value" do
+    code 'sed -i s/APACHE_MPM.*/APACHE_MPM="worker"/ /etc/sysconfig/apache2'
+    not_if "grep -q 'APACHE_MPM=\"worker\"' /etc/sysconfig/apache2"
+  end
+end
+
 include_recipe 'apache2'
 
 apache_module 'fastcgi' do

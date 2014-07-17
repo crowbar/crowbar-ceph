@@ -1,4 +1,4 @@
-FastCgiExternalServer <%= node['ceph']['radosgw']['path'] %>/s3gw.fcgi -socket /var/run/ceph/radosgw.<%= node['hostname'] %>
+FastCgiExternalServer <%= node['ceph']['radosgw']['path'] %>/s3gw.fcgi -socket /var/run/ceph-radosgw/radosgw.<%= node['hostname'] %>
 
 <VirtualHost <%= node['ceph']['radosgw']['rgw_addr'] %>>
   ServerName <%= node['hostname'] %>
