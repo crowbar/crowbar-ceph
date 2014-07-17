@@ -23,7 +23,8 @@
             },
             "monitor-secret": { "type": "str", "required": true },
             "admin-secret": { "type": "str", "required": true },
-            "clustername": { "type": "str", "required": true }
+            "clustername": { "type": "str", "required": true },
+            "keystone_instance": { "type": "str", "required": true }
           }
         }
       }

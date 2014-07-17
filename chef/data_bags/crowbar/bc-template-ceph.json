@@ -10,14 +10,15 @@
       },
       "monitor-secret": "",
       "admin-secret": "",
-      "clustername": "ceph"
+      "clustername": "ceph",
+      "keystone_instance": "none"
     }
   },
   "deployment": {
     "ceph": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 11,
+      "schema-revision": 12,
       "element_states": {
         "ceph-mon": [ "readying", "ready", "applying" ],
         "ceph-osd": [ "readying", "ready", "applying" ],

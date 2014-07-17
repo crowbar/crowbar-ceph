@@ -45,3 +45,8 @@ if !::File.exist?("/var/lib/ceph/radosgw/ceph-radosgw.#{hostname}/done")
 else
   Log.info('Rados Gateway already deployed')
 end
+
+# check if keystone is deployed (not a requirement for ceph)
+if node[:ceph][:keystone_instance]
+  include_recipe "ceph::radosgw_keystone"
+end

@@ -62,6 +62,15 @@ class CephService < ServiceObject
     end
   end
 
+  def proposal_dependencies(role)
+    answer = []
+    if role.default_attributes[@bc_name]["keystone_instance"]
+      answer << { "barclamp" => "keystone", "inst" => role.default_attributes[@bc_name]["keystone_instance"] }
+    end
+    answer
+  end
+
+
   def create_proposal
     @logger.debug("Ceph create_proposal: entering")
     base = super
@@ -69,6 +78,8 @@ class CephService < ServiceObject
     if base["attributes"]["ceph"]["config"]["fsid"].empty?
       base["attributes"]["ceph"]["config"]["fsid"] = generate_uuid
     end
+
+    base["attributes"][@bc_name]["keystone_instance"] = find_dep_proposal("keystone", true)
 
     nodes        = NodeObject.all
     nodes.delete_if { |n| n.nil? or n.admin? }
