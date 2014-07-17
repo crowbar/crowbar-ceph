@@ -25,6 +25,12 @@
         public network = <%= @public_network %>
         cluster network = <%= @cluster_network %>
 
+<% if (! node['ceph']['config']['global'].nil?) -%>
+  <% node['ceph']['config']['global'].each do |k, v| %>
+  <%= k %> = <%= v %>
+  <% end %>
+<% end -%>
+
 ; monitors
 ;  You need at least one.  You need at least three if you want to
 ;  tolerate any node failures.  Always create an odd number.
@@ -52,6 +58,11 @@
     ;debug mon = 20
     ;debug paxos = 20
     ;debug auth = 20
+<% if (! node['ceph']['config']['mon'].nil?) -%>
+  <% node['ceph']['config']['mon'].each do |k, v| %>
+  <%= k %> = <%= v %>
+  <% end %>
+<% end -%>
 
 ; mds
 ;  You need at least one.  Define two to get a standby.
@@ -106,23 +117,8 @@
         ; for other filesystems use 'osd mkfs options $fstype'
     ; osd mkfs options btrfs =
 
-<% if (! node['ceph']['config']['global'].nil?) -%>
-  <% node['ceph']['config']['global'].each do |k, v| %>
-  <%= k %> = <%= v %>
-  <% end %>
-
-<% end -%>
 <% if (! node['ceph']['config']['osd'].nil?) -%>
-[osd]
   <% node['ceph']['config']['osd'].each do |k, v| %>
   <%= k %> = <%= v %>
   <% end %>
-
-<% end -%>
-<% if (! node['ceph']['config']['mon'].nil?) -%>
-[mon]
-  <% node['ceph']['config']['mon'].each do |k, v| %>
-  <%= k %> = <%= v %>
-  <% end %>
-
 <% end -%>
