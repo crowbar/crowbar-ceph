@@ -25,6 +25,14 @@
         public network = <%= @public_network %>
         cluster network = <%= @cluster_network %>
 
+        ; If you are using for example the RADOS Gateway and want to have your newly created
+        ; pools a higher replication level, you can set a default
+        ;osd pool default size = 3
+
+        ; You can also specify a CRUSH rule for new pools
+        ; Wiki: http://ceph.newdream.net/wiki/Custom_data_placement_with_CRUSH
+        ;osd pool default crush rule = 0
+
 <% if (! node['ceph']['config']['global'].nil?) -%>
   <% node['ceph']['config']['global'].each do |k, v| %>
   <%= k %> = <%= v %>
@@ -36,14 +44,6 @@
 ;  tolerate any node failures.  Always create an odd number.
 [mon]
     mon data = /var/lib/ceph/mon/ceph-$id
-
-        ; If you are using for example the RADOS Gateway and want to have your newly created
-        ; pools a higher replication level, you can set a default
-        ;osd pool default size = 3
-
-        ; You can also specify a CRUSH rule for new pools
-        ; Wiki: http://ceph.newdream.net/wiki/Custom_data_placement_with_CRUSH
-        ;osd pool default crush rule = 0
 
         ; Timing is critical for monitors, but if you want to allow the clocks to drift a
         ; bit more, you can specify the max drift.
