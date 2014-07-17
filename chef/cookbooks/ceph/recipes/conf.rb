@@ -1,6 +1,7 @@
 raise "fsid must be set in config" if node["ceph"]["config"]['fsid'].nil?
 
 mon_nodes = get_mon_nodes
+osd_nodes = get_osd_nodes
 mon_addresses = get_mon_addresses
 
 mon_init = []
@@ -20,6 +21,7 @@ template '/etc/ceph/ceph.conf' do
   variables(
     :mon_initial => mon_init,
     :mon_addresses => mon_addresses,
+    :osd_nodes_count => osd_nodes.length,
     :public_network => node["ceph"]["config"]["public-network"],
     :cluster_network => node["ceph"]["config"]["cluster-network"]
   )
