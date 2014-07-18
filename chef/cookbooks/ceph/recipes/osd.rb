@@ -110,7 +110,7 @@ else
           Log.info("osd: osd_device #{osd_device} has already been setup.")
           next
         end
-        create_cmd = "ceph-disk prepare --zap #{osd_device['device']}"
+        create_cmd = "ceph-disk prepare --cluster #{cluster} --zap-disk #{osd_device['device']}"
 
         if %w(redhat centos).include? node.platform
           # redhat has buggy udev so we have to use workaround from ceph
