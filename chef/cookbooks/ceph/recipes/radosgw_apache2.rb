@@ -36,14 +36,17 @@ packages.each do |pkg|
   end
 end
 
-if node[:platform] == "suse"
-  bash "Set MPM apache value" do
-    code 'sed -i s/APACHE_MPM.*/APACHE_MPM="worker"/ /etc/sysconfig/apache2'
-    not_if "grep -q 'APACHE_MPM=\"worker\"' /etc/sysconfig/apache2"
-  end
-end
-
 include_recipe 'apache2'
+
+crowbar_defined_ports = node[:apache][:listen_ports_crowbar] || {}
+crowbar_defined_ports["ceph"] = [ node['ceph']['radosgw']['rgw_port'] ]
+
+node[:apache][:listen_ports_crowbar] = crowbar_defined_ports
+node.save
+
+# Override what the apache2 cookbook does since it enforces the ports
+resource = resources(:template => "#{node[:apache][:dir]}/ports.conf")
+resource.variables({:apache_listen_ports => crowbar_defined_ports.values.flatten })
 
 apache_module 'fastcgi' do
   conf true
@@ -72,4 +75,12 @@ template "#{node['ceph']['radosgw']['path']}/s3gw.fcgi" do
   variables(
     :ceph_rgw_client => "client.radosgw.#{node['hostname']}"
   )
+end
+
+if node[:platform] == "suse"
+  bash "Set MPM apache value" do
+    code 'sed -i s/^[[:space:]]*APACHE_MPM=.*/APACHE_MPM=\"worker\"/ /etc/sysconfig/apache2'
+    not_if 'grep -q "^[[:space:]]*APACHE_MPM=\"worker\"" /etc/sysconfig/apache2'
+    notifies :restart, resources(:service => "apache2")
+  end
 end

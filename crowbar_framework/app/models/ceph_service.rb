@@ -64,6 +64,7 @@ class CephService < ServiceObject
 
   def proposal_dependencies(role)
     answer = []
+    # keystone is not hard requirement, but once ceph-radosgw+keystone is deployed, warn about keystone removal
     radosgw_nodes  = role.override_attributes[@bc_name]["elements"]["ceph-radosgw"] || []
     if (role.default_attributes[@bc_name]["keystone_instance"] && !radosgw_nodes.empty?)
       answer << { "barclamp" => "keystone", "inst" => role.default_attributes[@bc_name]["keystone_instance"] }

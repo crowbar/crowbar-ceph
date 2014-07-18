@@ -17,13 +17,16 @@
 # limitations under the License.
 #
 
-default['ceph']['radosgw']['rgw_addr'] = '*:80'
+default['ceph']['radosgw']['rgw_addr'] = '*'
+default['ceph']['radosgw']['rgw_port'] = '8080'
 
 default["ceph"]["radosgw"]["path"] = "/var/www"
 
 if node['platform'] == "suse"
   default["ceph"]["radosgw"]["path"] = "/srv/www/ceph-radosgw"
 end
+
+default['ceph']['radosgw']['nss_directory'] = "/var/lib/ceph/nss"
 
 case node['platform']
   when 'ubuntu'
