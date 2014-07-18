@@ -25,19 +25,33 @@
         public network = <%= @public_network %>
         cluster network = <%= @cluster_network %>
 
+        osd pool default size = <%= [@osd_nodes_count, 3].min %>
+        # Ensure you have a realistic number of placement groups. We recommend
+        # approximately 100 per OSD. E.g., total number of OSDs multiplied by 100
+        # divided by the number of replicas (i.e., osd pool default size). So for
+        # 10 OSDs and osd pool default size = 4, we'd recommend approximately
+        # (100 * 10) / 4 = 250.
+        osd pool default pg num = <%= (@osd_nodes_count * 10) / [@osd_nodes_count, 3].min %>
+        osd pool default pgp num = <%= (@osd_nodes_count * 10) / [@osd_nodes_count, 3].min %>
+
+        # Choose a reasonable crush leaf type.
+        # 0 for a 1-node cluster.
+        # 1 for a multi node cluster in a single rack
+        # 2 for a multi node, multi chassis cluster with multiple hosts in a chassis
+        # 3 for a multi node cluster with hosts across racks, etc.
+        osd crush chooseleaf type = <%= @osd_nodes_count > 1 ? 1 : 0 %>
+
+<% if (! node['ceph']['config']['global'].nil?) -%>
+  <% node['ceph']['config']['global'].each do |k, v| %>
+  <%= k %> = <%= v %>
+  <% end %>
+<% end -%>
+
 ; monitors
 ;  You need at least one.  You need at least three if you want to
 ;  tolerate any node failures.  Always create an odd number.
 [mon]
     mon data = /var/lib/ceph/mon/ceph-$id
-
-        ; If you are using for example the RADOS Gateway and want to have your newly created
-        ; pools a higher replication level, you can set a default
-        ;osd pool default size = 3
-
-        ; You can also specify a CRUSH rule for new pools
-        ; Wiki: http://ceph.newdream.net/wiki/Custom_data_placement_with_CRUSH
-        ;osd pool default crush rule = 0
 
         ; Timing is critical for monitors, but if you want to allow the clocks to drift a
         ; bit more, you can specify the max drift.
@@ -52,6 +66,11 @@
     ;debug mon = 20
     ;debug paxos = 20
     ;debug auth = 20
+<% if (! node['ceph']['config']['mon'].nil?) -%>
+  <% node['ceph']['config']['mon'].each do |k, v| %>
+  <%= k %> = <%= v %>
+  <% end %>
+<% end -%>
 
 ; mds
 ;  You need at least one.  Define two to get a standby.
@@ -106,23 +125,8 @@
         ; for other filesystems use 'osd mkfs options $fstype'
     ; osd mkfs options btrfs =
 
-<% if (! node['ceph']['config']['global'].nil?) -%>
-  <% node['ceph']['config']['global'].each do |k, v| %>
-  <%= k %> = <%= v %>
-  <% end %>
-
-<% end -%>
 <% if (! node['ceph']['config']['osd'].nil?) -%>
-[osd]
   <% node['ceph']['config']['osd'].each do |k, v| %>
   <%= k %> = <%= v %>
   <% end %>
-
-<% end -%>
-<% if (! node['ceph']['config']['mon'].nil?) -%>
-[mon]
-  <% node['ceph']['config']['mon'].each do |k, v| %>
-  <%= k %> = <%= v %>
-  <% end %>
-
 <% end -%>
