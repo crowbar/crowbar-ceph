@@ -105,17 +105,19 @@ class CephService < ServiceObject
       net_svc.allocate_ip "default", "storage", "host", n
     end
 
-    # Save net info in attributes
-    node = NodeObject.find_node_by_name all_nodes[0]
-    admin_net = node.get_network_by_type("admin")
-    cluster_net = node.get_network_by_type("storage")
+    # Save net info in attributes if we're applying
+    unless all_nodes.empty?
+      node = NodeObject.find_node_by_name all_nodes[0]
+      admin_net = node.get_network_by_type("admin")
+      cluster_net = node.get_network_by_type("storage")
 
-    role.default_attributes["ceph"]["config"]["public-network"] =
-      "#{admin_net['subnet']}/#{mask_to_bits(admin_net['netmask'])}"
-    role.default_attributes["ceph"]["config"]["cluster-network"] =
-      "#{cluster_net['subnet']}/#{mask_to_bits(cluster_net['netmask'])}"
+      role.default_attributes["ceph"]["config"]["public-network"] =
+        "#{admin_net['subnet']}/#{mask_to_bits(admin_net['netmask'])}"
+      role.default_attributes["ceph"]["config"]["cluster-network"] =
+        "#{cluster_net['subnet']}/#{mask_to_bits(cluster_net['netmask'])}"
 
-    role.save
+      role.save
+    end
 
     # electing master ceph
     unless monitors.empty?
