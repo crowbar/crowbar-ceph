@@ -43,9 +43,9 @@
         osd crush chooseleaf type = <%= @osd_nodes_count > 1 ? 1 : 0 %>
 
 <% if (! node['ceph']['config']['global'].nil?) -%>
-  <% node['ceph']['config']['global'].each do |k, v| %>
+  <% node['ceph']['config']['global'].each do |k, v| -%>
   <%= k %> = <%= v %>
-  <% end %>
+  <% end -%>
 <% end -%>
 
 ; monitors
@@ -68,9 +68,9 @@
     ;debug paxos = 20
     ;debug auth = 20
 <% if (! node['ceph']['config']['mon'].nil?) -%>
-  <% node['ceph']['config']['mon'].each do |k, v| %>
+  <% node['ceph']['config']['mon'].each do |k, v| -%>
   <%= k %> = <%= v %>
-  <% end %>
+  <% end -%>
 <% end -%>
 
 ; mds
@@ -127,9 +127,9 @@
     ; osd mkfs options btrfs =
 
 <% if (! node['ceph']['config']['osd'].nil?) -%>
-  <% node['ceph']['config']['osd'].each do |k, v| %>
+  <% node['ceph']['config']['osd'].each do |k, v| -%>
   <%= k %> = <%= v %>
-  <% end %>
+  <% end -%>
 <% end -%>
 
 <% if (@is_rgw) -%>
