@@ -43,8 +43,12 @@ end
 
 cinder_controller = search(:node, "roles:cinder-controller")
 if cinder_controller.length > 0
-  cinder_user = cinder_controller[0][:cinder][:volume][:rbd][:user]
-  cinder_pool = cinder_controller[0][:cinder][:volume][:rbd][:pool]
+  cinder_pools = []
+  cinder_controller[0][:cinder][:volumes].each do |volume|
+    next unless (volume['backend_driver'] == "rbd") && volume['rbd']['use_crowbar']
+    cinder_pools << volume[:rbd][:pool]
+  end
+
   nova_uuid = node["ceph"]["config"]["fsid"]
   nova_user = 'nova'
 
@@ -60,10 +64,12 @@ if cinder_controller.length > 0
   ruby_block "save nova key in node attributes" do
     block do
     
+      allow_pools = cinder_pools.map{|p| "allow rwx pool=#{p}"}.join(", ")
+
       client_key = %x[
         ceph \
           auth get-or-create-key client.'#{nova_user}' mon 'allow r' \
-         osd 'allow class-read object_prefix rbd_children, allow rwx pool='#{cinder_pool}''
+         osd 'allow class-read object_prefix rbd_children, #{allow_pools}'
       ].tr("\n","")
       raise 'adding or getting nova client key failed' unless $?.exitstatus == 0
 
