@@ -107,7 +107,7 @@ class CephService < ServiceObject
 
     # Save net info in attributes if we're applying
     unless all_nodes.empty?
-      node = NodeObject.find_node_by_name all_nodes[0]
+      node = NodeObject.find_node_by_name osd_nodes[0]
       admin_net = node.get_network_by_type("admin")
       cluster_net = node.get_network_by_type("storage")
 
