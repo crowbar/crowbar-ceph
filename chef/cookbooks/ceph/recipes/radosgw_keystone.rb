@@ -3,6 +3,8 @@
 # Keystone itself needs to be configured to point to the Ceph Object Gateway as an object-storage endpoint:
 keystone_settings = KeystoneHelper.keystone_settings(node, @cookbook_name)
 
+crowbar_pacemaker_sync_mark "wait-radosgw_register"
+
 keystone_register "radosgw wakeup keystone" do
   protocol keystone_settings['protocol']
   host keystone_settings['internal_url_host']
@@ -37,7 +39,7 @@ end
 # --internalurl http://radosgw.example.com/swift/v1 --adminurl http://radosgw.example.com/swift/v1
 
 protocol        = "http"
-ha_enabled      = false
+ha_enabled      = node[:ceph][:ha][:radosgw][:enabled]
 
 admin_host = CrowbarHelper.get_host_for_admin_url(node, ha_enabled)
 public_host = CrowbarHelper.get_host_for_public_url(node, protocol == "https", ha_enabled)
@@ -56,6 +58,8 @@ keystone_register "register radosgw endpoint" do
     endpoint_internalURL "#{protocol}://#{admin_host}:#{rgw_port}/swift/v1"
    action :add_endpoint_template
 end
+
+crowbar_pacemaker_sync_mark "create-radosgw_register"
 
 # Convert OpenSSL certificates that Keystone uses for creating the requests to the nss db format
 # See http://ceph.com/docs/master/radosgw/keystone/

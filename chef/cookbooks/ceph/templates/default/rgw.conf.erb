@@ -1,6 +1,6 @@
 FastCgiExternalServer <%= node['ceph']['radosgw']['path'] %>/s3gw.fcgi -socket /var/run/ceph-radosgw/radosgw.<%= node['hostname'] %>
 
-<VirtualHost <%= node['ceph']['radosgw']['rgw_addr'] %>:<%= node['ceph']['radosgw']['rgw_port'] %>>
+<VirtualHost <%= node['ceph']['radosgw']['rgw_addr'] %>:<%= @params[:port] %>>
   ServerName <%= node['hostname'] %>
 <% if !node["crowbar"]["display"].nil? && node["crowbar"]["display"]["alias"] -%>
   ServerAlias <%= node["crowbar"]["display"]["alias"] %>

@@ -37,9 +37,14 @@ packages.each do |pkg|
 end
 
 include_recipe 'apache2'
+# This is required for the OCF resource agent
+include_recipe "apache2::mod_status"
+
+rgw_port        = node['ceph']['radosgw']['rgw_port']
+rgw_port        = node['ceph']['ha']['ports']['radosgw_plain'] if node['ceph']['ha']['radosgw']['enabled']
 
 node.normal[:apache][:listen_ports_crowbar] ||= {}
-node.normal[:apache][:listen_ports_crowbar][:ceph] = [ node['ceph']['radosgw']['rgw_port'] ]
+node.normal[:apache][:listen_ports_crowbar][:ceph] = [ rgw_port ]
 node.save
 
 # Override what the apache2 cookbook does since it enforces the ports
@@ -56,6 +61,7 @@ end
 
 web_app 'rgw' do
   template 'rgw.conf.erb'
+  port rgw_port
 end
 
 directory node['ceph']['radosgw']['path'] do

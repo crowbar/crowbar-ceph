@@ -8,3 +8,4 @@ version				"0.1.0"
 
 depends                 "apache2"
 depends                 "keystone"
+depends                 "crowbar-pacemaker"

@@ -47,3 +47,6 @@ case node['platform_family']
   else
     default['ceph']['radosgw']['packages'] = []
 end
+
+default['ceph']['ha']['radosgw']['enabled'] = false
+default['ceph']['ha']['ports']['radosgw_plain'] = 5590

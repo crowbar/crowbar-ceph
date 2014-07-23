@@ -112,17 +112,16 @@ class CephService < ServiceObject
     @logger.debug("ceph apply_role_pre_chef_call: entering #{all_nodes.inspect}")
     monitors = role.override_attributes["ceph"]["elements"]["ceph-mon"] || []
     osd_nodes = role.override_attributes["ceph"]["elements"]["ceph-osd"] || []
-    radosgw_nodes = role.override_attributes["ceph"]["elements"]["ceph-radosgw"] || []
 
     @logger.debug("monitors: #{monitors.inspect}")
     @logger.debug("osd_nodes: #{osd_nodes.inspect}")
 
-    server_elements, radosgw_nodes, ha_enabled = role_expand_elements(role, "ceph-radosgw")
+    radosgw_elements, radosgw_nodes, ha_enabled = role_expand_elements(role, "ceph-radosgw")
 
     vip_networks = ["admin", "public"]
 
     dirty = false
-    dirty = prepare_role_for_ha_with_haproxy(role, ["ceph-radosgw", "ha", "enabled"], ha_enabled, server_elements, vip_networks)
+    dirty = prepare_role_for_ha_with_haproxy(role, ["ceph", "ha", "radosgw", "enabled"], ha_enabled, radosgw_elements, vip_networks)
     role.save if dirty
 
     # Make sure to use the storage network
@@ -138,32 +137,8 @@ class CephService < ServiceObject
 
     # No specific need to call sync dns here, as the cookbook doesn't require
     # the VIP of the cluster to be setup
-    allocate_virtual_ips_for_any_cluster_in_networks(server_elements, vip_networks)
+    allocate_virtual_ips_for_any_cluster_in_networks(radosgw_elements, vip_networks)
 
-    if ha_enabled
-      # This assumes that there can only be one cluster assigned to the
-      # ceph-radosgw role (otherwise, we'd need to check to which
-      # cluster each node belongs to create the link).
-      # Good news, the assumption is correct :-)
-      public_db = ProposalObject.find_data_bag_item "crowbar/public_network"
-      admin_db = ProposalObject.find_data_bag_item "crowbar/admin_network"
-
-      hostname = nil
-      server_elements.each do |element|
-        if is_cluster? element
-          hostname = PacemakerServiceObject.cluster_vhostname_from_element(element)
-          break
-        end
-      end
-
-      raise "Cannot find hostname for VIP of cluster" if hostname.nil?
-
-      public_server_ip = public_db["allocated_by_name"]["#{hostname}"]["address"]
-      admin_server_ip = admin_db["allocated_by_name"]["#{hostname}"]["address"]
-    end
-
-
->>>>>>> initial HA support (crowbar part, mostly copy from nova_dashboard)
     # Save net info in attributes if we're applying
     unless all_nodes.empty?
       node = NodeObject.find_node_by_name osd_nodes[0]
