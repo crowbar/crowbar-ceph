@@ -1,0 +1,29 @@
+FastCgiExternalServer <%= node['ceph']['radosgw']['path'] %>/s3gw.fcgi -socket /var/run/ceph-radosgw/radosgw.<%= node['hostname'] %>
+
+<VirtualHost <%= node['ceph']['radosgw']['rgw_addr'] %>:<%= node['ceph']['radosgw']['rgw_port'] %>>
+  ServerName <%= node['hostname'] %>
+<% if node["crowbar"]["display"]["alias"] -%>
+  ServerAlias <%= node["crowbar"]["display"]["alias"] %>
+<% end -%>
+  DocumentRoot <%= node['ceph']['radosgw']['path'] %>
+
+  RewriteEngine On
+  RewriteRule ^/([a-zA-Z0-9-_.]*)([/]?.*) /s3gw.fcgi?page=$1&params=$2&%{QUERY_STRING} [E=HTTP_AUTHORIZATION:%{HTTP:Authorization},L]
+
+  <IfModule mod_fastcgi.c>
+    <Directory <%= node['ceph']['radosgw']['path'] %>>
+      Options +ExecCGI
+      AllowOverride All
+      SetHandler fastcgi-script
+      Order allow,deny
+      Allow from all
+      AuthBasicAuthoritative Off
+    </Directory>
+  </IfModule>
+
+  AllowEncodedSlashes On
+
+  ErrorLog <%= node['apache']['log_dir'] %>/rgw-error_log
+  CustomLog <%= node['apache']['log_dir'] %>/rgw-access_log proxy_combined
+  ServerSignature Off
+</VirtualHost>

@@ -53,9 +53,23 @@ class CephService < ServiceObject
         "ceph-osd" => {
           "unique" => false,
           "count" => 8
+        },
+        "ceph-radosgw" => {
+          "unique" => false,
+          "count" => 1
         }
       }
     end
+  end
+
+  def proposal_dependencies(role)
+    answer = []
+    # keystone is not hard requirement, but once ceph-radosgw+keystone is deployed, warn about keystone removal
+    radosgw_nodes  = role.override_attributes[@bc_name]["elements"]["ceph-radosgw"] || []
+    if (role.default_attributes[@bc_name]["keystone_instance"] && !radosgw_nodes.empty?)
+      answer << { "barclamp" => "keystone", "inst" => role.default_attributes[@bc_name]["keystone_instance"] }
+    end
+    answer
   end
 
   def create_proposal
@@ -65,6 +79,8 @@ class CephService < ServiceObject
     if base["attributes"]["ceph"]["config"]["fsid"].empty?
       base["attributes"]["ceph"]["config"]["fsid"] = generate_uuid
     end
+
+    base["attributes"][@bc_name]["keystone_instance"] = find_dep_proposal("keystone", true)
 
     nodes        = NodeObject.all
     nodes.delete_if { |n| n.nil? or n.admin? }
@@ -84,6 +100,7 @@ class CephService < ServiceObject
     base["deployment"]["ceph"]["elements"] = {
         "ceph-mon" => controller_nodes.map { |x| x.name },
         "ceph-osd" => storage_nodes.map{ |x| x.name },
+        "ceph-radosgw" => [ controller_nodes.first.name ]
     } unless storage_nodes.nil?
 
     @logger.debug("Ceph create_proposal: exiting")
@@ -156,6 +173,14 @@ class CephService < ServiceObject
       unless osd_nodes.include? n.name
         validation_error "The ceph-osd role cannot be removed from a node '#{n.name}'"
       end
+    end
+
+    unless proposal["deployment"]["ceph"]["elements"]["ceph-radosgw"].empty?
+      ProposalObject.find_proposals("swift").each {|p|
+        if (p.status == "ready") || (p.status == "pending")
+          validation_error("Swift is already deployed. Only one of Ceph with RadosGW and Swift can be deployed at any time.")
+        end
+      }
     end
 
     super

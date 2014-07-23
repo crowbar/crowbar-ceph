@@ -130,3 +130,23 @@
   <%= k %> = <%= v %>
   <% end %>
 <% end -%>
+
+<% if (@is_rgw) -%>
+[client.radosgw.<%= node['hostname'] %>]
+  host = <%= node['hostname'] %>
+  rgw socket path = /var/run/ceph-radosgw/radosgw.<%= node['hostname'] %>
+  admin socket = /var/run/ceph-radosgw/ceph-client.radosgw.<%= node['hostname'] %>.asok
+  pid file = /var/run/ceph-radosgw/$name.pid
+  keyring = /etc/ceph/ceph.client.radosgw.<%= node['hostname'] %>.keyring
+  log file = /var/log/ceph/radosgw.log
+  <% if node[:ceph][:keystone_instance] -%>
+  rgw keystone url =  <%= @keystone_settings['internal_auth_url'] %>
+  rgw keystone admin token = <%= @keystone_settings['admin_token'] %>
+  nss db path = <%= node['ceph']['radosgw']['nss_directory'] %>
+  <% end -%>
+<% if (! node['ceph']['config']['rgw'].nil?) -%>
+  <% node['ceph']['config']['rgw'].sort.each do |k, v| -%>
+  <%= k %> = <%= v %>
+  <% end -%>
+<% end -%>
+<% end -%>

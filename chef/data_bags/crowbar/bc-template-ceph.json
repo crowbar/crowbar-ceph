@@ -10,26 +10,30 @@
       },
       "monitor-secret": "",
       "admin-secret": "",
-      "clustername": "ceph"
+      "clustername": "ceph",
+      "keystone_instance": "none"
     }
   },
   "deployment": {
     "ceph": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 10,
+      "schema-revision": 12,
       "element_states": {
         "ceph-mon": [ "readying", "ready", "applying" ],
-        "ceph-osd": [ "readying", "ready", "applying" ]
+        "ceph-osd": [ "readying", "ready", "applying" ],
+        "ceph-radosgw": [ "readying", "ready", "applying" ]
       },
       "elements": {},
       "element_order": [
         [ "ceph-mon" ],
-        [ "ceph-osd" ]
+        [ "ceph-osd" ],
+        [ "ceph-radosgw" ]
       ],
       "element_run_list_order": {
         "ceph-mon": 80,
-        "ceph-osd": 81
+        "ceph-osd": 81,
+        "ceph-radosgw": 82
       },
       "config": {
         "environment": "ceph-base-config",
