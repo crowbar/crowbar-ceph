@@ -38,15 +38,13 @@ end
 
 include_recipe 'apache2'
 
-crowbar_defined_ports = node[:apache][:listen_ports_crowbar] || {}
-crowbar_defined_ports["ceph"] = [ node['ceph']['radosgw']['rgw_port'] ]
-
-node[:apache][:listen_ports_crowbar] = crowbar_defined_ports
+node.normal[:apache][:listen_ports_crowbar] ||= {}
+node.normal[:apache][:listen_ports_crowbar][:ceph] = [ node['ceph']['radosgw']['rgw_port'] ]
 node.save
 
 # Override what the apache2 cookbook does since it enforces the ports
 resource = resources(:template => "#{node[:apache][:dir]}/ports.conf")
-resource.variables({:apache_listen_ports => crowbar_defined_ports.values.flatten })
+resource.variables({:apache_listen_ports => node.normal[:apache][:listen_ports_crowbar].values.flatten})
 
 apache_module 'fastcgi' do
   conf true
