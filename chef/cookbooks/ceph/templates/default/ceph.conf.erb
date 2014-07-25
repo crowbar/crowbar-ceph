@@ -3,6 +3,7 @@
         auth cluster required = cephx
         auth service required = cephx
         auth client required = cephx
+        cephx require signatures = true
 
         ; allow ourselves to open a lot of files
         max open files = 131072
