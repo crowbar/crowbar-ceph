@@ -44,7 +44,7 @@ node.save
 
 # Override what the apache2 cookbook does since it enforces the ports
 resource = resources(:template => "#{node[:apache][:dir]}/ports.conf")
-resource.variables({:apache_listen_ports => node.normal[:apache][:listen_ports_crowbar].values.flatten.uniq})
+resource.variables({:apache_listen_ports => node.normal[:apache][:listen_ports_crowbar].values.flatten.uniq.sort})
 
 apache_module 'fastcgi' do
   conf true
