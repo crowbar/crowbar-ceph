@@ -111,6 +111,7 @@ class CephService < ServiceObject
     @logger.debug("ceph apply_role_pre_chef_call: entering #{all_nodes.inspect}")
     monitors = role.override_attributes["ceph"]["elements"]["ceph-mon"] || []
     osd_nodes = role.override_attributes["ceph"]["elements"]["ceph-osd"] || []
+    radosgw_nodes = role.override_attributes["ceph"]["elements"]["ceph-radosgw"] || []
 
     @logger.debug("monitors: #{monitors.inspect}")
     @logger.debug("osd_nodes: #{osd_nodes.inspect}")
@@ -120,6 +121,10 @@ class CephService < ServiceObject
 
     osd_nodes.each do |n|
       net_svc.allocate_ip "default", "storage", "host", n
+    end
+
+    radosgw_nodes.each do |n|
+      net_svc.allocate_ip "default", "public", "host", n
     end
 
     # Save net info in attributes if we're applying
