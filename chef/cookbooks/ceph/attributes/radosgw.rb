@@ -18,7 +18,7 @@
 #
 
 default['ceph']['radosgw']['rgw_addr'] = '*'
-default['ceph']['radosgw']['rgw_port'] = '8080'
+default['ceph']['radosgw']['rgw_port'] = 8080
 
 default["ceph"]["radosgw"]["path"] = "/var/www"
 
