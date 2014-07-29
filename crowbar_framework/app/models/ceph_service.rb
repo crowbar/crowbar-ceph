@@ -36,7 +36,7 @@ def mask_to_bits(mask)
   count
 end
 
-class CephService < ServiceObject
+class CephService < PacemakerServiceObject
 
   def initialize(thelogger)
     super(thelogger)

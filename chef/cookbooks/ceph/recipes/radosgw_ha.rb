@@ -21,9 +21,6 @@ haproxy_loadbalancer "ceph-radosgw" do
   action :nothing
 end.run_action(:create)
 
-# FIXME the rest (=pacemaker parts) should be only done when apache primitive does not exist yet
-# (might be created by other barclamp)
-
 # Wait for all nodes to reach this point so we know that all nodes will have
 # all the required packages installed before we create the pacemaker
 # resources
@@ -32,19 +29,11 @@ crowbar_pacemaker_sync_mark "sync-ceph-radosgw_before_ha"
 # Avoid races when creating pacemaker resources
 crowbar_pacemaker_sync_mark "wait-ceph-radosgw_ha_resources"
 
-agent_name = "ocf:heartbeat:apache"
-apache_op = {}
-apache_op["monitor"] = {}
-apache_op["monitor"]["interval"] = "10s"
-
-service_name = "apache"
+service_name = "ceph-radosgw"
 
 pacemaker_primitive service_name do
-  agent agent_name
-  params ({
-    "statusurl" => "http://127.0.0.1:#{node[:ceph][:radosgw][:ha][:ports][:plain]}/server-status"
-  })
-  op    apache_op
+  agent node[:ceph][:ha][:radosgw][:agent]
+  op    node[:ceph][:ha][:radosgw][:op]
   action :create
 end
 
@@ -53,8 +42,36 @@ pacemaker_clone "cl-#{service_name}" do
   action [ :create, :start ]
 end
 
+agent_name = "ocf:heartbeat:apache"
+apache_op = {}
+apache_op["monitor"] = {}
+apache_op["monitor"]["interval"] = "10s"
+
+service_name = "apache-ceph"
+
+if (::Kernel.system("crm resource list | grep -q apache")) && (!::Kernel.system("crm resource list | grep -q #{service_name}"))
+  Chef::Log.info("apache primitive exists, and was configured by someone else")
+else
+
+  pacemaker_primitive service_name do
+    agent agent_name
+    params ({
+      "statusurl" => "http://127.0.0.1:#{node[:ceph][:ha][:ports][:radosgw_plain]}/server-status"
+    })
+    op          apache_op
+    action      :create
+  end
+
+  pacemaker_clone "cl-#{service_name}" do
+    rsc service_name
+    action [ :create, :start ]
+  end
+
+  # Override service provider for apache2 resource defined in apache2 cookbook
+  resource = resources(:service => "apache2")
+  resource.provider(Chef::Provider::CrowbarPacemakerService)
+end
+
 crowbar_pacemaker_sync_mark "create-ceph-radosgw_ha_resources"
 
-# Override service provider for apache2 resource defined in apache2 cookbook
-resource = resources(:service => "apache2")
-resource.provider(Chef::Provider::CrowbarPacemakerService)
+
