@@ -200,6 +200,24 @@ class CephService < PacemakerServiceObject
       }
     end
 
+    # make sure that all nodes with radosgw role have the same other ceph roles
+    if is_cluster? radosgw_nodes.first
+      rgw_nodes         = PacemakerServiceObject.expand_nodes(radosgw_nodes.first)
+      additional_roles  = {}
+      rgw_nodes.each do |n|
+        additional_roles["osd"] = true if osd_nodes.include?(n)
+        additional_roles["mon"] = true if mon_nodes.include?(n)
+      end
+      rgw_nodes.each do |n|
+        if additional_roles["osd"] && !osd_nodes.include?(n)
+          validation_error("Nodes in cluster must have same roles: node #{n} is missing ceph-osd role.")
+        end
+        if additional_roles["mon"] && !mon_nodes.include?(n)
+          validation_error("Nodes in cluster must have same roles: node #{n} is missing ceph-mon role.")
+        end
+      end
+    end
+
     super
   end
 
