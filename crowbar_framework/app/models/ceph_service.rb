@@ -185,6 +185,8 @@ class CephService < PacemakerServiceObject
     validate_at_least_n_for_role proposal, "ceph-osd", 2
 
     osd_nodes = proposal["deployment"]["ceph"]["elements"]["ceph-osd"] || []
+    mon_nodes = proposal["deployment"]["ceph"]["elements"]["ceph-mon"] || []
+    radosgw_nodes = proposal["deployment"]["ceph"]["elements"]["ceph-radosgw"] || []
 
     NodeObject.find("roles:ceph-osd").each do |n|
       unless osd_nodes.include? n.name
@@ -200,7 +202,9 @@ class CephService < PacemakerServiceObject
       }
     end
 
-    # make sure that all nodes with radosgw role have the same other ceph roles
+    # Make sure that all nodes with radosgw role have the same other ceph roles:
+    # chef-client will first run on nodes with ceph-osd/ceph-mon and will execute the HA bits for radosgw,
+    # causing the sync between nodes to fail if the other cluster nodes don't have the same roles
     if is_cluster? radosgw_nodes.first
       rgw_nodes         = PacemakerServiceObject.expand_nodes(radosgw_nodes.first)
       additional_roles  = {}

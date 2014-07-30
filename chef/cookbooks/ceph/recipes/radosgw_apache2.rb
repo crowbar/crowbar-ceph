@@ -37,19 +37,22 @@ packages.each do |pkg|
 end
 
 include_recipe 'apache2'
-# This is required for the OCF resource agent
-include_recipe "apache2::mod_status"
 
+rgw_addr        = node['ceph']['radosgw']['rgw_addr']
 rgw_port        = node['ceph']['radosgw']['rgw_port']
-rgw_port        = node['ceph']['ha']['ports']['radosgw_plain'] if node['ceph']['ha']['radosgw']['enabled']
+
+if node['ceph']['ha']['radosgw']['enabled']
+  rgw_addr        = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
+  rgw_port        = node['ceph']['ha']['ports']['radosgw_plain']
+end
 
 node.normal[:apache][:listen_ports_crowbar] ||= {}
-node.normal[:apache][:listen_ports_crowbar][:ceph] = [ rgw_port ]
+node.normal[:apache][:listen_ports_crowbar][:ceph] = { :plain => [rgw_port] }
 node.save
 
 # Override what the apache2 cookbook does since it enforces the ports
 resource = resources(:template => "#{node[:apache][:dir]}/ports.conf")
-resource.variables({:apache_listen_ports => node.normal[:apache][:listen_ports_crowbar].values.flatten.uniq.sort})
+resource.variables({:apache_listen_ports => node.normal[:apache][:listen_ports_crowbar].values.map{ |p| p.values }.flatten.uniq.sort})
 
 apache_module 'fastcgi' do
   conf true
@@ -61,6 +64,7 @@ end
 
 web_app 'rgw' do
   template 'rgw.conf.erb'
+  host rgw_addr
   port rgw_port
 end
 

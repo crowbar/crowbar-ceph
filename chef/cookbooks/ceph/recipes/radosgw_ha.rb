@@ -42,36 +42,6 @@ pacemaker_clone "cl-#{service_name}" do
   action [ :create, :start ]
 end
 
-agent_name = "ocf:heartbeat:apache"
-apache_op = {}
-apache_op["monitor"] = {}
-apache_op["monitor"]["interval"] = "10s"
-
-service_name = "apache-ceph"
-
-if (::Kernel.system("crm resource list | grep -q apache")) && (!::Kernel.system("crm resource list | grep -q #{service_name}"))
-  Chef::Log.info("apache primitive exists, and was configured by someone else")
-else
-
-  pacemaker_primitive service_name do
-    agent agent_name
-    params ({
-      "statusurl" => "http://127.0.0.1:#{node[:ceph][:ha][:ports][:radosgw_plain]}/server-status"
-    })
-    op          apache_op
-    action      :create
-  end
-
-  pacemaker_clone "cl-#{service_name}" do
-    rsc service_name
-    action [ :create, :start ]
-  end
-
-  # Override service provider for apache2 resource defined in apache2 cookbook
-  resource = resources(:service => "apache2")
-  resource.provider(Chef::Provider::CrowbarPacemakerService)
-end
+include_recipe "crowbar-pacemaker::apache"
 
 crowbar_pacemaker_sync_mark "create-ceph-radosgw_ha_resources"
-
-
