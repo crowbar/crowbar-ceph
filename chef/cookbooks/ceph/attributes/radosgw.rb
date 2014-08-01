@@ -47,3 +47,8 @@ case node['platform_family']
   else
     default['ceph']['radosgw']['packages'] = []
 end
+
+default['ceph']['ha']['radosgw']['enabled'] = false
+default['ceph']['ha']['radosgw']['agent'] = "lsb:#{default['ceph']['radosgw']['service_name']}"
+default['ceph']['ha']['radosgw']['op']['monitor']['interval'] = '10s'
+default['ceph']['ha']['ports']['radosgw_plain'] = 5590

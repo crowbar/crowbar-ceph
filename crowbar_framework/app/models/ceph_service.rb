@@ -36,7 +36,7 @@ def mask_to_bits(mask)
   count
 end
 
-class CephService < ServiceObject
+class CephService < PacemakerServiceObject
 
   def initialize(thelogger)
     super(thelogger)
@@ -56,7 +56,8 @@ class CephService < ServiceObject
         },
         "ceph-radosgw" => {
           "unique" => false,
-          "count" => 1
+          "count" => 1,
+          "cluster" => true
         }
       }
     end
@@ -111,10 +112,17 @@ class CephService < ServiceObject
     @logger.debug("ceph apply_role_pre_chef_call: entering #{all_nodes.inspect}")
     monitors = role.override_attributes["ceph"]["elements"]["ceph-mon"] || []
     osd_nodes = role.override_attributes["ceph"]["elements"]["ceph-osd"] || []
-    radosgw_nodes = role.override_attributes["ceph"]["elements"]["ceph-radosgw"] || []
 
     @logger.debug("monitors: #{monitors.inspect}")
     @logger.debug("osd_nodes: #{osd_nodes.inspect}")
+
+    radosgw_elements, radosgw_nodes, ha_enabled = role_expand_elements(role, "ceph-radosgw")
+
+    vip_networks = ["admin", "public"]
+
+    dirty = false
+    dirty = prepare_role_for_ha_with_haproxy(role, ["ceph", "ha", "radosgw", "enabled"], ha_enabled, radosgw_elements, vip_networks)
+    role.save if dirty
 
     # Make sure to use the storage network
     net_svc = NetworkService.new @logger
@@ -126,6 +134,10 @@ class CephService < ServiceObject
     radosgw_nodes.each do |n|
       net_svc.allocate_ip "default", "public", "host", n
     end
+
+    # No specific need to call sync dns here, as the cookbook doesn't require
+    # the VIP of the cluster to be setup
+    allocate_virtual_ips_for_any_cluster_in_networks(radosgw_elements, vip_networks)
 
     # Save net info in attributes if we're applying
     unless all_nodes.empty?
@@ -173,6 +185,8 @@ class CephService < ServiceObject
     validate_at_least_n_for_role proposal, "ceph-osd", 2
 
     osd_nodes = proposal["deployment"]["ceph"]["elements"]["ceph-osd"] || []
+    mon_nodes = proposal["deployment"]["ceph"]["elements"]["ceph-mon"] || []
+    radosgw_nodes = proposal["deployment"]["ceph"]["elements"]["ceph-radosgw"] || []
 
     NodeObject.find("roles:ceph-osd").each do |n|
       unless osd_nodes.include? n.name
@@ -186,6 +200,26 @@ class CephService < ServiceObject
           validation_error("Swift is already deployed. Only one of Ceph with RadosGW and Swift can be deployed at any time.")
         end
       }
+    end
+
+    # Make sure that all nodes with radosgw role have the same other ceph roles:
+    # chef-client will first run on nodes with ceph-osd/ceph-mon and will execute the HA bits for radosgw,
+    # causing the sync between nodes to fail if the other cluster nodes don't have the same roles
+    if is_cluster? radosgw_nodes.first
+      rgw_nodes         = PacemakerServiceObject.expand_nodes(radosgw_nodes.first)
+      additional_roles  = {}
+      rgw_nodes.each do |n|
+        additional_roles["osd"] = true if osd_nodes.include?(n)
+        additional_roles["mon"] = true if mon_nodes.include?(n)
+      end
+      rgw_nodes.each do |n|
+        if additional_roles["osd"] && !osd_nodes.include?(n)
+          validation_error("Nodes in cluster must have same roles: node #{n} is missing ceph-osd role.")
+        end
+        if additional_roles["mon"] && !mon_nodes.include?(n)
+          validation_error("Nodes in cluster must have same roles: node #{n} is missing ceph-mon role.")
+        end
+      end
     end
 
     super

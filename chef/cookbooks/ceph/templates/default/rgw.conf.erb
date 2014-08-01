@@ -1,6 +1,6 @@
 FastCgiExternalServer <%= node['ceph']['radosgw']['path'] %>/s3gw.fcgi -socket /var/run/ceph-radosgw/radosgw.<%= node['hostname'] %>
 
-<VirtualHost <%= node['ceph']['radosgw']['rgw_addr'] %>:<%= node['ceph']['radosgw']['rgw_port'] %>>
+<VirtualHost <%= @params[:host] %>:<%= @params[:port] %>>
   ServerName <%= node['hostname'] %>
 <% if !node["crowbar"]["display"].nil? && node["crowbar"]["display"]["alias"] -%>
   ServerAlias <%= node["crowbar"]["display"]["alias"] %>
@@ -8,6 +8,7 @@ FastCgiExternalServer <%= node['ceph']['radosgw']['path'] %>/s3gw.fcgi -socket /
   DocumentRoot <%= node['ceph']['radosgw']['path'] %>
 
   RewriteEngine On
+  RewriteCond %{REQUEST_URI} !^/server-status
   RewriteRule ^/([a-zA-Z0-9-_.]*)([/]?.*) /s3gw.fcgi?page=$1&params=$2&%{QUERY_STRING} [E=HTTP_AUTHORIZATION:%{HTTP:Authorization},L]
 
   <IfModule mod_fastcgi.c>

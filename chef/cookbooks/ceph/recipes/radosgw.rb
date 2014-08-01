@@ -21,12 +21,16 @@ end
 
 include_recipe "ceph::radosgw_apache2"
 
+crowbar_pacemaker_sync_mark "wait-ceph_client_generate"
+
 ceph_client 'radosgw' do
   caps('mon' => 'allow rw', 'osd' => 'allow rwx')
   owner "root"
   group node[:apache][:group]
   mode 0640
 end
+
+crowbar_pacemaker_sync_mark "create-ceph_client_generate"
 
 directory "/var/lib/ceph/radosgw/ceph-radosgw.#{hostname}" do
   recursive true
@@ -49,4 +53,9 @@ service 'radosgw' do
   supports :restart => true
   action [:enable, :start]
   subscribes :restart, "template[/etc/ceph/ceph.conf]"
+end
+
+if node[:ceph][:ha][:radosgw][:enabled]
+  log "HA support for ceph-radosgw is enabled"
+  include_recipe "ceph::radosgw_ha"
 end
