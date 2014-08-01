@@ -4,3 +4,15 @@
 
   .panel-body
     = select_field :disk_mode, :collection => :diskmodes_for_ceph
+
+    %fieldset
+      %legend
+        = t(".ssl.header")
+
+      = boolean_field %w(ssl enabled), :collection => :ssl_protocols_for_radosgw, "data-sslprefix" => "ssl", "data-sslcert" => "/etc/apache2/ssl.crt/ceph-radosgw.crt", "data-sslkey" => "/etc/apache2/ssl.key/ceph-radosgw.key"
+
+      #ssl_container
+        = boolean_field %w(ssl generate_certs)
+        = string_field %w(ssl certfile)
+        = string_field %w(ssl keyfile)
+        = boolean_field %w(ssl insecure)

@@ -17,6 +17,15 @@
 
 module Barclamp
   module CephHelper
+    def ssl_protocols_for_radosgw(selected)
+      options_for_select(
+        [
+          ["HTTP", "false"],
+          ["HTTPS", "true"]
+        ],
+        selected.to_s
+      )
+    end
     def diskmodes_for_ceph(selected)
       options_for_select(
         [
