@@ -205,7 +205,7 @@ class CephService < PacemakerServiceObject
     # Make sure that all nodes with radosgw role have the same other ceph roles:
     # chef-client will first run on nodes with ceph-osd/ceph-mon and will execute the HA bits for radosgw,
     # causing the sync between nodes to fail if the other cluster nodes don't have the same roles
-    if is_cluster? radosgw_nodes.first
+    if !radosgw_nodes.empty? && is_cluster?(radosgw_nodes.first)
       rgw_nodes         = PacemakerServiceObject.expand_nodes(radosgw_nodes.first)
       additional_roles  = {}
       rgw_nodes.each do |n|
