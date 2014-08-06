@@ -52,6 +52,16 @@ if cinder_controller.length > 0
   nova_uuid = node["ceph"]["config"]["fsid"]
   nova_user = 'nova'
 
+  if nova_uuid.nil? || nova_uuid.empty?
+    mons = get_mon_nodes("ceph_admin-secret:*")
+    if mons.empty? then
+      Chef::Log.fatal("No ceph-mon found")
+      raise "No ceph-mon found"
+    end
+
+    nova_uuid = mons[0]["ceph"]["config"]["fsid"]
+  end
+
   allow_pools = cinder_pools.map{|p| "allow rwx pool=#{p}"}.join(", ")
   ceph_caps = { 'mon' => 'allow r', 'osd' => "allow class-read object_prefix rbd_children, #{allow_pools}" }
 
