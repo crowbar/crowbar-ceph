@@ -11,14 +11,21 @@
       "monitor-secret": "",
       "admin-secret": "",
       "clustername": "ceph",
-      "keystone_instance": "none"
+      "keystone_instance": "none",
+      "ssl": {
+          "enabled": false,
+          "certfile": "/etc/apache2/ssl.crt/ceph-radosgw.crt",
+          "keyfile": "/etc/apache2/ssl.key/ceph-radosgw.key",
+          "generate_certs": false,
+          "insecure": false
+      }
     }
   },
   "deployment": {
     "ceph": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 12,
+      "schema-revision": 13,
       "element_states": {
         "ceph-mon": [ "readying", "ready", "applying" ],
         "ceph-osd": [ "readying", "ready", "applying" ],

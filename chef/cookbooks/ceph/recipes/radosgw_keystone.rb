@@ -38,13 +38,18 @@ end
 # keystone endpoint-create --service-id <id> --publicurl http://radosgw.example.com/swift/v1 \
 # --internalurl http://radosgw.example.com/swift/v1 --adminurl http://radosgw.example.com/swift/v1
 
-protocol        = "http"
+if node[:ceph][:ssl][:enabled]
+  protocol      = "https"
+  port          = node['ceph']['radosgw']['rgw_port_ssl']
+else
+  protocol      = "http"
+  port          = node['ceph']['radosgw']['rgw_port']
+end
 ha_enabled      = node[:ceph][:ha][:radosgw][:enabled]
 
 admin_host = CrowbarHelper.get_host_for_admin_url(node, ha_enabled)
 public_host = CrowbarHelper.get_host_for_public_url(node, protocol == "https", ha_enabled)
 
-rgw_port = node['ceph']['radosgw']['rgw_port']
 
 keystone_register "register radosgw endpoint" do
     protocol keystone_settings['protocol']
@@ -53,9 +58,9 @@ keystone_register "register radosgw endpoint" do
     port keystone_settings['admin_port']
     endpoint_service "swift"
     endpoint_region "RegionOne"
-    endpoint_publicURL "#{protocol}://#{public_host}:#{rgw_port}/swift/v1"
-    endpoint_adminURL "#{protocol}://#{admin_host}:#{rgw_port}/swift/v1"
-    endpoint_internalURL "#{protocol}://#{admin_host}:#{rgw_port}/swift/v1"
+    endpoint_publicURL "#{protocol}://#{public_host}:#{port}/swift/v1"
+    endpoint_adminURL "#{protocol}://#{admin_host}:#{port}/swift/v1"
+    endpoint_internalURL "#{protocol}://#{admin_host}:#{port}/swift/v1"
    action :add_endpoint_template
 end
 

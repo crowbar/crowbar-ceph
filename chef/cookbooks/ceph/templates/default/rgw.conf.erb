@@ -11,6 +11,12 @@ FastCgiExternalServer <%= node['ceph']['radosgw']['path'] %>/s3gw.fcgi -socket /
   RewriteCond %{REQUEST_URI} !^/server-status
   RewriteRule ^/([a-zA-Z0-9-_.]*)([/]?.*) /s3gw.fcgi?page=$1&params=$2&%{QUERY_STRING} [E=HTTP_AUTHORIZATION:%{HTTP:Authorization},L]
 
+  <% if node[:ceph][:ssl][:enabled] %>
+  SSLEngine on
+  SSLCertificateFile <%= node['ceph']['ssl']['certfile'] %>
+  SSLCertificateKeyFile <%= node['ceph']['ssl']['keyfile'] %>
+  <% end %>
+
   <IfModule mod_fastcgi.c>
     <Directory <%= node['ceph']['radosgw']['path'] %>>
       Options +ExecCGI

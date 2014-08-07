@@ -19,6 +19,7 @@
 
 default['ceph']['radosgw']['rgw_addr'] = '*'
 default['ceph']['radosgw']['rgw_port'] = 8080
+default['ceph']['radosgw']['rgw_port_ssl'] = 8081
 
 default["ceph"]["radosgw"]["path"] = "/var/www"
 
@@ -48,7 +49,14 @@ case node['platform_family']
     default['ceph']['radosgw']['packages'] = []
 end
 
+default['ceph']['ssl']['ssl'] = false
+default['ceph']['ssl']['certfile'] = '/etc/apache2/ssl.crt/ceph-radosgw.crt'
+default['ceph']['ssl']['keyfile'] = '/etc/apache2/ssl.key/ceph-radosgw.key'
+default['ceph']['ssl']['generate_certs'] = false
+default['ceph']['ssl']['insecure'] = false
+
 default['ceph']['ha']['radosgw']['enabled'] = false
 default['ceph']['ha']['radosgw']['agent'] = "lsb:#{default['ceph']['radosgw']['service_name']}"
 default['ceph']['ha']['radosgw']['op']['monitor']['interval'] = '10s'
 default['ceph']['ha']['ports']['radosgw_plain'] = 5590
+default['ceph']['ha']['ports']['radosgw_ssl'] = 5591
