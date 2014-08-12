@@ -83,7 +83,7 @@ end
 
 keystone_node = search_env_filtered(:node, "roles:keystone-server AND keystone_pki_content:*").first
 
-if keystone_node[:keystone][:signing][:token_format] == "PKI"
+if !keystone_node.nil? && keystone_node[:keystone][:signing][:token_format] == "PKI"
   file "#{nss_dir}/keystone_pki_ca.pem" do
     content keystone_node[:keystone][:pki][:content][:ca]
   end
