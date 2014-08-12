@@ -1,9 +1,9 @@
 def upgrade ta, td, a, d
-  a['ssl'] = ta['ssl']
+  a['radosgw'] = ta['radosgw']
   return a, d
 end
 
 def downgrade ta, td, a, d
-  a.delete('ssl')
+  a.delete('radosgw')
   return a, d
 end

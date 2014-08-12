@@ -12,12 +12,14 @@
       "admin-secret": "",
       "clustername": "ceph",
       "keystone_instance": "none",
-      "ssl": {
-          "enabled": false,
-          "certfile": "/etc/apache2/ssl.crt/ceph-radosgw.crt",
-          "keyfile": "/etc/apache2/ssl.key/ceph-radosgw.key",
-          "generate_certs": false,
-          "insecure": false
+      "radosgw": {
+        "ssl": {
+            "enabled": false,
+            "certfile": "/etc/apache2/ssl.crt/ceph-radosgw.crt",
+            "keyfile": "/etc/apache2/ssl.key/ceph-radosgw.key",
+            "generate_certs": false,
+            "insecure": false
+        }
       }
     }
   },

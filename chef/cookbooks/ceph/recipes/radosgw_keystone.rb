@@ -38,7 +38,7 @@ end
 # keystone endpoint-create --service-id <id> --publicurl http://radosgw.example.com/swift/v1 \
 # --internalurl http://radosgw.example.com/swift/v1 --adminurl http://radosgw.example.com/swift/v1
 
-if node[:ceph][:ssl][:enabled]
+if node[:ceph][:radosgw][:ssl][:enabled]
   protocol      = "https"
   port          = node['ceph']['radosgw']['rgw_port_ssl']
 else

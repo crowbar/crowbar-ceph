@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 
-ssl_enabled = node[:ceph][:ssl][:enabled]
+ssl_enabled = node[:ceph][:radosgw][:ssl][:enabled]
 
 haproxy_loadbalancer "ceph-radosgw" do
   address "0.0.0.0"
