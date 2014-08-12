@@ -13,13 +13,13 @@
 # limitations under the License.
 #
 
-ssl = node[:ceph][:ssl][:enabled]
+ssl_enabled = node[:ceph][:ssl][:enabled]
 
 haproxy_loadbalancer "ceph-radosgw" do
   address "0.0.0.0"
-  port ssl ? node["ceph"]["radosgw"]["rgw_port_ssl"] : node["ceph"]["radosgw"]["rgw_port"]
-  use_ssl ssl
-  servers CrowbarPacemakerHelper.haproxy_servers_for_service(node, "ceph", "ceph-radosgw", ssl ? "radosgw_ssl" : "radosgw_plain")
+  port ssl_enabled ? node["ceph"]["radosgw"]["rgw_port_ssl"] : node["ceph"]["radosgw"]["rgw_port"]
+  use_ssl ssl_enabled
+  servers CrowbarPacemakerHelper.haproxy_servers_for_service(node, "ceph", "ceph-radosgw", ssl_enabled ? "radosgw_ssl" : "radosgw_plain")
   action :nothing
 end.run_action(:create)
 
