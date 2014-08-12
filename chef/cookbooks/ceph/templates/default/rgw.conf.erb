@@ -1,3 +1,8 @@
+<% if @node[:ceph][:ssl][:enabled] -%>
+<IfDefine SSL>
+<IfDefine !NOSSL>
+
+<% end -%>
 FastCgiExternalServer <%= node['ceph']['radosgw']['path'] %>/s3gw.fcgi -socket /var/run/ceph-radosgw/radosgw.<%= node['hostname'] %>
 
 <VirtualHost <%= @params[:host] %>:<%= @params[:port] %>>
@@ -34,3 +39,8 @@ FastCgiExternalServer <%= node['ceph']['radosgw']['path'] %>/s3gw.fcgi -socket /
   CustomLog <%= node['apache']['log_dir'] %>/rgw-access_log proxy_combined
   ServerSignature Off
 </VirtualHost>
+<% if @node[:ceph][:ssl][:enabled] -%>
+
+</IfDefine>
+</IfDefine>
+<% end -%>
