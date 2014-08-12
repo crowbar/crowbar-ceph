@@ -81,7 +81,7 @@ directory nss_dir do
   action :create
 end
 
-keystone_node = search_env_filtered(:node, "roles:keystone-server").first
+keystone_node = search_env_filtered(:node, "roles:keystone-server AND keystone_pki_content:*").first
 
 if keystone_node[:keystone][:signing][:token_format] == "PKI"
   file "#{nss_dir}/keystone_pki_ca.pem" do
