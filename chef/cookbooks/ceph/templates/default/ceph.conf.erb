@@ -140,7 +140,7 @@
   pid file = /var/run/ceph-radosgw/$name.pid
   keyring = /etc/ceph/ceph.client.radosgw.<%= node['hostname'] %>.keyring
   log file = /var/log/radosgw/radosgw.log
-  <% if node[:ceph][:keystone_instance] -%>
+  <% unless node[:ceph][:keystone_instance].nil? || node[:ceph][:keystone_instance].empty? -%>
   rgw keystone url =  <%= @keystone_settings['internal_auth_url'] %>
   rgw keystone admin token = <%= @keystone_settings['admin_token'] %>
   nss db path = <%= node['ceph']['radosgw']['nss_directory'] %>

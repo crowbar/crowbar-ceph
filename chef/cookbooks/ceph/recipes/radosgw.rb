@@ -51,7 +51,7 @@ file "/var/lib/ceph/radosgw/ceph-radosgw.#{hostname}/done" do
 end
 
 # check if keystone is deployed (not a requirement for ceph)
-if node[:ceph][:keystone_instance]
+unless node[:ceph][:keystone_instance].nil? || node[:ceph][:keystone_instance].empty?
   include_recipe "ceph::radosgw_keystone"
 end
 
