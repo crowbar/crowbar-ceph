@@ -49,11 +49,11 @@ case node['platform_family']
     default['ceph']['radosgw']['packages'] = []
 end
 
-default['ceph']['ssl']['ssl'] = false
-default['ceph']['ssl']['certfile'] = '/etc/apache2/ssl.crt/ceph-radosgw.crt'
-default['ceph']['ssl']['keyfile'] = '/etc/apache2/ssl.key/ceph-radosgw.key'
-default['ceph']['ssl']['generate_certs'] = false
-default['ceph']['ssl']['insecure'] = false
+default['ceph']['radosgw']['ssl']['enabled'] = false
+default['ceph']['radosgw']['ssl']['certfile'] = '/etc/apache2/ssl.crt/ceph-radosgw.crt'
+default['ceph']['radosgw']['ssl']['keyfile'] = '/etc/apache2/ssl.key/ceph-radosgw.key'
+default['ceph']['radosgw']['ssl']['generate_certs'] = false
+default['ceph']['radosgw']['ssl']['insecure'] = false
 
 default['ceph']['ha']['radosgw']['enabled'] = false
 default['ceph']['ha']['radosgw']['agent'] = "lsb:#{default['ceph']['radosgw']['service_name']}"

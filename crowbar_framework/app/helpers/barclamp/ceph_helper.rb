@@ -17,7 +17,7 @@
 
 module Barclamp
   module CephHelper
-    def ssl_protocols_for_radosgw(selected)
+    def radosgw_ssl_protocols(selected)
       options_for_select(
         [
           ["HTTP", "false"],

@@ -39,7 +39,7 @@ end
 
 include_recipe 'apache2'
 
-use_ssl         = node['ceph']['ssl']['enabled']
+use_ssl         = node['ceph']['radosgw']['ssl']['enabled']
 rgw_addr        = node['ceph']['radosgw']['rgw_addr']
 rgw_port        = node['ceph']['radosgw']['rgw_port']
 rgw_port_ssl    = node['ceph']['radosgw']['rgw_port_ssl']
@@ -65,9 +65,9 @@ resource = resources(:template => "#{node[:apache][:dir]}/ports.conf")
 resource.variables({:apache_listen_ports => node.normal[:apache][:listen_ports_crowbar].values.map{ |p| p.values }.flatten.uniq.sort})
 
 if use_ssl
-  certfile      = node['ceph']['ssl']['certfile']
-  keyfile       = node['ceph']['ssl']['keyfile']
-  if  node['ceph']['ssl']['generate_certs']
+  certfile      = node['ceph']['radosgw']['ssl']['certfile']
+  keyfile       = node['ceph']['radosgw']['ssl']['keyfile']
+  if  node['ceph']['radosgw']['ssl']['generate_certs']
     package "openssl"
     ruby_block "generate_certs for radosgw" do
         block do
@@ -77,7 +77,7 @@ if use_ssl
             Chef::Log.info("Generating SSL certificate for radosgw...")
 
             [:certfile, :keyfile].each do |k|
-              dir = File.dirname(node[:ceph][:ssl][k])
+              dir = File.dirname(node[:ceph][:radosgw][:ssl][k])
               FileUtils.mkdir_p(dir) unless File.exists?(dir)
             end
 
