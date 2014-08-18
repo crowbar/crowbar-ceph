@@ -33,7 +33,7 @@ end
 is_rgw = node.roles.include?("ceph-radosgw")
 
 keystone_settings = {}
-if is_rgw && node[:ceph][:keystone_instance]
+if is_rgw && !(node[:ceph][:keystone_instance].nil? || node[:ceph][:keystone_instance].empty?)
   keystone_settings = KeystoneHelper.keystone_settings(node, @cookbook_name)
 end
 
