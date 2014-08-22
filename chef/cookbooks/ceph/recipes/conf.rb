@@ -30,9 +30,10 @@ directory "/var/log/ceph" do
   action :create
 end
 
+is_rgw = node.roles.include?("ceph-radosgw")
 
 keystone_settings = {}
-if node[:ceph][:keystone_instance]
+if is_rgw && !(node[:ceph][:keystone_instance].nil? || node[:ceph][:keystone_instance].empty?)
   keystone_settings = KeystoneHelper.keystone_settings(node, @cookbook_name)
 end
 
@@ -44,7 +45,7 @@ template '/etc/ceph/ceph.conf' do
     :osd_nodes_count => osd_nodes.length,
     :public_network => node["ceph"]["config"]["public-network"],
     :cluster_network => node["ceph"]["config"]["cluster-network"],
-    :is_rgw => node.roles.include?("ceph-radosgw"),
+    :is_rgw => is_rgw,
     :keystone_settings => keystone_settings
   )
   mode '0644'

@@ -67,7 +67,7 @@ class CephService < PacemakerServiceObject
     answer = []
     # keystone is not hard requirement, but once ceph-radosgw+keystone is deployed, warn about keystone removal
     radosgw_nodes  = role.override_attributes[@bc_name]["elements"]["ceph-radosgw"] || []
-    if (role.default_attributes[@bc_name]["keystone_instance"] && !radosgw_nodes.empty?)
+    unless role.default_attributes[@bc_name]["keystone_instance"].blank? || radosgw_nodes.empty?
       answer << { "barclamp" => "keystone", "inst" => role.default_attributes[@bc_name]["keystone_instance"] }
     end
     answer
