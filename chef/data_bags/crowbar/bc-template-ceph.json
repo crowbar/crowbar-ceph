@@ -27,7 +27,7 @@
     "ceph": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 13,
+      "schema-revision": 14,
       "element_states": {
         "ceph-mon": [ "readying", "ready", "applying" ],
         "ceph-osd": [ "readying", "ready", "applying" ],
