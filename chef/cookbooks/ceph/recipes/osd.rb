@@ -68,7 +68,7 @@ else
   end
 
   if is_crowbar?
-    node["ceph"]["osd_devices"] = [] if node["ceph"]["osd_devices"].nil?
+    node.set["ceph"]["osd_devices"] = [] if node["ceph"]["osd_devices"].nil?
     unclaimed_disks = BarclampLibrary::Barclamp::Inventory::Disk.unclaimed(node).sort
     if node["ceph"]["disk_mode"] == "first" && node["ceph"]["osd_devices"].empty?
       if unclaimed_disks.empty?
@@ -87,7 +87,7 @@ else
     disk_list.select do |d|
       if d.claim("Ceph")
         Chef::Log.info("Ceph: Claimed #{d.name}")
-        node["ceph"]["osd_devices"].push("device" => d.name)
+        node.set["ceph"]["osd_devices"].push("device" => d.name)
         node.save
       else
         Chef::Log.info("Ceph: Ignoring #{d.name}")
