@@ -119,6 +119,11 @@ service "ceph_mon" do
   subscribes :restart, resources(:template => "/etc/ceph/ceph.conf")
 end
 
+execute "Create Ceph client.admin key when ceph-mon is ready" do
+  command "ceph-create-keys -i #{node['hostname']}"
+  not_if { File.exists?("/etc/ceph/#{cluster}.client.admin.keyring") }
+end
+
 get_mon_addresses.each do |addr|
   execute "peer #{addr}" do
     command "ceph --admin-daemon '/var/run/ceph/ceph-mon.#{node['hostname']}.asok' add_bootstrap_peer_hint #{addr}"
