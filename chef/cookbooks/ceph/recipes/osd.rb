@@ -70,12 +70,27 @@ else
   if is_crowbar?
     node.set["ceph"]["osd_devices"] = [] if node["ceph"]["osd_devices"].nil?
     unclaimed_disks = BarclampLibrary::Barclamp::Inventory::Disk.unclaimed(node).sort
+
+    # if devices for journal are explicitely listed, do not use automatic journal assigning to SSD
+    if !node["ceph"]["osd"]["journal_devices"].empty?
+      node.set["ceph"]["osd"]["use_ssd_for_journal"]        = false
+    end
+
     if node["ceph"]["disk_mode"] == "first" && node["ceph"]["osd_devices"].empty?
       if unclaimed_disks.empty?
         Chef::Log.fatal("There is no suitable disks for ceph")
         raise "There is no suitable disks for ceph"
       else
-        disk_list = [unclaimed_disks.first]
+        # take first available non-SSD disk (or even SSD one if SSD detection is switched off)
+        first_disk      = unclaimed_disks.find do |d|
+          if node["ceph"]["osd"]["use_ssd_for_journal"]
+            node[:block_device][d.name.gsub("/dev/", "")]["rotational"] == "1"
+          else
+            true
+          end
+        end
+        first_disk      = disk_list.first if first_disk.empty?
+        disk_list       = [ first_disk ]
       end
     elsif node["ceph"]["disk_mode"] == "all"
       disk_list = unclaimed_disks
@@ -87,7 +102,14 @@ else
     disk_list.select do |d|
       if d.claim("Ceph")
         Chef::Log.info("Ceph: Claimed #{d.name}")
-        node.set["ceph"]["osd_devices"].push("device" => d.name)
+        device = {}
+        dev_name = d.name.gsub("/dev/", "")
+        if node["ceph"]["osd"]["journal_devices"].include?(d.name) || (node[:block_device][dev_name]["rotational"] == "0" && node["ceph"]["osd"]["use_ssd_for_journal"])
+          Chef::Log.info("Ceph: Mark #{d.name} as journal")
+          device["status"] = "journal"
+        end
+        device["device"] = d.name
+        node.set["ceph"]["osd_devices"].push(device)
         node.save
       else
         Chef::Log.info("Ceph: Ignoring #{d.name}")
@@ -104,13 +126,27 @@ else
     #  - $cluster should always be ceph
     #  - The --dmcrypt option will be available starting w/ Cuttlefish
     unless disk_list.empty?
-      osd_devices = []
+      ssd_devices = node["ceph"]["osd_devices"].select { |d| d["status"] == "journal" }
+      partitions_per_ssd = (disk_list.size - ssd_devices.size) / ssd_devices.size rescue 1
+      ssd_index         = 0
+      ssd_partitions    = 1
       node["ceph"]["osd_devices"].each_with_index do |osd_device,index|
         if !osd_device["status"].nil?
-          Log.info("osd: osd_device #{osd_device} has already been setup.")
+          Log.info("osd: osd_device #{osd_device['device']} has already been set up.")
           next
         end
-        create_cmd = "ceph-disk prepare --cluster #{cluster} --zap-disk #{osd_device['device']}"
+        create_cmd = "ceph-disk prepare --cluster #{cluster} --journal-dev --zap-disk #{osd_device['device']}"
+        unless ssd_devices.empty?
+          ssd_device            = ssd_devices[ssd_index]
+          journal_device        = ssd_device['device']
+          create_cmd            = create_cmd + " #{journal_device}" if journal_device
+          # move to next fee SSD if number of partitions on current one is too big
+          ssd_partitions        = ssd_partitions + 1
+          if ssd_partitions > partitions_per_ssd && ssd_devices[ssd_index+1]
+            ssd_partitions      = 0
+            ssd_index           = ssd_index + 1
+          end
+        end
 
         if %w(redhat centos).include? node.platform
           # redhat has buggy udev so we have to use workaround from ceph
@@ -135,6 +171,7 @@ else
           end
         end
         node.set["ceph"]["osd_devices"][index]["status"] = "deployed"
+        node.set["ceph"]["osd_devices"][index]["journal"] = journal_device unless journal_device.nil?
 
         execute "Writing Ceph OSD device mappings to fstab" do
           command "tail -n1 /etc/mtab >> /etc/fstab"

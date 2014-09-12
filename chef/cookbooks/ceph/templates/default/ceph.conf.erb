@@ -97,7 +97,7 @@
     ; separate disk or partition.
         ; This is an example of a file-based journal.
     osd journal = /var/lib/ceph/osd/ceph-$id/journal
-    osd journal size = 1000
+    osd journal size = <% node['ceph']['osd']['journal_size'] %>
 
         ; If you want to run the journal on a tmpfs (don't), disable DirectIO
         ;journal dio = false

@@ -12,6 +12,11 @@
       "admin-secret": "",
       "clustername": "ceph",
       "keystone_instance": "none",
+      "osd": {
+        "journal_size"  : 5120,
+        "journal_devices"  : [],
+        "use_ssd_for_journal"  : true
+      },
       "radosgw": {
         "ssl": {
             "enabled": false,
@@ -27,7 +32,7 @@
     "ceph": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 14,
+      "schema-revision": 15,
       "element_states": {
         "ceph-mon": [ "readying", "ready", "applying" ],
         "ceph-osd": [ "readying", "ready", "applying" ],
