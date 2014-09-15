@@ -129,6 +129,12 @@ apache_module 'fastcgi' do
   conf true
 end
 
+if node[:platform] == "suse" && node['platform_version'].to_f >= 12
+  apache_module 'access_compat' do
+    conf false
+  end
+end
+
 apache_module 'rewrite' do
   conf false
 end
