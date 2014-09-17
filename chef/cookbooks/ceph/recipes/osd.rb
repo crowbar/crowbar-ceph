@@ -89,7 +89,7 @@ else
             true
           end
         end
-        first_disk      = disk_list.first if first_disk == nil
+        first_disk      = disk_list.first if first_disk.nil?
         disk_list       = [ first_disk ]
       end
     elsif node["ceph"]["disk_mode"] == "all"
