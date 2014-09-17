@@ -89,13 +89,13 @@ else
             true
           end
         end
-        first_disk      = disk_list.first if first_disk.empty?
+        first_disk      = disk_list.first if first_disk == nil
         disk_list       = [ first_disk ]
       end
     elsif node["ceph"]["disk_mode"] == "all"
       disk_list = unclaimed_disks
     else
-      disk_list = ''
+      disk_list = []
     end
 
     # Now, we have the final list of devices to claim, so claim them
