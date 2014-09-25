@@ -28,7 +28,6 @@ FastCgiExternalServer <%= node['ceph']['radosgw']['path'] %>/s3gw.fcgi -socket /
       AllowOverride All
       SetHandler fastcgi-script
       AuthBasicAuthoritative Off
-      #FIXME not in our apache recipe!
       <%- if node[:apache][:version].to_f < 2.4 %>
       Order allow,deny
       Allow from all

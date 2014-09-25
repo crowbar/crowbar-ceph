@@ -130,12 +130,6 @@ apache_module 'fastcgi' do
   notifies :restart, 'service[apache2]'
 end
 
-#FIXME remove this and adapt apache recipe!
-apache_module 'access_compat' do
-  conf false
-  only_if { node['platform'] == 'suse' && node['platform_version'].to_f >= 12 }
-end
-
 apache_module 'rewrite' do
   conf false
   notifies :restart, 'service[apache2]'
