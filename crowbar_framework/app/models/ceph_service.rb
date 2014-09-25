@@ -93,8 +93,12 @@ class CephService < PacemakerServiceObject
       controller_nodes = controller_nodes.take(3)
     end
 
+    # Prefer non-storage/non-controller nodes for monitors
+    other_nodes = nodes.dup
+    other_nodes.delete_if { |n| ["storage", "controller"].include? n.intended_role }
+
     if storage_nodes.size < 2
-      storage_nodes = [ storage_nodes, controller_nodes, nodes ].flatten.uniq{|n| n.name}
+      storage_nodes = [ storage_nodes, other_nodes, controller_nodes ].flatten.uniq{|n| n.name}
       storage_nodes = storage_nodes.take(2)
     end
 
