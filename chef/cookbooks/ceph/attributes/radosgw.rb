@@ -21,13 +21,13 @@ default['ceph']['radosgw']['rgw_addr'] = '*'
 default['ceph']['radosgw']['rgw_port'] = 8080
 default['ceph']['radosgw']['rgw_port_ssl'] = 8081
 
-default["ceph"]["radosgw"]["path"] = "/var/www"
+default['ceph']['radosgw']['path'] = '/var/www'
 
-if node['platform'] == "suse"
-  default["ceph"]["radosgw"]["path"] = "/srv/www/ceph-radosgw"
+if node['platform_family'] == 'suse'
+  default['ceph']['radosgw']['path'] = '/srv/www/ceph-radosgw'
 end
 
-default['ceph']['radosgw']['nss_directory'] = "/var/lib/ceph/nss"
+default['ceph']['radosgw']['nss_directory'] = '/var/lib/ceph/nss'
 
 case node['platform']
   when 'ubuntu'

@@ -127,16 +127,18 @@ end
 
 apache_module 'fastcgi' do
   conf true
+  notifies :restart, 'service[apache2]'
 end
 
-if node[:platform] == "suse" && node['platform_version'].to_f >= 12
-  apache_module 'access_compat' do
-    conf false
-  end
+#FIXME remove this and adapt apache recipe!
+apache_module 'access_compat' do
+  conf false
+  only_if { node['platform'] == 'suse' && node['platform_version'].to_f >= 12 }
 end
 
 apache_module 'rewrite' do
   conf false
+  notifies :restart, 'service[apache2]'
 end
 
 web_app 'rgw' do
@@ -148,7 +150,7 @@ end
 directory node['ceph']['radosgw']['path'] do
   owner 'root'
   group 'root'
-  mode "0755"
+  mode '0755'
   action :create
 end
 
@@ -162,10 +164,10 @@ template "#{node['ceph']['radosgw']['path']}/s3gw.fcgi" do
   )
 end
 
-if node[:platform] == "suse"
-  bash "Set MPM apache value" do
+if node['platform_family'] == 'suse'
+  bash 'Set MPM apache value' do
     code 'sed -i s/^[[:space:]]*APACHE_MPM=.*/APACHE_MPM=\"worker\"/ /etc/sysconfig/apache2'
     not_if 'grep -q "^[[:space:]]*APACHE_MPM=\"worker\"" /etc/sysconfig/apache2'
-    notifies :restart, resources(:service => "apache2")
+    notifies :restart, 'service[apache2]'
   end
 end
