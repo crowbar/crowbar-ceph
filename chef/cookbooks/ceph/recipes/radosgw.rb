@@ -7,22 +7,22 @@ end
 
 hostname = node['hostname']
 
-directory "/var/log/radosgw" do
-  owner node[:apache][:user]
-  group node[:apache][:group]
-  mode "0755"
+directory '/var/log/radosgw' do
+  owner node['apache']['user']
+  group node['apache']['group']
+  mode '0755'
   action :create
 end
 
-file "/var/log/radosgw/radosgw.log" do
-  owner node[:apache][:user]
-  group node[:apache][:group]
+file '/var/log/radosgw/radosgw.log' do
+  owner node['apache']['user']
+  group node['apache']['group']
 end
 
-directory "/var/run/ceph-radosgw" do
-  owner node[:apache][:user]
-  group node[:apache][:group]
-  mode "0755"
+directory '/var/run/ceph-radosgw' do
+  owner node['apache']['user']
+  group node['apache']['group']
+  mode '0755'
   action :create
 end
 
@@ -32,8 +32,8 @@ crowbar_pacemaker_sync_mark "wait-ceph_client_generate"
 
 ceph_client 'radosgw' do
   caps('mon' => 'allow rw', 'osd' => 'allow rwx')
-  owner "root"
-  group node[:apache][:group]
+  owner 'root'
+  group node['apache']['group']
   mode 0640
 end
 
