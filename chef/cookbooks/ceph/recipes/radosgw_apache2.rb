@@ -127,12 +127,10 @@ end
 
 apache_module 'fastcgi' do
   conf true
-  notifies :restart, 'service[apache2]'
 end
 
 apache_module 'rewrite' do
   conf false
-  notifies :restart, 'service[apache2]'
 end
 
 web_app 'rgw' do
