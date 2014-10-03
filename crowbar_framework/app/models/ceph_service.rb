@@ -47,7 +47,7 @@ class CephService < PacemakerServiceObject
     def role_constraints
       {
         "ceph-calamari" => {
-          "uniqure" => false,
+          "unique" => false,
           "count" => 1
         },
         "ceph-mon" => {
