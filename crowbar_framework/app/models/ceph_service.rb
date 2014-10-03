@@ -46,6 +46,10 @@ class CephService < PacemakerServiceObject
   class << self
     def role_constraints
       {
+        "ceph-calamari" => {
+          "uniqure" => false,
+          "count" => 1
+        },
         "ceph-mon" => {
           "unique" => false,
           "count" => 3
@@ -102,7 +106,13 @@ class CephService < PacemakerServiceObject
       storage_nodes = storage_nodes.take(2)
     end
 
+    # Any spare node after allocating mons and osds is fair game
+    # to automatically use as the calamari server
+    # TODO: enforce not allocating calamari to any regular ceph node
+    spare_nodes = nodes.select { |n| !storage_nodes.include?(n) && !controller_nodes.include?(n) }
+
     base["deployment"]["ceph"]["elements"] = {
+        "ceph-calamari" => spare_nodes.empty? ? [] : [ spare_nodes.first.name ],
         "ceph-mon" => controller_nodes.map { |x| x.name },
         "ceph-osd" => storage_nodes.map{ |x| x.name },
         "ceph-radosgw" => [ controller_nodes.first.name ]
@@ -116,6 +126,7 @@ class CephService < PacemakerServiceObject
     @logger.debug("ceph apply_role_pre_chef_call: entering #{all_nodes.inspect}")
     monitors = role.override_attributes["ceph"]["elements"]["ceph-mon"] || []
     osd_nodes = role.override_attributes["ceph"]["elements"]["ceph-osd"] || []
+    calamari = role.override_attributes["ceph"]["elements"]["ceph-calamari"] || []
 
     @logger.debug("monitors: #{monitors.inspect}")
     @logger.debug("osd_nodes: #{osd_nodes.inspect}")
@@ -179,6 +190,21 @@ class CephService < PacemakerServiceObject
         master[:ceph][:master] = true
         master.save
       end
+    end
+
+    calamari.each do |n|
+      node = NodeObject.find_node_by_name(n)
+      node.crowbar["crowbar"] ||= {}
+      node.crowbar["crowbar"]["links"] ||= {}
+
+      for t in ['public', 'admin'] do
+        node.crowbar["crowbar"]["links"].delete("Calamari Dashboard (#{t})")
+        next unless node.get_network_by_type(t)
+        ip = node.get_network_by_type(t)["address"]
+        node.crowbar["crowbar"]["links"]["Calamari Dashboard (#{t})"] = "http://#{ip}/"
+      end
+
+      node.save
     end
 
   end

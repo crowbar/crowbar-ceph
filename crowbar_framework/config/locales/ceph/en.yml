@@ -30,3 +30,8 @@ en:
             keyfile: 'SSL (Private) Key File'
             insecure: 'SSL Certificate is insecure (for instance, self-signed)'
             generate_certs: 'Generate (self-signed) certificates (implies insecure)'
+        calamari:
+          header: 'Calamari Credentials'
+          username: 'Administrator Username'
+          email: 'Administrator Email Address'
+          password: 'Administrator Password'

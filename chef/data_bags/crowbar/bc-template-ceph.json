@@ -25,6 +25,11 @@
             "generate_certs": false,
             "insecure": false
         }
+      },
+      "calamari": {
+        "username": "admin",
+        "email": "admin@example.com",
+        "password": "calamari"
       }
     }
   },
@@ -32,19 +37,22 @@
     "ceph": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 15,
+      "schema-revision": 16,
       "element_states": {
+        "ceph-calamari": [ "readying", "ready", "applying" ],
         "ceph-mon": [ "readying", "ready", "applying" ],
         "ceph-osd": [ "readying", "ready", "applying" ],
         "ceph-radosgw": [ "readying", "ready", "applying" ]
       },
       "elements": {},
       "element_order": [
+        [ "ceph-calamari" ],
         [ "ceph-mon" ],
         [ "ceph-osd" ],
         [ "ceph-radosgw" ]
       ],
       "element_run_list_order": {
+        "ceph-calamari": 79,
         "ceph-mon": 80,
         "ceph-osd": 81,
         "ceph-radosgw": 82

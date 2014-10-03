@@ -54,6 +54,15 @@
                   }
                 }
               }
+            },
+            "calamari": {
+              "type": "map",
+              "required": true,
+              "mapping": {
+                "username": { "type": "str", "required": true },
+                "email": { "type": "str", "required": true },
+                "password": { "type": "str", "required": true }
+              }
             }
           }
         }
