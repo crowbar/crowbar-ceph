@@ -48,7 +48,8 @@ class CephService < PacemakerServiceObject
       {
         "ceph-calamari" => {
           "unique" => false,
-          "count" => 1
+          "count" => 1,
+          "conflicts_with" => [ "ceph-mon", "ceph-osd", "ceph-radosgw" ]
         },
         "ceph-mon" => {
           "unique" => false,
