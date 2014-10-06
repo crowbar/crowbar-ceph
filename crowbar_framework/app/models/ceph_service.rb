@@ -109,7 +109,6 @@ class CephService < PacemakerServiceObject
 
     # Any spare node after allocating mons and osds is fair game
     # to automatically use as the calamari server
-    # TODO: enforce not allocating calamari to any regular ceph node
     spare_nodes = nodes.select { |n| !storage_nodes.include?(n) && !controller_nodes.include?(n) }
 
     base["deployment"]["ceph"]["elements"] = {
