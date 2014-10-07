@@ -22,7 +22,6 @@ ruby_block "initialize calamari server" do
           "--admin-email", node[:ceph][:calamari][:email])
       init_cmd.run_command
       init_cmd.error!
-      # TODO: verify services are all started
     else
       # Check passed, so it's already configured.  Need to update admin user.
       # Is it unholy to generate python from ruby?
@@ -37,6 +36,15 @@ admin_user.save()
 eos
       update_cmd.run_command
       update_cmd.error!
+    end
+    # verify services are all started (slightly paranoid; the only
+    # one of these I've seen fail in real life was apache when the
+    # config was broken due to a bug)
+    [ 'salt-master', 'carbon-cache', 'cthulhu', 'apache2' ].each do |s|
+      %x[service '#{s}' status]
+      # this works to catch service failure, but output is horrible
+      # (has a backtrace & whatnot)
+      raise "Service #{s} is not running" unless $?.exitstatus == 0
     end
   end
 end
