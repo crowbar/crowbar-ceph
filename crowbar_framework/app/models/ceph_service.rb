@@ -198,7 +198,7 @@ class CephService < PacemakerServiceObject
       end
     end
 
-    unless proposal["deployment"]["ceph"]["elements"]["ceph-radosgw"].empty?
+    unless radosgw_nodes.empty?
       ProposalObject.find_proposals("swift").each {|p|
         if (p.status == "ready") || (p.status == "pending")
           validation_error("Swift is already deployed. Only one of Ceph with RadosGW and Swift can be deployed at any time.")
