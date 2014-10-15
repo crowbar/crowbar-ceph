@@ -57,7 +57,7 @@ keystone_register "register radosgw endpoint" do
     token keystone_settings['admin_token']
     port keystone_settings['admin_port']
     endpoint_service "swift"
-    endpoint_region "RegionOne"
+    endpoint_region keystone_settings['endpoint_region']
     endpoint_publicURL "#{protocol}://#{public_host}:#{port}/swift/v1"
     endpoint_adminURL "#{protocol}://#{admin_host}:#{port}/swift/v1"
     endpoint_internalURL "#{protocol}://#{admin_host}:#{port}/swift/v1"
