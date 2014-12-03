@@ -178,6 +178,9 @@ else
           action :run
         end
 
+        # No need to specifically enable ceph-osd@N on systemd systems, as this
+        # is done automatically by ceph-disk-activate
+
       end
       node.save
 
@@ -192,8 +195,12 @@ else
         action [ :enable, :start ]
         supports :restart => true
         subscribes :restart, resources(:template => "/etc/ceph/ceph.conf")
-      end
+      end if service_type != "systemd"
 
+      # In addition to the osd services, ceph.target must be enabled when using systemd
+      service "ceph.target" do
+        action :enable
+      end if service_type == "systemd"
     end
   end
 end

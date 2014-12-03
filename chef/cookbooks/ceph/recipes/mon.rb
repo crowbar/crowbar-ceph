@@ -111,6 +111,8 @@ service "ceph_mon" do
   when "upstart"
     service_name "ceph-mon-all-starter"
     provider Chef::Provider::Service::Upstart
+  when "systemd"
+    service_name "ceph-mon@#{node["hostname"]}"
   else
     service_name "ceph"
   end
@@ -118,6 +120,11 @@ service "ceph_mon" do
   action [ :enable, :start ]
   subscribes :restart, resources(:template => "/etc/ceph/ceph.conf")
 end
+
+# In addition to the mon service, ceph.target must be enabled when using systemd
+service "ceph.target" do
+  action :enable
+end if service_type == "systemd"
 
 execute "Create Ceph client.admin key when ceph-mon is ready" do
   command "ceph-create-keys -i #{node['hostname']}"
