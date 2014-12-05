@@ -37,16 +37,26 @@ eos
       update_cmd.run_command
       update_cmd.error!
     end
-    # verify services are all started (slightly paranoid; the only
-    # one of these I've seen fail in real life was apache when the
-    # config was broken due to a bug)
-    [ 'salt-master', 'carbon-cache', 'cthulhu', 'apache2' ].each do |s|
-      %x[service '#{s}' status]
-      # this works to catch service failure, but output is horrible
-      # (has a backtrace & whatnot)
-      raise "Service #{s} is not running" unless $?.exitstatus == 0
-    end
   end
+end
+
+# salt-master, carbon-cache, cthulhu and apache2 are all initially enabled
+# and started by the first `calamari-ctl initialize` invocation, but add them
+# as chef service resources regardless to make sure they're tracked.
+service 'salt-master' do
+  action [ :enable, :start ]
+end
+
+service 'carbon-cache' do
+  action [ :enable, :start ]
+end
+
+service 'cthulhu' do
+  action [ :enable, :start ]
+end
+
+service 'apache2' do
+  action [ :enable, :start ]
 end
 
 # TODO: Is there any way we can auto-auth salt minions?  This would be nice,
