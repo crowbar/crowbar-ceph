@@ -206,6 +206,16 @@ class CephService < PacemakerServiceObject
       }
     end
 
+    nodes = NodeObject.find("roles:provisioner-server")
+    unless nodes.nil? or nodes.length < 1
+      provisioner_server_node = nodes[0]
+      if provisioner_server_node[:platform] == "suse"
+        if (provisioner_server_node[:provisioner][:suse][:missing_storage] rescue true)
+          validation_error "The SUSE Storage repositories have not been setup."
+        end
+      end
+    end
+
     # Make sure that all nodes with radosgw role have the same other ceph roles:
     # chef-client will first run on nodes with ceph-osd/ceph-mon and will execute the HA bits for radosgw,
     # causing the sync between nodes to fail if the other cluster nodes don't have the same roles
