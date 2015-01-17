@@ -211,7 +211,7 @@ class CephService < PacemakerServiceObject
       provisioner_server_node = nodes[0]
       if provisioner_server_node[:platform] == "suse"
         if (provisioner_server_node[:provisioner][:suse][:missing_storage] rescue true)
-          validation_error "The SUSE Storage repositories have not been setup."
+          validation_error "The SUSE Enterprise Storage repositories have not been setup."
         end
       end
     end
