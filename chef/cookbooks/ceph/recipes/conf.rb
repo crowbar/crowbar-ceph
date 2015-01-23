@@ -61,9 +61,7 @@ end
 calamari_host = search(:node, "roles:ceph-calamari")
 Chef::Log.info("Not deploying salt-minion (no host with ceph-calamari role found)") if calamari_host.empty?
 if !calamari_host.empty? && (node.roles.include?("ceph-osd") || node.roles.include?("ceph-mon"))
-  package "salt-minion" do
-    action :install
-  end
+  package "salt-minion"
   template '/etc/salt/minion.d/calamari.conf' do
     source 'calamari.conf.erb'
     variables(
