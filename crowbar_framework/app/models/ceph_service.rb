@@ -201,16 +201,17 @@ class CephService < PacemakerServiceObject
       node.crowbar["crowbar"] ||= {}
       node.crowbar["crowbar"]["links"] ||= {}
 
-      for t in ['public', 'admin'] do
-        node.crowbar["crowbar"]["links"].delete("Calamari Dashboard (#{t})")
-        next unless node.get_network_by_type(t)
+      for t in ['admin'] do
+        unless node.get_network_by_type(t)
+          node.crowbar["crowbar"]["links"].delete("Calamari Dashboard (#{t})")
+          next
+        end
         ip = node.get_network_by_type(t)["address"]
         node.crowbar["crowbar"]["links"]["Calamari Dashboard (#{t})"] = "http://#{ip}/"
       end
 
       node.save
     end
-
   end
 
   def validate_proposal_after_save proposal
