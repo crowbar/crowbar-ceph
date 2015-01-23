@@ -126,7 +126,6 @@ class CephService < PacemakerServiceObject
     @logger.debug("ceph apply_role_pre_chef_call: entering #{all_nodes.inspect}")
     monitors = role.override_attributes["ceph"]["elements"]["ceph-mon"] || []
     osd_nodes = role.override_attributes["ceph"]["elements"]["ceph-osd"] || []
-    calamari = role.override_attributes["ceph"]["elements"]["ceph-calamari"] || []
 
     @logger.debug("monitors: #{monitors.inspect}")
     @logger.debug("osd_nodes: #{osd_nodes.inspect}")
@@ -191,6 +190,11 @@ class CephService < PacemakerServiceObject
         master.save
       end
     end
+  end
+
+  def apply_role_post_chef_call(old_role, role, all_nodes)
+    @logger.debug("ceph apply_role_post_chef_call: entering #{all_nodes.inspect}")
+    calamari = role.override_attributes["ceph"]["elements"]["ceph-calamari"] || []
 
     calamari.each do |n|
       node = NodeObject.find_node_by_name(n)
