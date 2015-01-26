@@ -48,15 +48,27 @@ class CephService < PacemakerServiceObject
       {
         "ceph-mon" => {
           "unique" => false,
-          "count" => 3
+          "count" => 3,
+          "exclude_platform" => {
+            "suse" => "< 12.0",
+            "windows" => "/.*/"
+          }
         },
         "ceph-osd" => {
           "unique" => false,
-          "count" => 8
+          "count" => 8,
+          "exclude_platform" => {
+            "suse" => "< 12.0",
+            "windows" => "/.*/"
+          }
         },
         "ceph-radosgw" => {
           "unique" => false,
           "count" => 1,
+          "exclude_platform" => {
+            "suse" => "< 12.0",
+            "windows" => "/.*/"
+          },
           "cluster" => true
         }
       }
