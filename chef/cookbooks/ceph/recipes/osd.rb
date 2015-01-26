@@ -153,7 +153,9 @@ else
           b_dev = osd_device['device'].gsub("/dev/", "")
           create_cmd = create_cmd + " && ceph-disk-udev 2 #{b_dev}2 #{b_dev} ; ceph-disk-udev 1 #{b_dev}1 #{b_dev}"
         else
-          create_cmd = create_cmd + " && ceph-disk-activate #{osd_device['device']}1"
+          extra_options = ""
+          extra_options = "--mark-init systemd" if service_type == "systemd"
+          create_cmd = create_cmd + " && ceph-disk activate #{extra_options} -- #{osd_device['device']}1"
         end
 
         execute "Activating Ceph OSD on #{osd_device['device']}" do
