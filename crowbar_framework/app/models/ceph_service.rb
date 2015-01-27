@@ -49,6 +49,10 @@ class CephService < PacemakerServiceObject
         "ceph-calamari" => {
           "unique" => false,
           "count" => 1,
+          "exclude_platform" => {
+            "suse" => "< 12.0",
+            "windows" => "/.*/"
+          },
           "conflicts_with" => [ "ceph-mon", "ceph-osd", "ceph-radosgw", "nova_dashboard-server" ]
         },
         "ceph-mon" => {
