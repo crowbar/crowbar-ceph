@@ -59,8 +59,9 @@ end
 # assigned first, just in case, hence the change to put ceph-calamari first in
 # element_order and element_run_list_order.
 calamari_host = search(:node, "roles:ceph-calamari")
-Chef::Log.info("Not deploying salt-minion (no host with ceph-calamari role found)") if calamari_host.empty?
-if !calamari_host.empty? && (node.roles.include?("ceph-osd") || node.roles.include?("ceph-mon"))
+if calamari_host.empty?
+  Chef::Log.info("Not deploying salt-minion (no host with ceph-calamari role found)")
+elsif node.roles.include?("ceph-osd") || node.roles.include?("ceph-mon")
   package "salt-minion"
   template '/etc/salt/minion.d/calamari.conf' do
     source 'calamari.conf.erb'
