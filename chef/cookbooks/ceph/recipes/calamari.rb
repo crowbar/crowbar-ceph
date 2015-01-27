@@ -3,7 +3,9 @@ node['ceph']['calamari']['packages'].each do |pkg|
 end
 
 # TODO: do we need pacemaker sync marks? (nothing here uses pacemaker;
-# something for further consideration is making the calamari server HA)
+# something for further consideration is making the calamari server HA,
+# but will be dependent on implementation of pacemaker deployment support
+# for SLE12)
 
 ruby_block "initialize calamari server" do
   block do
