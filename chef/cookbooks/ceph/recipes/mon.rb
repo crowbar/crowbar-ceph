@@ -15,6 +15,7 @@
 #  /var/lib/ceph/bootstrap-{osd,mds}/ceph.keyring
 
 include_recipe "ceph::default"
+include_recipe "ceph::server"
 include_recipe "ceph::conf"
 
 service_type = node["ceph"]["mon"]["init_style"]

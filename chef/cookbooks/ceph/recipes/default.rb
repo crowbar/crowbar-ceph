@@ -46,8 +46,7 @@ when "redhat", "centos", "fedora"
   end
 when "suse"
   packages = %w{
-      ceph
-      python-ceph
+      ceph-common
   }
 end
 

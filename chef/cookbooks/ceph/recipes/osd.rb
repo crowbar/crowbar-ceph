@@ -32,6 +32,7 @@
 #]
 
 include_recipe "ceph::default"
+include_recipe "ceph::server"
 include_recipe "ceph::conf"
 
 package 'gdisk' do
