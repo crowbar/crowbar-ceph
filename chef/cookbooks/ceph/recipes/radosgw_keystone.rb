@@ -68,9 +68,7 @@ crowbar_pacemaker_sync_mark "create-radosgw_register"
 
 # Convert OpenSSL certificates that Keystone uses for creating the requests to the nss db format
 # See http://ceph.com/docs/master/radosgw/keystone/
-package "mozilla-nss-tools" do
-  action :install
-end
+package "mozilla-nss-tools"
 
 nss_dir = node['ceph']['radosgw']['nss_directory']
 

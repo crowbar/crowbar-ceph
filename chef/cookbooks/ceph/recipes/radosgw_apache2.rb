@@ -31,9 +31,7 @@ case node['platform_family']
 end
 
 packages.each do |pkg|
-  package pkg do
-    action :install
-  end
+  package pkg
 end
 
 

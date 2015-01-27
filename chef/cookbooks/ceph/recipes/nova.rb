@@ -12,9 +12,7 @@ when "suse"
 end
 
 packages.each do |pkg|
-  package pkg do
-    action :install
-  end
+  package pkg
 end
 
 # TODO cluster name
