@@ -135,7 +135,7 @@ else
           Log.info("osd: osd_device #{osd_device['device']} has already been set up.")
           next
         end
-        create_cmd = "ceph-disk prepare --cluster #{cluster} --journal-dev --zap-disk #{osd_device['device']}"
+        create_cmd = "ceph-disk prepare --cluster '#{cluster}' --journal-dev --zap-disk '#{osd_device['device']}'"
         unless ssd_devices.empty?
           ssd_device            = ssd_devices[ssd_index]
           journal_device        = ssd_device['device']
@@ -155,7 +155,7 @@ else
         else
           extra_options = ""
           extra_options = "--mark-init systemd" if service_type == "systemd"
-          create_cmd = create_cmd + " && ceph-disk activate #{extra_options} -- #{osd_device['device']}1"
+          create_cmd = create_cmd + " && ceph-disk activate #{extra_options} -- '#{osd_device['device']}1'"
         end
 
         execute "Activating Ceph OSD on #{osd_device['device']}" do

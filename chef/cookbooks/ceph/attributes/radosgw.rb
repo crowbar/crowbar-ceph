@@ -34,6 +34,8 @@ case node['platform']
     default['ceph']['radosgw']['service_name']  = 'radosgw-all-starter'
   when 'debian'
     default['ceph']['radosgw']['service_name']  = 'radosgw'
+  when 'suse'
+    default['ceph']['radosgw']['service_name']  = "ceph-radosgw@#{node["hostname"]}"
   else
     default['ceph']['radosgw']['service_name']  = 'ceph-radosgw'
 end
