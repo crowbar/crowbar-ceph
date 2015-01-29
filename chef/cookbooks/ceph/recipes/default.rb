@@ -46,13 +46,10 @@ when "redhat", "centos", "fedora"
   end
 when "suse"
   packages = %w{
-      ceph
-      python-ceph
+      ceph-common
   }
 end
 
 packages.each do |pkg|
-  package pkg do
-    action :install
-  end
+  package pkg
 end

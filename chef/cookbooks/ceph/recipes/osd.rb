@@ -32,11 +32,10 @@
 #]
 
 include_recipe "ceph::default"
+include_recipe "ceph::server"
 include_recipe "ceph::conf"
 
-package 'gdisk' do
-  action :install
-end
+package 'gdisk'
 
 service_type = node["ceph"]["osd"]["init_style"]
 mons = get_mon_nodes("ceph_bootstrap-osd-secret:*")

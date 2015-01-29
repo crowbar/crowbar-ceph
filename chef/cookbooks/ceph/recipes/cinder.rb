@@ -1,9 +1,7 @@
 include_recipe "ceph::default"
 include_recipe "ceph::conf"
 
-package "python-ceph" do
-  action :install
-end
+package "python-ceph"
 
 # TODO cluster name
 cluster = 'ceph'
