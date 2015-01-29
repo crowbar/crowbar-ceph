@@ -104,35 +104,41 @@ class CephService < PacemakerServiceObject
 
     base["attributes"][@bc_name]["keystone_instance"] = find_dep_proposal("keystone", true)
 
-    nodes        = NodeObject.all
-    nodes.delete_if { |n| n.nil? or n.admin? }
+    nodes = NodeObject.all
 
-    storage_nodes = nodes.select { |n| n.intended_role == "storage" }
-    controller_nodes = nodes.select { |n| n.intended_role == "controller"}
-    if controller_nodes.size < 3
-      controller_nodes = [ controller_nodes, storage_nodes, nodes ].flatten.uniq{|n| n.name}
-      controller_nodes = controller_nodes.take(3)
+    osd_nodes = select_nodes_for_role(nodes, "ceph-osd", "storage")
+    if osd_nodes.size < 2
+      osd_nodes_controller = select_nodes_for_role(nodes, "ceph-osd", "controller")
+      osd_nodes_all = select_nodes_for_role(nodes, "ceph-osd")
+      # avoid controllers if possible (will likely be used for mon)
+      osd_nodes_no_controller = osd_nodes_all - osd_nodes_controller
+      osd_nodes = [ osd_nodes, osd_nodes_no_controller, osd_nodes_all ].flatten.uniq{|n| n.name}
+      osd_nodes = osd_nodes.take(2)
     end
 
-    # Prefer non-storage/non-controller nodes for monitors
-    other_nodes = nodes.dup
-    other_nodes.delete_if { |n| ["storage", "controller"].include? n.intended_role }
+    mon_nodes = select_nodes_for_role(nodes, "ceph-mon", "controller")
 
-    if storage_nodes.size < 2
-      storage_nodes = [ storage_nodes, other_nodes, controller_nodes ].flatten.uniq{|n| n.name}
-      storage_nodes = storage_nodes.take(2)
+    if mon_nodes.size < 3
+      mon_nodes_storage = select_nodes_for_role(nodes, "ceph-mon", "storage")
+      mon_nodes_all = select_nodes_for_role(nodes, "ceph-mon")
+      mon_nodes = [ mon_nodes, mon_nodes_storage, mon_nodes_all ].flatten.uniq{|n| n.name}
     end
+    mon_nodes = mon_nodes.take(mon_nodes.length > 2 ? 3 : 1)
+
+    radosgw_node = select_nodes_for_role(nodes, "ceph-radosgw", "controller").first
 
     # Any spare node after allocating mons and osds is fair game
     # to automatically use as the calamari server
-    spare_nodes = nodes.select { |n| !storage_nodes.include?(n) && !controller_nodes.include?(n) }
+    calamari_nodes = select_nodes_for_role(nodes, "ceph-calamari")
+    calamari_nodes.reject! { |n| osd_nodes.include? n or mon_nodes.include? n }
+    calamari_node = calamari_nodes.first
 
     base["deployment"]["ceph"]["elements"] = {
-        "ceph-calamari" => spare_nodes.empty? ? [] : [ spare_nodes.first.name ],
-        "ceph-mon" => controller_nodes.map { |x| x.name },
-        "ceph-osd" => storage_nodes.map{ |x| x.name },
-        "ceph-radosgw" => [ controller_nodes.first.name ]
-    } unless storage_nodes.nil?
+        "ceph-calamari" => calamari_node.nil? ? [] : [ calamari_node.name ],
+        "ceph-mon" => mon_nodes.map { |x| x.name },
+        "ceph-osd" => osd_nodes.map { |x| x.name },
+        "ceph-radosgw" => radosgw_node.nil? ? [] : [ radosgw_node.name ]
+    }
 
     @logger.debug("Ceph create_proposal: exiting")
     base
