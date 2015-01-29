@@ -46,6 +46,15 @@ class CephService < PacemakerServiceObject
   class << self
     def role_constraints
       {
+        "ceph-calamari" => {
+          "unique" => false,
+          "count" => 1,
+          "exclude_platform" => {
+            "suse" => "< 12.0",
+            "windows" => "/.*/"
+          },
+          "conflicts_with" => [ "ceph-mon", "ceph-osd", "ceph-radosgw", "nova_dashboard-server" ]
+        },
         "ceph-mon" => {
           "unique" => false,
           "count" => 3,
@@ -114,7 +123,12 @@ class CephService < PacemakerServiceObject
       storage_nodes = storage_nodes.take(2)
     end
 
+    # Any spare node after allocating mons and osds is fair game
+    # to automatically use as the calamari server
+    spare_nodes = nodes.select { |n| !storage_nodes.include?(n) && !controller_nodes.include?(n) }
+
     base["deployment"]["ceph"]["elements"] = {
+        "ceph-calamari" => spare_nodes.empty? ? [] : [ spare_nodes.first.name ],
         "ceph-mon" => controller_nodes.map { |x| x.name },
         "ceph-osd" => storage_nodes.map{ |x| x.name },
         "ceph-radosgw" => [ controller_nodes.first.name ]
@@ -192,7 +206,28 @@ class CephService < PacemakerServiceObject
         master.save
       end
     end
+  end
 
+  def apply_role_post_chef_call(old_role, role, all_nodes)
+    @logger.debug("ceph apply_role_post_chef_call: entering #{all_nodes.inspect}")
+    calamari = role.override_attributes["ceph"]["elements"]["ceph-calamari"] || []
+
+    calamari.each do |n|
+      node = NodeObject.find_node_by_name(n)
+      node.crowbar["crowbar"] ||= {}
+      node.crowbar["crowbar"]["links"] ||= {}
+
+      for t in ['admin'] do
+        unless node.get_network_by_type(t)
+          node.crowbar["crowbar"]["links"].delete("Calamari Dashboard (#{t})")
+          next
+        end
+        ip = node.get_network_by_type(t)["address"]
+        node.crowbar["crowbar"]["links"]["Calamari Dashboard (#{t})"] = "http://#{ip}/"
+      end
+
+      node.save
+    end
   end
 
   def validate_proposal_after_save proposal

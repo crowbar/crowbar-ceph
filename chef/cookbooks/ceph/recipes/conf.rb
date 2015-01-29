@@ -50,3 +50,30 @@ template '/etc/ceph/ceph.conf' do
   )
   mode '0644'
 end
+
+# Need salt minion on osd and mon nodes to hook up to calamari.  Note: in one
+# early test (where calamari role was assigned last) it seems one node didn't
+# find the calamari server, presumably because everything deployed all at once
+# and maybe the calamari role hadn't been assigned in time?  I haven't been
+# able to reproduce this, but it seems safest to have the calamari role
+# assigned first, just in case, hence the change to put ceph-calamari first in
+# element_order and element_run_list_order.
+calamari_host = search(:node, "roles:ceph-calamari")
+if calamari_host.empty?
+  Chef::Log.info("Not deploying salt-minion (no host with ceph-calamari role found)")
+elsif node.roles.include?("ceph-osd") || node.roles.include?("ceph-mon")
+  package "salt-minion"
+  template '/etc/salt/minion.d/calamari.conf' do
+    source 'calamari.conf.erb'
+    variables(
+      :calamari_host => calamari_host[0]['fqdn']
+    )
+    mode '0644'
+  end
+  service "salt-minion" do
+    supports :restart => true, :status => true
+    action [ :enable, :start ]
+    subscribes :restart, resources(:template => "/etc/salt/minion.d/calamari.conf")
+  end
+end
+
