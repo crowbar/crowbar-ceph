@@ -8,6 +8,10 @@ when "suse"
     action :install
     only_if { node[:platform_version].to_f < 12.0 }
   end
+  package "qemu-block-rbd" do
+    action :install
+    only_if { node[:platform_version].to_f >= 12.0 }
+  end
 end
 
 # TODO cluster name
