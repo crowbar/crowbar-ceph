@@ -11,6 +11,7 @@ FastCgiExternalServer <%= node['ceph']['radosgw']['path'] %>/s3gw.fcgi -socket /
   ServerAlias <%= node["crowbar"]["display"]["alias"] %>
 <% end -%>
   DocumentRoot <%= node['ceph']['radosgw']['path'] %>
+  LimitRequestFieldSize 32768
 
   RewriteEngine On
   RewriteCond %{REQUEST_URI} !^/server-status
