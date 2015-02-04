@@ -7,6 +7,7 @@ crowbar_pacemaker_sync_mark "wait-radosgw_register"
 
 keystone_register "radosgw wakeup keystone" do
   protocol keystone_settings['protocol']
+  insecure keystone_settings['insecure']
   host keystone_settings['internal_url_host']
   port keystone_settings['admin_port']
   token keystone_settings['admin_token']
@@ -16,6 +17,7 @@ end
 role = "ResellerAdmin"
 keystone_register "add #{role} role" do
   protocol keystone_settings['protocol']
+  insecure keystone_settings['insecure']
   host keystone_settings['internal_url_host']
   port keystone_settings['admin_port']
   token keystone_settings['admin_token']
@@ -26,6 +28,7 @@ end
 # keystone service-create --name swift --type object-store
 keystone_register "register swift service" do
   protocol keystone_settings['protocol']
+  insecure keystone_settings['insecure']
   host keystone_settings['internal_url_host']
   token keystone_settings['admin_token']
   port keystone_settings['admin_port']
@@ -53,6 +56,7 @@ public_host = CrowbarHelper.get_host_for_public_url(node, protocol == "https", h
 
 keystone_register "register radosgw endpoint" do
     protocol keystone_settings['protocol']
+    insecure keystone_settings['insecure']
     host keystone_settings['internal_url_host']
     token keystone_settings['admin_token']
     port keystone_settings['admin_port']
