@@ -40,7 +40,12 @@ FastCgiExternalServer <%= node['ceph']['radosgw']['path'] %>/s3gw.fcgi -socket /
   AllowEncodedSlashes On
 
   ErrorLog <%= node['apache']['log_dir'] %>/rgw-error_log
+  <% if @behind_proxy -%>
+  LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" proxy_combined
   CustomLog <%= node['apache']['log_dir'] %>/rgw-access_log proxy_combined
+  <% else -%>
+  CustomLog <%= node['apache']['log_dir'] %>/rgw-access_log combined
+  <% end -%>
   ServerSignature Off
 </VirtualHost>
 <% if @node[:ceph][:radosgw][:ssl][:enabled] -%>

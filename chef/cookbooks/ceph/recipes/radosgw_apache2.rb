@@ -37,16 +37,18 @@ end
 
 include_recipe 'apache2'
 
-use_ssl         = node['ceph']['radosgw']['ssl']['enabled']
-rgw_addr        = node['ceph']['radosgw']['rgw_addr']
-rgw_port        = node['ceph']['radosgw']['rgw_port']
-rgw_port_ssl    = node['ceph']['radosgw']['rgw_port_ssl']
+ha_enabled = node['ceph']['ha']['radosgw']['enabled']
 
-if node['ceph']['ha']['radosgw']['enabled']
+if ha_enabled
   rgw_addr      = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
   rgw_port      = node['ceph']['ha']['ports']['radosgw_plain']
   rgw_port_ssl  = node['ceph']['ha']['ports']['radosgw_ssl']
+else
+  rgw_addr        = node['ceph']['radosgw']['rgw_addr']
+  rgw_port        = node['ceph']['radosgw']['rgw_port']
+  rgw_port_ssl    = node['ceph']['radosgw']['rgw_port_ssl']
 end
+use_ssl = node['ceph']['radosgw']['ssl']['enabled']
 
 node.normal[:apache][:listen_ports_crowbar] ||= {}
 if use_ssl
@@ -135,6 +137,7 @@ web_app 'rgw' do
   template 'rgw.conf.erb'
   host rgw_addr
   port use_ssl ? rgw_port_ssl : rgw_port
+  behind_proxy ha_enabled
 end
 
 directory node['ceph']['radosgw']['path'] do
