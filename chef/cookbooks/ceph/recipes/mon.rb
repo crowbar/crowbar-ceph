@@ -149,9 +149,10 @@ end
         sleep 1
       end
 
-      node.set["ceph"]["#{auth}-secret"] = auth_key
-      node.save
+      if node["ceph"]["#{auth}-secret"] != auth_key
+        node.set["ceph"]["#{auth}-secret"] = auth_key
+        node.save
+      end
     end
-    only_if { node["ceph"]["#{auth}-secret"].empty? }
   end
 end
