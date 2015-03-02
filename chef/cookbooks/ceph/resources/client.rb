@@ -1,6 +1,11 @@
 actions :add
 default_action :add
 
+# Allow using non-standard locations for ceph.conf and admin keyring. 
+# This can happen when using and external ceph cluster not deployed with crowbar
+attribute :ceph_conf, :kind_of => String, :default => '/etc/ceph/ceph.conf'
+attribute :admin_keyring, :kind_of => String, :default => '/etc/ceph/ceph.client.admin.keyring'
+
 attribute :name, :kind_of => String, :name_attribute => true
 attribute :caps, :kind_of => Hash, :default => { 'mon' => 'allow r', 'osd' => 'allow r' }
 
