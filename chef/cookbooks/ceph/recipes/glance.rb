@@ -19,6 +19,7 @@ ceph_client glance_user do
   mode 0640
 end
 
-execute "create new pool #{glance_pool}" do
-  command "ceph osd pool create #{glance_pool} 64"
+ceph_pool glance_pool do
+  pool_name glance_pool
+  pg_num 64
 end

@@ -18,8 +18,9 @@ node[:cinder][:volumes].each_with_index do |volume, volid|
   cinder_pools = (ceph_clients[cinder_user] || []) << cinder_pool
   ceph_clients[cinder_user] = cinder_pools
 
-  execute "create new pool #{cinder_pool} (#{backend_id})" do
-    command "ceph osd pool create #{cinder_pool} 128"
+  ceph_pool cinder_pool do
+    pool_name cinder_pool
+    pg_num 128
   end
 end
 
