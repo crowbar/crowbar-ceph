@@ -77,19 +77,13 @@ else
 
     if node["ceph"]["disk_mode"] == "first" && node["ceph"]["osd_devices"].empty?
       if unclaimed_disks.empty?
-        Chef::Log.fatal("There is no suitable disks for ceph")
-        raise "There is no suitable disks for ceph"
+        Chef::Log.fatal("There are no suitable disks for ceph")
+        raise "There are no suitable disks for ceph"
       else
-        # take first available non-SSD disk (or even SSD one if SSD detection is switched off)
-        first_disk      = unclaimed_disks.find do |d|
-          if node["ceph"]["osd"]["use_ssd_for_journal"]
-            node[:block_device][d.name.gsub("/dev/", "")]["rotational"] == "1"
-          else
-            true
-          end
-        end
-        first_disk      = unclaimed_disks.first if first_disk.nil?
-        disk_list       = [ first_disk ]
+        # take first available disk, regardless of whether it's an SSD or not
+        # (use_ssd_for_journal doesn't make sense if you're only trying to claim
+        # one disk)
+        disk_list = [ unclaimed_disks.first ]
       end
     elsif node["ceph"]["disk_mode"] == "all"
       disk_list = unclaimed_disks
@@ -103,7 +97,15 @@ else
         Chef::Log.info("Ceph: Claimed #{d.name}")
         device = {}
         dev_name = d.name.gsub("/dev/", "")
-        if node["ceph"]["osd"]["journal_devices"].include?(d.name) || (node[:block_device][dev_name]["rotational"] == "0" && node["ceph"]["osd"]["use_ssd_for_journal"])
+        if node["ceph"]["osd"]["journal_devices"].include?(d.name) ||
+            (node[:block_device][dev_name]["rotational"] == "0" &&
+             node["ceph"]["osd"]["use_ssd_for_journal"] &&
+             node["ceph"]["disk_mode"] == "all")
+          # Disk marked as journal if explicitly specified in journal_devices,
+          # or if disk is SSD, and use_ssd_for_journal and disk_mode == all.
+          # Note: journal_devices with disk_mode == first probably doesn't work,
+          # but if you know how to define journal_devices, you probably know
+          # you don't want to only allocate one disk to ceph.
           Chef::Log.info("Ceph: Mark #{d.name} as journal")
           device["status"] = "journal"
         end
