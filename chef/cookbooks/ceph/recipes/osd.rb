@@ -75,6 +75,19 @@ else
       node.set["ceph"]["osd"]["use_ssd_for_journal"]        = false
     end
 
+    # If no OSDs have yet been deployed, check what type of disks are available.
+    # If they are all of one type, turn off automatic journal assigning to SSD
+    # (automatic SSD journals only makes sense if there's a mix of disk types).
+    # Note: this also effectively disables SSD journal assignment if there's
+    # only one disk available (can't have a mix of disks if there's only one
+    # disk!)
+    if node["ceph"]["osd_devices"].empty? && unclaimed_disks.any?
+      has_ssds = unclaimed_disks.any? {|d| node[:block_device][d.name.gsub("/dev/", "")]["rotational"] == "0" }
+      has_hdds = unclaimed_disks.any? {|d| node[:block_device][d.name.gsub("/dev/", "")]["rotational"] == "1" }
+
+      node.set["ceph"]["osd"]["use_ssd_for_journal"] = false unless has_ssds && has_hdds
+    end
+
     if node["ceph"]["disk_mode"] == "first" && node["ceph"]["osd_devices"].empty?
       if unclaimed_disks.empty?
         Chef::Log.fatal("There are no suitable disks for ceph")
