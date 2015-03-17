@@ -4,7 +4,7 @@
   "attributes": {
     "ceph": {
       "master": false,
-      "disk_mode": "first",
+      "disk_mode": "all",
       "config": {
         "fsid" : ""
       },
