@@ -68,7 +68,8 @@ else
 
   if is_crowbar?
     node.set["ceph"]["osd_devices"] = [] if node["ceph"]["osd_devices"].nil?
-    unclaimed_disks = BarclampLibrary::Barclamp::Inventory::Disk.unclaimed(node).sort
+    min_size_blocks = node["ceph"]["osd"]["min_size_gb"] * 1024 * 1024 * 2
+    unclaimed_disks = BarclampLibrary::Barclamp::Inventory::Disk.unclaimed(node).sort.select {|d| d.size >= min_size_blocks}
 
     # if devices for journal are explicitely listed, do not use automatic journal assigning to SSD
     if !node["ceph"]["osd"]["journal_devices"].empty?

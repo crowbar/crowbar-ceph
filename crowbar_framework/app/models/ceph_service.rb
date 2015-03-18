@@ -289,19 +289,22 @@ class CephService < PacemakerServiceObject
       end
     end
 
+    min_size_gb = proposal["attributes"]["ceph"]["osd"]["min_size_gb"]
+    min_size_blocks = min_size_gb * 1024 * 1024 * 2
+
     nodes_without_suitable_drives = proposal["deployment"][@bc_name]["elements"]["ceph-osd"].select do |node_name|
       node = NodeObject.find_node_by_name(node_name)
       if node.nil?
           false
       else
-          disks_count = node.unclaimed_physical_drives.length
+          disks_count = node.unclaimed_physical_drives.select { |d, data| data['size'].to_i >= min_size_blocks }.length
           disks_count += node.physical_drives.select { |d, data| node.disk_owner(node.unique_device_for(d)) == 'Ceph' }.length
           disks_count == 0
       end
     end
 
     unless nodes_without_suitable_drives.empty?
-      validation_error("Nodes #{nodes_without_suitable_drives.to_sentence} for ceph-osd role are missing at least one unclaimed disk")
+      validation_error("Nodes #{nodes_without_suitable_drives.to_sentence} for ceph-osd role are missing at least one unclaimed disk larger than #{min_size_gb}GB")
     end
 
     super

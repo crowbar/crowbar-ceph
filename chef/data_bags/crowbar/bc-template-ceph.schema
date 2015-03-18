@@ -29,6 +29,7 @@
               "type": "map",
               "required": true,
               "mapping": {
+                  "min_size_gb": { "type" : "int", "required" : true },
                   "use_ssd_for_journal": { "type" : "bool", "required" : true },
                   "journal_size": { "type" : "int", "required" : true },
                   "journal_devices"  : {
