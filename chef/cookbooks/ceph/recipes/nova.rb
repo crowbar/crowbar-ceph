@@ -24,9 +24,9 @@ if cinder_controller.length > 0
     cinder_pools << volume[:rbd][:pool]
   end
 
-  nova_uuid = is_crowbar? ? "" : node["ceph"]["config"]["fsid"]
   nova_user = 'nova'
 
+  nova_uuid = is_crowbar? ? "" : node["ceph"]["config"]["fsid"]
   if nova_uuid.nil? || nova_uuid.empty?
     mons = get_mon_nodes("ceph_admin-secret:*")
     if mons.empty? then
