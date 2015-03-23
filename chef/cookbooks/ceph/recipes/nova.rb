@@ -61,6 +61,40 @@ if cinder_controller.length > 0
   ruby_block "save nova key as libvirt secret" do
     block do
       if system("virsh hostname &> /dev/null")
+        # First remove conflicting secrets due to same usage name
+        secret_list = %x[ virsh secret-list 2> /dev/null ]
+
+        secret_lines = secret_list.split("\n")
+        if secret_lines.length < 2 || !secret_lines[0].start_with?("UUID") || !secret_lines[1].start_with?("----")
+          raise "cannot fetch list of libvirt secret"
+        end
+        secret_lines.shift(2)
+
+        secret_lines.each do |secret_line|
+          secret_uuid = secret_line.split(" ")[0]
+          secret_xml = %x[ virsh secret-dumpxml #{secret_uuid} ]
+          # some secrets might not be ceph-related, skip these
+          next if secret_xml.index("<usage type='ceph'>").nil?
+
+          # lazy xml parsing
+          re_match = %r[<usage type='ceph'>.*<name>(.*)</name>]m.match(secret_xml)
+          next if re_match.nil?
+          secret_usage = re_match[1]
+
+          undefine = false
+
+          if secret_uuid == nova_uuid
+            undefine = true if secret_usage != "client.#{nova_user} secret"
+          else
+            undefine = true if secret_usage == "client.#{nova_user} secret"
+          end
+
+          if undefine
+            %x[ virsh secret-undefine #{secret_uuid} ]
+          end
+        end
+
+        # Now add our secret and its value
         client_key = %x[ ceph auth get-key client.'#{nova_user}' ]
         raise 'getting nova client key failed' unless $?.exitstatus == 0
 
