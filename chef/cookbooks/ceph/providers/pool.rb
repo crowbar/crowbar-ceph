@@ -1,7 +1,7 @@
 action :create do
   ceph_conf = @new_resource.ceph_conf
   admin_keyring = @new_resource.admin_keyring
-  pool_name = @new_resource.pool_name
+  pool_name = @new_resource.name
   if @new_resource.pg_num
     pg_num = @new_resource.pg_num
   else

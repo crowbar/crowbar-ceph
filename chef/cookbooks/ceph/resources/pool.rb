@@ -8,6 +8,5 @@ attribute :name, :kind_of => String, :name_attribute => true
 attribute :ceph_conf, :kind_of => String, :default => '/etc/ceph/ceph.conf'
 attribute :admin_keyring, :kind_of => String, :default => '/etc/ceph/ceph.client.admin.keyring'
 
-# what pool should be created in the ceph cluster
-attribute :pool_name, :kind_of => String
+# Number of placement groups for the pool.
 attribute :pg_num, :kind_of => Integer
