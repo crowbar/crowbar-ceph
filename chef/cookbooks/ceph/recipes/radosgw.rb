@@ -1,5 +1,7 @@
 include_recipe "ceph::default"
 include_recipe "ceph::conf"
+# needed because of our use of ceph_client
+include_recipe "ceph::keyring"
 
 node['ceph']['radosgw']['packages'].each do |pkg|
   package pkg
