@@ -1,5 +1,11 @@
-include_recipe "ceph::default"
-include_recipe "ceph::conf"
+# do not include "ceph::keyring" recipe, 
+# when node role is "ceph-mon"
+if node.roles.include?("ceph-mon")
+  include_recipe "ceph::default"
+  include_recipe "ceph::conf"
+else
+  include_recipe "ceph::keyring"
+end
 
 node['ceph']['radosgw']['packages'].each do |pkg|
   package pkg
