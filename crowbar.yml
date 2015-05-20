@@ -23,6 +23,7 @@ barclamp:
   user_managed: true
   member:
     - 'openstack'
+    - 'suse_enterprise_storage'
 
 crowbar:
   layout: 1
