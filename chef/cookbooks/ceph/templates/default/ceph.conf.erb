@@ -26,14 +26,12 @@
         public network = <%= @public_network %>
         cluster network = <%= @cluster_network %>
 
-        osd pool default size = <%= [@osd_nodes_count, 3].min %>
-        # Ensure you have a realistic number of placement groups. We recommend
-        # approximately 100 per OSD. E.g., total number of OSDs multiplied by 100
-        # divided by the number of replicas (i.e., osd pool default size). So for
-        # 10 OSDs and osd pool default size = 4, we'd recommend approximately
-        # (100 * 10) / 4 = 250.
-        osd pool default pg num = <%= (@osd_nodes_count * 10) / [@osd_nodes_count, 3].min %>
-        osd pool default pgp num = <%= (@osd_nodes_count * 10) / [@osd_nodes_count, 3].min %>
+        ; replication level, number of data copies
+        osd pool default size = <%= @pool_size %>
+        ; number of placement groups for a pool
+        osd pool default pg num = <%= @pool_pg_num %>
+        ; default number of placement groups for placement for a pool
+        osd pool default pgp num = <%= @pool_pg_num %>
 
         # Choose a reasonable crush leaf type.
         # 0 for a 1-node cluster.

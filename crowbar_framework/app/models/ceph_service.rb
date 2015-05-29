@@ -212,6 +212,25 @@ class CephService < PacemakerServiceObject
         master.save
       end
     end
+
+    # estimating number of osds for ceph cluster
+    disks_num = 0
+    osds_in_total = 0
+    unless osd_nodes.empty? || role.default_attributes["ceph"]["config"]["osds_in_total"] != 0
+      osds = osd_nodes.map {|n| NodeObject.find_node_by_name n}
+      osds.each do |osd|
+        disks_num = osd.unclaimed_physical_drives.length
+        disks_num += osd.physical_drives.select { |d, data| osd.disk_owner(osd.unique_device_for(d)) == 'Ceph' }.length
+        if role.default_attributes["ceph"]["disk_mode"] == "all"
+          osds_in_total += disks_num
+        else
+          osds_in_total += 1 if disks_num
+        end
+      end
+      role.default_attributes["ceph"]["config"]["osds_in_total"] = osds_in_total
+      role.save
+    end
+
   end
 
   def apply_role_post_chef_call(old_role, role, all_nodes)

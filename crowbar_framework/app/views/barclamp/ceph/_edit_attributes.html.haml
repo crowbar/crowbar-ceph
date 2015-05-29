@@ -4,6 +4,9 @@
 
   .panel-body
     = select_field :disk_mode, :collection => :diskmodes_for_ceph
+    = integer_field %w(config replicas_number), :min => 0, :max => 6
+    %span.help-block
+      = t('.replicas_number_hint')
 
     %fieldset
       %legend

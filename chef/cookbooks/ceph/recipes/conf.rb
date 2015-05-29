@@ -2,7 +2,7 @@ raise "fsid must be set in config" if node["ceph"]["config"]['fsid'].nil?
 
 mon_nodes = get_mon_nodes
 osd_nodes = get_osd_nodes
-mon_addresses = get_mon_addresses
+mon_addr = get_mon_addresses
 
 mon_init = []
 mon_nodes.each do |monitor|
@@ -37,11 +37,43 @@ if is_rgw && !(node[:ceph][:keystone_instance].nil? || node[:ceph][:keystone_ins
   keystone_settings = KeystoneHelper.keystone_settings(node, @cookbook_name)
 end
 
+if node["ceph"]["config"]["replicas_number"] == 0
+  rep_num = [osd_nodes.length, 3].min
+else
+  rep_num = node["ceph"]["config"]["replicas_number"]
+end
+
+if node["ceph"]["config"]["osds_in_total"] == 0
+  num_osds = osd_nodes.length
+else
+  num_osds = node["ceph"]["config"]["osds_in_total"]
+end
+
+# calculate pg_num based on documentation
+# http://ceph.com/docs/master/rados/operations/placement-groups/
+case num_osds
+when 1..4
+  pg_num = 128
+when 5..9
+  pg_num = 512
+when 10..49
+  pg_num = 4096
+else
+  # Ensure you have a realistic number of placement groups. We recommend
+  # approximately 100 per OSD. E.g., total number of OSDs multiplied by 100
+  # divided by the number of replicas (i.e., osd pool default size).
+  # The result should be rounded up to the nearest power of two.
+  pg_num = 2 ** Math.log2(num_osds * 100 / rep_num).round
+end
+
+
 template '/etc/ceph/ceph.conf' do
   source 'ceph.conf.erb'
   variables(
     :mon_initial => mon_init,
-    :mon_addresses => mon_addresses,
+    :mon_addresses => mon_addr,
+    :pool_size => rep_num,
+    :pool_pg_num => pg_num,
     :osd_nodes_count => osd_nodes.length,
     :public_network => node["ceph"]["config"]["public-network"],
     :cluster_network => node["ceph"]["config"]["cluster-network"],

@@ -22,6 +22,9 @@ en:
     ceph:
       edit_attributes:
         disk_mode: 'Disk selection method'
+        config:
+          replicas_number: 'Number of replicas of an object'
+        replicas_number_hint: 'Values: 0 - automatic, 1-6 - number of replicas'
         radosgw:
           ssl:
             header: 'SSL Support for RadosGW'

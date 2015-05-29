@@ -6,7 +6,9 @@
       "master": false,
       "disk_mode": "all",
       "config": {
-        "fsid" : ""
+        "fsid" : "",
+        "osds_in_total": 0,
+        "replicas_number": 0
       },
       "monitor-secret": "",
       "admin-secret": "",

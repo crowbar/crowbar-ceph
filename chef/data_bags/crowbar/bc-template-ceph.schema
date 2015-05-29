@@ -18,7 +18,9 @@
               "type": "map",
               "required": true,
               "mapping": {
-                "fsid": { "type": "str", "required": true }
+                "fsid": { "type": "str", "required": true },
+                "osds_in_total": { "type": "int", "required": true },
+                "replicas_number": { "type": "int", "required": true }
               }
             },
             "monitor-secret": { "type": "str", "required": true },
