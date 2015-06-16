@@ -1,3 +1,14 @@
+# Include the keyring recipe, so we get /etc/ceph/ceph.client.admin.keyring
+# and can thus use the calamari host to run `ceph -w`, i.e. the calamari
+# host can be used for CLI admin tasks.  There's a catch though, because
+# calamari is deployed first, before there's any mons, the first time this
+# runs the keyring recipe will throw an error because there's no mons yet,
+# so have to put it in a "rescue" guard to avoid this failure/race.
+begin
+  include_recipe "ceph::keyring"
+rescue
+end
+
 node['ceph']['calamari']['packages'].each do |pkg|
   package pkg
 end
