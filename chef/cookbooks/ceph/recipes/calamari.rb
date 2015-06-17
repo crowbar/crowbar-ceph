@@ -65,3 +65,31 @@ end
 # but is not critical given the user is prompted to authorize them the first
 # time they log in to Calamari.
 
+include_recipe 'apache2'
+
+use_ssl = node['ceph']['calamari']['ssl']['enabled']
+if use_ssl
+  include_recipe 'apache2::mod_ssl'
+
+  certfile = node['ceph']['calamari']['ssl']['certfile']
+  unless ::File.exists? certfile
+    message = "Certificate \"#{certfile}\" is not present."
+    Chef::Log.fatal(message)
+    raise message
+  end
+
+end
+
+# Can't use "web_app 'calamari'" here, because that puts the file in
+# /etc/apache2/vhosts.d/calamari.conf, but /etc/apache2/conf.d/calamari.conf
+# will still exist, and thus conflict (or be used as well), as that's what
+# came in the calamari-server package
+template '/etc/apache2/conf.d/calamari.conf' do
+  source 'calamari-httpd.conf.erb'
+  variables(
+    :port => use_ssl ? 443 : 80
+  )
+  mode '0644'
+  notifies :restart, resources(:service => "apache2"), :immediately
+end
+

@@ -1,0 +1,71 @@
+<% if @node[:ceph][:calamari][:ssl][:enabled] -%>
+<IfDefine SSL>
+<IfDefine !NOSSL>
+
+<% end -%>
+WSGISocketPrefix /var/run/wsgi
+<IfModule !wsgi_module>
+    LoadModule wsgi_module modules/mod_wsgi.so
+</IfModule>
+
+<VirtualHost *:<%= @port %>>
+    ServerName calamari
+    DocumentRoot "/srv/www/calamari"
+    ErrorLog /var/log/calamari/httpd_error.log
+    CustomLog /var/log/calamari/httpd_access.log common
+    AddOutputFilterByType DEFLATE text/text text/html text/plain text/xml text/css application/x-javascript application/javascript application/json
+
+    <% if @node[:ceph][:calamari][:ssl][:enabled] %>
+    SSLEngine on
+    SSLCertificateFile <%= node['ceph']['calamari']['ssl']['certfile'] %>
+    SSLCertificateKeyFile <%= node['ceph']['calamari']['ssl']['keyfile'] %>
+    <% end %>
+
+    WSGIScriptAlias / /srv/www/calamari/calamari.wsgi
+    WSGIDaemonProcess calamari display-name=calamari-httpd processes=8 threads=1 maximum-requests=32
+    WSGIProcessGroup calamari
+    WSGIApplicationGroup %{GLOBAL}
+
+    # The logic assets are treated as public/static files, and are served
+    # directly by Apache.
+    Alias /static /srv/www/calamari/content/
+    <Location "/static/">
+        <IfVersion >= 2.4>
+            Require all granted
+        </IfVersion>
+        SetHandler None
+    </Location>
+
+    # FIXME: graphite static assets are hardcoded to /content/
+    Alias /content /srv/www/calamari/content/
+    <Location "/content/">
+        <IfVersion >= 2.4>
+            Require all granted
+        </IfVersion>
+        SetHandler None
+    </Location>
+
+    Alias /login/ /srv/www/calamari/content/login/
+    <Location "/login/">
+        <IfVersion >= 2.4>
+            Require all granted
+        </IfVersion>
+        SetHandler None
+    </Location>
+
+    <Directory /srv/www/calamari>
+        <IfVersion >= 2.4>
+            Require all granted
+        </IfVersion>
+        <IfVersion < 2.4>
+            Order deny,allow
+            Allow from all
+        </IfVersion>
+    </Directory>
+
+</VirtualHost>
+<% if @node[:ceph][:calamari][:ssl][:enabled] -%>
+</IfDefine>
+</IfDefine>
+
+<% end -%>

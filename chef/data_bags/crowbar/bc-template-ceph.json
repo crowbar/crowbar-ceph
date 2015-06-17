@@ -32,7 +32,12 @@
       "calamari": {
         "username": "admin",
         "email": "admin@example.com",
-        "password": "calamari"
+        "password": "calamari",
+        "ssl": {
+          "enabled": false,
+          "certfile": "/etc/apache2/ssl.crt/calamari-server.crt",
+          "keyfile": "/etc/apache2/ssl.key/calamari-server.key"
+        }
       }
     }
   },
@@ -40,7 +45,7 @@
     "ceph": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 30,
+      "schema-revision": 31,
       "element_states": {
         "ceph-calamari": [ "readying", "ready", "applying" ],
         "ceph-mon": [ "readying", "ready", "applying" ],

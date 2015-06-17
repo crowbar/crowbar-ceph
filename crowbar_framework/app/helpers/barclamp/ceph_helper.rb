@@ -35,5 +35,14 @@ module Barclamp
         selected.to_s
       )
     end
+    def calamari_ssl_protocols(selected)
+      options_for_select(
+        [
+          ["HTTP", "false"],
+          ["HTTPS", "true"]
+        ],
+        selected.to_s
+      )
+    end
   end
 end

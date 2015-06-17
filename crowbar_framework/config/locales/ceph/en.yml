@@ -38,3 +38,8 @@ en:
           username: 'Administrator Username'
           email: 'Administrator Email Address'
           password: 'Administrator Password'
+          ssl:
+            header: 'SSL Support for Calamari'
+            enabled: 'Protocol'
+            certfile: 'SSL Certificate File'
+            keyfile: 'SSL (Private) Key File'
