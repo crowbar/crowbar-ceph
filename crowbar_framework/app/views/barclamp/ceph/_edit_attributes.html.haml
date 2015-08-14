@@ -27,3 +27,13 @@
       = string_field %w(calamari username)
       = string_field %w(calamari email)
       = password_field %w(calamari password)
+
+      %fieldset
+        %legend
+          = t(".calamari.ssl.header")
+
+        = boolean_field %w(calamari ssl enabled), :collection => :calamari_ssl_protocols, "data-sslprefix" => "calamari_ssl", "data-sslcert" => "/etc/apache2/ssl.crt/calamari-server.crt", "data-sslkey" => "/etc/apache2/ssl.key/calamari-server.key"
+
+        #calamari_ssl_container
+          = string_field %w(calamari ssl certfile)
+          = string_field %w(calamari ssl keyfile)
