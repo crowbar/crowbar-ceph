@@ -1,0 +1,56 @@
+<% if @node[:ceph][:radosgw][:ssl][:enabled] -%>
+<IfDefine SSL>
+<IfDefine !NOSSL>
+
+<% end -%>
+FastCgiExternalServer <%= node['ceph']['radosgw']['path'] %>/s3gw.fcgi -socket /var/run/ceph-radosgw/radosgw.<%= node['hostname'] %>
+
+<VirtualHost <%= @params[:host] %>:<%= @params[:port] %>>
+  ServerName <%= node['hostname'] %>
+<% if !node["crowbar"]["display"].nil? && node["crowbar"]["display"]["alias"] -%>
+  ServerAlias <%= node["crowbar"]["display"]["alias"] %>
+<% end -%>
+  DocumentRoot <%= node['ceph']['radosgw']['path'] %>
+  LimitRequestFieldSize 32768
+
+  RewriteEngine On
+  RewriteCond %{REQUEST_URI} !^/server-status
+  RewriteRule ^/([a-zA-Z0-9-_.]*)([/]?.*) /s3gw.fcgi?page=$1&params=$2&%{QUERY_STRING} [E=HTTP_AUTHORIZATION:%{HTTP:Authorization},L]
+
+  <% if node[:ceph][:radosgw][:ssl][:enabled] %>
+  SSLEngine on
+  SSLCertificateFile <%= node['ceph']['radosgw']['ssl']['certfile'] %>
+  SSLCertificateKeyFile <%= node['ceph']['radosgw']['ssl']['keyfile'] %>
+  <% end %>
+
+  <IfModule mod_fastcgi.c>
+    <Directory <%= node['ceph']['radosgw']['path'] %>>
+      Options +ExecCGI
+      AllowOverride All
+      SetHandler fastcgi-script
+      AuthBasicAuthoritative Off
+      <%- if node[:apache][:version].to_f < 2.4 %>
+      Order allow,deny
+      Allow from all
+      <%- else %>
+      Require all granted
+      <%- end %>
+    </Directory>
+  </IfModule>
+
+  AllowEncodedSlashes On
+
+  ErrorLog <%= node['apache']['log_dir'] %>/rgw-error_log
+  <% if @behind_proxy -%>
+  LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" proxy_combined
+  CustomLog <%= node['apache']['log_dir'] %>/rgw-access_log proxy_combined
+  <% else -%>
+  CustomLog <%= node['apache']['log_dir'] %>/rgw-access_log combined
+  <% end -%>
+  ServerSignature Off
+</VirtualHost>
+<% if @node[:ceph][:radosgw][:ssl][:enabled] -%>
+
+</IfDefine>
+</IfDefine>
+<% end -%>

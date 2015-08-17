@@ -1,0 +1,39 @@
+= attributes_for @proposal do
+  .panel-sub
+    = header show_raw_deployment?, true
+
+  .panel-body
+    = select_field :disk_mode, :collection => :diskmodes_for_ceph
+    = integer_field %w(config replicas_number), :min => 0, :max => 6
+    %span.help-block
+      = t('.replicas_number_hint')
+
+    %fieldset
+      %legend
+        = t(".radosgw.ssl.header")
+
+      = boolean_field %w(radosgw ssl enabled), :collection => :radosgw_ssl_protocols, "data-sslprefix" => "radosgw_ssl", "data-sslcert" => "/etc/apache2/ssl.crt/ceph-radosgw.crt", "data-sslkey" => "/etc/apache2/ssl.key/ceph-radosgw.key"
+
+      #radosgw_ssl_container
+        = boolean_field %w(radosgw ssl generate_certs)
+        = string_field %w(radosgw ssl certfile)
+        = string_field %w(radosgw ssl keyfile)
+        = boolean_field %w(radosgw ssl insecure)
+
+    %fieldset
+      %legend
+        = t(".calamari.header")
+
+      = string_field %w(calamari username)
+      = string_field %w(calamari email)
+      = password_field %w(calamari password)
+
+      %fieldset
+        %legend
+          = t(".calamari.ssl.header")
+
+        = boolean_field %w(calamari ssl enabled), :collection => :calamari_ssl_protocols, "data-sslprefix" => "calamari_ssl", "data-sslcert" => "/etc/apache2/ssl.crt/calamari-server.crt", "data-sslkey" => "/etc/apache2/ssl.key/calamari-server.key"
+
+        #calamari_ssl_container
+          = string_field %w(calamari ssl certfile)
+          = string_field %w(calamari ssl keyfile)

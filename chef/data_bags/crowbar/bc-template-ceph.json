@@ -1,0 +1,77 @@
+{
+  "id": "bc-template-ceph",
+  "description": "Distributed object store and file system",
+  "attributes": {
+    "ceph": {
+      "master": false,
+      "disk_mode": "all",
+      "config": {
+        "fsid" : "",
+        "osds_in_total": 0,
+        "replicas_number": 0
+      },
+      "monitor-secret": "",
+      "admin-secret": "",
+      "clustername": "ceph",
+      "keystone_instance": "none",
+      "osd": {
+        "min_size_gb": 20,
+        "journal_size"  : 5120,
+        "journal_devices"  : [],
+        "use_ssd_for_journal"  : true
+      },
+      "radosgw": {
+        "ssl": {
+            "enabled": false,
+            "certfile": "/etc/apache2/ssl.crt/ceph-radosgw.crt",
+            "keyfile": "/etc/apache2/ssl.key/ceph-radosgw.key",
+            "generate_certs": false,
+            "insecure": false
+        }
+      },
+      "calamari": {
+        "username": "admin",
+        "email": "admin@example.com",
+        "password": "calamari",
+        "ssl": {
+          "enabled": false,
+          "certfile": "/etc/apache2/ssl.crt/calamari-server.crt",
+          "keyfile": "/etc/apache2/ssl.key/calamari-server.key"
+        }
+      }
+    }
+  },
+  "deployment": {
+    "ceph": {
+      "crowbar-revision": 0,
+      "crowbar-applied": false,
+      "schema-revision": 31,
+      "element_states": {
+        "ceph-calamari": [ "readying", "ready", "applying" ],
+        "ceph-mon": [ "readying", "ready", "applying" ],
+        "ceph-osd": [ "readying", "ready", "applying" ],
+        "ceph-radosgw": [ "readying", "ready", "applying" ]
+      },
+      "elements": {},
+      "element_order": [
+        [ "ceph-calamari" ],
+        [ "ceph-mon" ],
+        [ "ceph-osd" ],
+        [ "ceph-radosgw" ]
+      ],
+      "element_run_list_order": {
+        "ceph-calamari": 79,
+        "ceph-mon": 80,
+        "ceph-osd": 81,
+        "ceph-radosgw": 82
+      },
+      "config": {
+        "environment": "ceph-base-config",
+        "mode": "full",
+        "transitions": false,
+        "transition_list": [
+        ]
+      }
+    }
+  }
+}
