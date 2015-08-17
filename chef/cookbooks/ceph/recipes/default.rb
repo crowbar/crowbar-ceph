@@ -26,7 +26,7 @@ when "debian", "ubuntu"
       ceph-common
   }
 
-  if node['ceph']['install_debug']
+  if node["ceph"]["install_debug"]
     packages_dbg = %w{
       ceph-dbg
       ceph-common-dbg
@@ -38,7 +38,7 @@ when "redhat", "centos", "fedora"
       ceph
   }
 
-  if node['ceph']['install_debug']
+  if node["ceph"]["install_debug"]
     packages_dbg = %w{
       ceph-debuginfo
     }

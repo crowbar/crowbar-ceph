@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-require 'chef'
+require "chef"
 
 def mask_to_bits(mask)
   octets = mask.split(".")
@@ -37,7 +37,6 @@ def mask_to_bits(mask)
 end
 
 class CephService < PacemakerServiceObject
-
   def initialize(thelogger)
     super(thelogger)
     @bc_name = "ceph"
@@ -53,7 +52,7 @@ class CephService < PacemakerServiceObject
             "suse" => "< 12.0",
             "windows" => "/.*/"
           },
-          "conflicts_with" => [ "ceph-mon", "ceph-osd", "ceph-radosgw", "nova_dashboard-server" ]
+          "conflicts_with" => ["ceph-mon", "ceph-osd", "ceph-radosgw", "nova_dashboard-server"]
         },
         "ceph-mon" => {
           "unique" => false,
@@ -112,7 +111,7 @@ class CephService < PacemakerServiceObject
       osd_nodes_all = select_nodes_for_role(nodes, "ceph-osd")
       # avoid controllers if possible (will likely be used for mon)
       osd_nodes_no_controller = osd_nodes_all - osd_nodes_controller
-      osd_nodes = [ osd_nodes, osd_nodes_no_controller, osd_nodes_all ].flatten.uniq{|n| n.name}
+      osd_nodes = [osd_nodes, osd_nodes_no_controller, osd_nodes_all].flatten.uniq{ |n| n.name }
       osd_nodes = osd_nodes.take(2)
     end
 
@@ -121,7 +120,7 @@ class CephService < PacemakerServiceObject
     if mon_nodes.size < 3
       mon_nodes_storage = select_nodes_for_role(nodes, "ceph-mon", "storage")
       mon_nodes_all = select_nodes_for_role(nodes, "ceph-mon")
-      mon_nodes = [ mon_nodes, mon_nodes_storage, mon_nodes_all ].flatten.uniq{|n| n.name}
+      mon_nodes = [mon_nodes, mon_nodes_storage, mon_nodes_all].flatten.uniq{ |n| n.name }
     end
     mon_nodes = mon_nodes.take(mon_nodes.length > 2 ? 3 : 1)
 
@@ -134,10 +133,10 @@ class CephService < PacemakerServiceObject
     calamari_node = calamari_nodes.first
 
     base["deployment"]["ceph"]["elements"] = {
-        "ceph-calamari" => calamari_node.nil? ? [] : [ calamari_node.name ],
+        "ceph-calamari" => calamari_node.nil? ? [] : [calamari_node.name],
         "ceph-mon" => mon_nodes.map { |x| x.name },
         "ceph-osd" => osd_nodes.map { |x| x.name },
-        "ceph-radosgw" => radosgw_node.nil? ? [] : [ radosgw_node.name ]
+        "ceph-radosgw" => radosgw_node.nil? ? [] : [radosgw_node.name]
     }
 
     @logger.debug("Ceph create_proposal: exiting")
@@ -191,7 +190,7 @@ class CephService < PacemakerServiceObject
 
     # electing master ceph
     unless monitors.empty?
-      mons = monitors.map {|n| NodeObject.find_node_by_name n}
+      mons = monitors.map { |n| NodeObject.find_node_by_name n }
 
       master = nil
       mons.each do |mon|
@@ -217,10 +216,10 @@ class CephService < PacemakerServiceObject
     disks_num = 0
     osds_in_total = 0
     unless osd_nodes.empty? || role.default_attributes["ceph"]["config"]["osds_in_total"] != 0
-      osds = osd_nodes.map {|n| NodeObject.find_node_by_name n}
+      osds = osd_nodes.map { |n| NodeObject.find_node_by_name n }
       osds.each do |osd|
         disks_num = osd.unclaimed_physical_drives.length
-        disks_num += osd.physical_drives.select { |d, data| osd.disk_owner(osd.unique_device_for(d)) == 'Ceph' }.length
+        disks_num += osd.physical_drives.select { |d, data| osd.disk_owner(osd.unique_device_for(d)) == "Ceph" }.length
         if role.default_attributes["ceph"]["disk_mode"] == "all"
           osds_in_total += disks_num
         else
@@ -242,7 +241,7 @@ class CephService < PacemakerServiceObject
       node.crowbar["crowbar"] ||= {}
       node.crowbar["crowbar"]["links"] ||= {}
 
-      for t in ['admin'] do
+      for t in ["admin"] do
         unless node.get_network_by_type(t)
           node.crowbar["crowbar"]["links"].delete("Calamari Dashboard (#{t})")
           next
@@ -316,8 +315,8 @@ class CephService < PacemakerServiceObject
       if node.nil?
           false
       else
-          disks_count = node.unclaimed_physical_drives.select { |d, data| data['size'].to_i >= min_size_blocks }.length
-          disks_count += node.physical_drives.select { |d, data| node.disk_owner(node.unique_device_for(d)) == 'Ceph' }.length
+          disks_count = node.unclaimed_physical_drives.select { |d, data| data["size"].to_i >= min_size_blocks }.length
+          disks_count += node.physical_drives.select { |d, data| node.disk_owner(node.unique_device_for(d)) == "Ceph" }.length
           disks_count == 0
       end
     end

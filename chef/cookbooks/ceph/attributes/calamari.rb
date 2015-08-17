@@ -1,1 +1,1 @@
-default['ceph']['calamari']['packages'] = ['calamari-clients']
+default["ceph"]["calamari"]["packages"] = ["calamari-clients"]

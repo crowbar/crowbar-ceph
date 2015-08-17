@@ -16,7 +16,6 @@
 #
 
 class CephController < BarclampController
-
   protected
 
   def initialize_service

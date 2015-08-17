@@ -35,7 +35,7 @@ include_recipe "ceph::default"
 include_recipe "ceph::server"
 include_recipe "ceph::conf"
 
-package 'gdisk'
+package "gdisk"
 
 service_type = node["ceph"]["osd"]["init_style"]
 mons = get_mon_nodes("ceph_bootstrap-osd-secret:*")
@@ -47,7 +47,7 @@ elsif mons[0]["ceph"]["bootstrap-osd-secret"].empty?
   Chef::Log.fatal("No authorization keys found")
 else
 
-  [ "tmp", "osd", "bootstrap-osd" ].each do |name|
+  ["tmp", "osd", "bootstrap-osd"].each do |name|
     directory "/var/lib/ceph/#{name}" do
       owner "root"
       group "root"
@@ -58,7 +58,7 @@ else
   end
 
   # TODO cluster name
-  cluster = 'ceph'
+  cluster = "ceph"
 
   osd_secret = mons[0]["ceph"]["bootstrap-osd-secret"]
 
@@ -69,7 +69,7 @@ else
   if is_crowbar?
     node.set["ceph"]["osd_devices"] = [] if node["ceph"]["osd_devices"].nil?
     min_size_blocks = node["ceph"]["osd"]["min_size_gb"] * 1024 * 1024 * 2
-    unclaimed_disks = BarclampLibrary::Barclamp::Inventory::Disk.unclaimed(node).sort.select {|d| d.size >= min_size_blocks}
+    unclaimed_disks = BarclampLibrary::Barclamp::Inventory::Disk.unclaimed(node).sort.select { |d| d.size >= min_size_blocks }
 
     # if devices for journal are explicitely listed, do not use automatic journal assigning to SSD
     if !node["ceph"]["osd"]["journal_devices"].empty?
@@ -83,8 +83,8 @@ else
     # only one disk available (can't have a mix of disks if there's only one
     # disk!)
     if node["ceph"]["osd_devices"].empty? && unclaimed_disks.any?
-      has_ssds = unclaimed_disks.any? {|d| node[:block_device][d.name.gsub("/dev/", "")]["rotational"] == "0" }
-      has_hdds = unclaimed_disks.any? {|d| node[:block_device][d.name.gsub("/dev/", "")]["rotational"] == "1" }
+      has_ssds = unclaimed_disks.any? { |d| node[:block_device][d.name.gsub("/dev/", "")]["rotational"] == "0" }
+      has_hdds = unclaimed_disks.any? { |d| node[:block_device][d.name.gsub("/dev/", "")]["rotational"] == "1" }
 
       node.set["ceph"]["osd"]["use_ssd_for_journal"] = false unless has_ssds && has_hdds
     end
@@ -97,7 +97,7 @@ else
         # take first available disk, regardless of whether it's an SSD or not
         # (use_ssd_for_journal doesn't make sense if you're only trying to claim
         # one disk)
-        disk_list = [ unclaimed_disks.first ]
+        disk_list = [unclaimed_disks.first]
       end
     elsif node["ceph"]["disk_mode"] == "all"
       disk_list = unclaimed_disks
@@ -153,7 +153,7 @@ else
         create_cmd = "ceph-disk prepare --cluster '#{cluster}' --journal-dev --zap-disk '#{osd_device['device']}'"
         unless ssd_devices.empty?
           ssd_device            = ssd_devices[ssd_index]
-          journal_device        = ssd_device['device']
+          journal_device        = ssd_device["device"]
           create_cmd            = create_cmd + " #{journal_device}" if journal_device
           # move to next fee SSD if number of partitions on current one is too big
           ssd_partitions        = ssd_partitions + 1
@@ -165,7 +165,7 @@ else
 
         if %w(redhat centos).include? node.platform
           # redhat has buggy udev so we have to use workaround from ceph
-          b_dev = osd_device['device'].gsub("/dev/", "")
+          b_dev = osd_device["device"].gsub("/dev/", "")
           create_cmd = create_cmd + " && ceph-disk-udev 2 #{b_dev}2 #{b_dev} ; ceph-disk-udev 1 #{b_dev}1 #{b_dev}"
         else
           extra_options = ""
@@ -180,9 +180,9 @@ else
 
         ruby_block "Get Ceph OSD ID for #{osd_device['device']}" do
           block do
-            osd_id = ''
+            osd_id = ""
             while osd_id.empty?
-              osd_id = get_osd_id(osd_device['device'])
+              osd_id = get_osd_id(osd_device["device"])
               sleep 1
             end
           end
@@ -197,7 +197,6 @@ else
 
         # No need to specifically enable ceph-osd@N on systemd systems, as this
         # is done automatically by ceph-disk-activate
-
       end
       node.save
 
@@ -209,9 +208,9 @@ else
         else
           service_name "ceph"
         end
-        action [ :enable, :start ]
-        supports :restart => true
-        subscribes :restart, resources(:template => "/etc/ceph/ceph.conf")
+        action [:enable, :start]
+        supports restart: true
+        subscribes :restart, resources(template: "/etc/ceph/ceph.conf")
       end unless service_type == "systemd"
 
       # In addition to the osd services, ceph.target must be enabled when using systemd

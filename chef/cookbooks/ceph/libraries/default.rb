@@ -1,5 +1,5 @@
-require 'ipaddr'
-require 'json'
+require "ipaddr"
+require "json"
 
 def is_crowbar?()
   return defined?(Chef::Recipe::Barclamp) != nil
@@ -9,7 +9,7 @@ def get_mon_nodes(extra_search=nil)
   if is_crowbar?
     mon_roles = search(:role, 'name:crowbar-* AND run_list:role\[ceph-mon\]')
     if not mon_roles.empty?
-      search_string = mon_roles.map { |role_object| "roles:"+role_object.name }.join(' OR ')
+      search_string = mon_roles.map { |role_object| "roles:"+role_object.name }.join(" OR ")
     else
       return []
     end
@@ -74,7 +74,7 @@ def get_mon_addresses()
     # make sure if this node runs ceph-mon, it's always included even if
     # search is laggy; put it first in the hopes that clients will talk
     # primarily to local node
-    if node['roles'].include? 'ceph-mon'
+    if node["roles"].include? "ceph-mon"
       mons << node
     end
 
@@ -82,10 +82,10 @@ def get_mon_addresses()
     if is_crowbar?
       mon_ips = mons.map { |node| Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address }
     else
-      if node['ceph']['config'] && node['ceph']['config']['public-network']
-        mon_ips = mons.map { |nodeish| find_node_ip_in_network(node['ceph']['config']['public-network'], nodeish) }
+      if node["ceph"]["config"] && node["ceph"]["config"]["public-network"]
+        mon_ips = mons.map { |nodeish| find_node_ip_in_network(node["ceph"]["config"]["public-network"], nodeish) }
       else
-        mon_ips = mons.map { |node| node['ipaddress'] + ":6789" }
+        mon_ips = mons.map { |node| node["ipaddress"] + ":6789" }
       end
     end
   end
@@ -94,17 +94,17 @@ end
 
 def get_quorum_members_ips()
   mon_ips = []
-  mon_status = %x[ceph --admin-daemon /var/run/ceph/ceph-mon.#{node['hostname']}.asok mon_status]
-  raise 'getting quorum members failed' unless $?.exitstatus == 0
+  mon_status = %x[ceph --admin-daemon /var/run/ceph/ceph-mon.#{node["hostname"]}.asok mon_status]
+  raise "getting quorum members failed" unless $?.exitstatus == 0
 
-  mons = JSON.parse(mon_status)['monmap']['mons']
+  mons = JSON.parse(mon_status)["monmap"]["mons"]
   mons.each do |k|
-    mon_ips.push(k['addr'][0..-3])
+    mon_ips.push(k["addr"][0..-3])
   end
   return mon_ips
 end
 
-QUORUM_STATES = ['leader', 'peon']
+QUORUM_STATES = ["leader", "peon"]
 def have_quorum?()
     # "ceph auth get-or-create-key" would hang if the monitor wasn't
     # in quorum yet, which is highly likely on the first run. This
@@ -115,9 +115,9 @@ def have_quorum?()
     # in the ceph tool, this exits immediately if the ceph-mon is not
     # running for any reason; trying to connect via TCP/IP would wait
     # for a relatively long timeout.
-    mon_status = %x[ceph --admin-daemon /var/run/ceph/ceph-mon.#{node['hostname']}.asok mon_status]
-    raise 'getting monitor state failed' unless $?.exitstatus == 0
-    state = JSON.parse(mon_status)['state']
+    mon_status = %x[ceph --admin-daemon /var/run/ceph/ceph-mon.#{node["hostname"]}.asok mon_status]
+    raise "getting monitor state failed" unless $?.exitstatus == 0
+    state = JSON.parse(mon_status)["state"]
     return QUORUM_STATES.include?(state)
 end
 
@@ -132,7 +132,7 @@ def get_osd_nodes()
   if is_crowbar?
     osd_roles = search(:role, 'name:crowbar-* AND run_list:role\[ceph-osd\]')
     if not osd_roles.empty?
-      search_string = osd_roles.map { |role_object| "roles:"+role_object.name }.join(' OR ')
+      search_string = osd_roles.map { |role_object| "roles:"+role_object.name }.join(" OR ")
     else
       return []
     end
@@ -142,19 +142,19 @@ def get_osd_nodes()
 
   search(:node, search_string).each do |node|
     port_counter = 6799
-    cluster_addr = ''
-    public_addr = ''
+    cluster_addr = ""
+    public_addr = ""
 
     public_addr = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
-    cluster_addr = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "storage").address    
+    cluster_addr = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "storage").address
 
-    osd = {} 
-    osd[:hostname] = node.name.split('.')[0]
+    osd = {}
+    osd[:hostname] = node.name.split(".")[0]
     osd[:cluster_addr] = cluster_addr
     osd[:cluster_port] = (port_counter += 1)
     osd[:public_addr] = public_addr
     osd[:public_port] = (port_counter += 1)
-    osds << osd    
+    osds << osd
   end
 
   return osds

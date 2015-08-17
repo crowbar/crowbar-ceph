@@ -29,15 +29,15 @@ directory "/var/lib/ceph/mon/ceph-#{node["hostname"]}" do
 end
 
 # TODO cluster name
-cluster = 'ceph'
+cluster = "ceph"
 
 unless File.exists?("/var/lib/ceph/mon/ceph-#{node["hostname"]}/done")
   keyring = "#{Chef::Config[:file_cache_path]}/#{cluster}-#{node['hostname']}.mon.keyring"
 
   execute "create monitor keyring" do
     command "ceph-authtool '#{keyring}' --create-keyring --name=mon. --add-key='#{node["ceph"]["monitor-secret"]}' --cap mon 'allow *'"
-    not_if { node['ceph']['monitor-secret'].empty? }
-    notifies :run, 'execute[ceph-mon mkfs]', :immediately
+    not_if { node["ceph"]["monitor-secret"].empty? }
+    notifies :run, "execute[ceph-mon mkfs]", :immediately
   end
 
   ruby_block "generate monitor-secret" do
@@ -50,21 +50,21 @@ unless File.exists?("/var/lib/ceph/mon/ceph-#{node["hostname"]}/done")
       add_key.run_command
       add_key.error!
 
-      node.set['ceph']['monitor-secret'] = monitor_key
+      node.set["ceph"]["monitor-secret"] = monitor_key
       node.save
     end
-    only_if { node['ceph']['monitor-secret'].empty? && node[:ceph][:master] }
-    notifies :run, 'execute[ceph-mon mkfs]', :immediately
+    only_if { node["ceph"]["monitor-secret"].empty? && node[:ceph][:master] }
+    notifies :run, "execute[ceph-mon mkfs]", :immediately
   end
 
   ruby_block "get monitor-secret" do
     block do
-      monitor_key = ''
+      monitor_key = ""
       while monitor_key.empty?
         mon_nodes = get_mon_nodes
         mon_nodes.each do |mon|
-          if mon[:ceph][:master] && !mon['ceph']['monitor-secret'].empty?
-            monitor_key = mon['ceph']['monitor-secret']
+          if mon[:ceph][:master] && !mon["ceph"]["monitor-secret"].empty?
+            monitor_key = mon["ceph"]["monitor-secret"]
           end
         end
         sleep 1
@@ -74,14 +74,14 @@ unless File.exists?("/var/lib/ceph/mon/ceph-#{node["hostname"]}/done")
       add_key.run_command
       add_key.error!
 
-      node.set['ceph']['monitor-secret'] = monitor_key
+      node.set["ceph"]["monitor-secret"] = monitor_key
       node.save
     end
-    only_if { node['ceph']['monitor-secret'].empty? }
-    notifies :run, 'execute[ceph-mon mkfs]', :immediately
+    only_if { node["ceph"]["monitor-secret"].empty? }
+    notifies :run, "execute[ceph-mon mkfs]", :immediately
   end
 
-  execute 'ceph-mon mkfs' do
+  execute "ceph-mon mkfs" do
     command "ceph-mon --mkfs -i #{node['hostname']} --keyring '#{keyring}'"
     action :nothing
   end
@@ -102,8 +102,8 @@ if service_type == "upstart"
   end
   service "ceph-mon-all" do
     provider Chef::Provider::Service::Upstart
-    supports :status => true
-    action [ :enable, :start ]
+    supports status: true
+    action [:enable, :start]
   end
 end
 
@@ -117,9 +117,9 @@ service "ceph_mon" do
   else
     service_name "ceph"
   end
-  supports :restart => true, :status => true
-  action [ :enable, :start ]
-  subscribes :restart, resources(:template => "/etc/ceph/ceph.conf")
+  supports restart: true, status: true
+  action [:enable, :start]
+  subscribes :restart, resources(template: "/etc/ceph/ceph.conf")
 end
 
 # In addition to the mon service, ceph.target must be enabled when using systemd
@@ -139,10 +139,10 @@ get_mon_addresses.each do |addr|
   end
 end
 
-[ "admin", "bootstrap-osd" ].each do |auth|
+["admin", "bootstrap-osd"].each do |auth|
   ruby_block "get #{auth}-secret" do
     block do
-      auth_key = ''
+      auth_key = ""
       while auth_key.empty?
         get_key = Mixlib::ShellOut.new("ceph auth get-key client.#{auth}")
         auth_key = get_key.run_command.stdout.strip

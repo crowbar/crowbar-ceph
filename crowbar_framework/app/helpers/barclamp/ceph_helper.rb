@@ -29,7 +29,7 @@ module Barclamp
     def diskmodes_for_ceph(selected)
       options_for_select(
         [
-          ["First Available","first"], 
+          ["First Available","first"],
           ["All Available", "all"]
         ],
         selected.to_s

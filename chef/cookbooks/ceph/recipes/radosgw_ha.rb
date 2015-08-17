@@ -35,14 +35,14 @@ service_name = "ceph-radosgw"
 
 pacemaker_primitive service_name do
   agent node[:ceph][:ha][:radosgw][:agent]
-  op    node[:ceph][:ha][:radosgw][:op]
+  op node[:ceph][:ha][:radosgw][:op]
   action :create
   only_if { CrowbarPacemakerHelper.is_cluster_founder?(node) }
 end
 
 pacemaker_clone "cl-#{service_name}" do
   rsc service_name
-  action [ :create, :start ]
+  action [:create, :start]
   only_if { CrowbarPacemakerHelper.is_cluster_founder?(node) }
 end
 

@@ -1,8 +1,8 @@
-case node['platform']
-when 'ubuntu'
+case node["platform"]
+when "ubuntu"
   default["ceph"]["osd"]["init_style"] = "upstart"
-when 'suse'
-  if node['platform_version'].to_f >= 12
+when "suse"
+  if node["platform_version"].to_f >= 12
     default["ceph"]["osd"]["init_style"] = "systemd"
   else
     default["ceph"]["osd"]["init_style"] = "sysvinit"

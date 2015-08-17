@@ -1,19 +1,19 @@
-if node['ceph']['radosgw']['use_apache_fork']
-  case node['lsb']['codename']
-  when 'precise', 'oneiric'
-    apt_repository 'ceph-apache2' do
-      repo_name 'ceph-apache2'
+if node["ceph"]["radosgw"]["use_apache_fork"]
+  case node["lsb"]["codename"]
+  when "precise", "oneiric"
+    apt_repository "ceph-apache2" do
+      repo_name "ceph-apache2"
       uri "http://gitbuilder.ceph.com/apache2-deb-#{node['lsb']['codename']}-x86_64-basic/ref/master"
-      distribution node['lsb']['codename']
-      components ['main']
-      key 'https://ceph.com/git/?p=ceph.git;a=blob_plain;f=keys/autobuild.asc'
+      distribution node["lsb"]["codename"]
+      components ["main"]
+      key "https://ceph.com/git/?p=ceph.git;a=blob_plain;f=keys/autobuild.asc"
     end
-    apt_repository 'ceph-modfastcgi' do
-      repo_name 'ceph-modfastcgi'
+    apt_repository "ceph-modfastcgi" do
+      repo_name "ceph-modfastcgi"
       uri "http://gitbuilder.ceph.com/libapache-mod-fastcgi-deb-#{node['lsb']['codename']}-x86_64-basic/ref/master"
-      distribution node['lsb']['codename']
-      components ['main']
-      key 'https://ceph.com/git/?p=ceph.git;a=blob_plain;f=keys/autobuild.asc'
+      distribution node["lsb"]["codename"]
+      components ["main"]
+      key "https://ceph.com/git/?p=ceph.git;a=blob_plain;f=keys/autobuild.asc"
     end
   else
     Log.info("Ceph's Apache and Apache FastCGI forks not available for this distribution")
@@ -21,53 +21,52 @@ if node['ceph']['radosgw']['use_apache_fork']
 end
 
 packages = []
-case node['platform_family']
-  when 'debian'
-    packages = ['libapache2-mod-fastcgi']
-  when 'rhel', 'fedora'
-    packages = ['mod_fastcgi']
-  when 'suse'
-    packages = ['apache2-mod_fastcgi', 'apache2-worker' ]
+case node["platform_family"]
+  when "debian"
+    packages = ["libapache2-mod-fastcgi"]
+  when "rhel", "fedora"
+    packages = ["mod_fastcgi"]
+  when "suse"
+    packages = ["apache2-mod_fastcgi", "apache2-worker"]
 end
 
 packages.each do |pkg|
   package pkg
 end
 
+include_recipe "apache2"
 
-include_recipe 'apache2'
-
-ha_enabled = node['ceph']['ha']['radosgw']['enabled']
+ha_enabled = node["ceph"]["ha"]["radosgw"]["enabled"]
 
 if ha_enabled
   rgw_addr      = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
-  rgw_port      = node['ceph']['ha']['ports']['radosgw_plain']
-  rgw_port_ssl  = node['ceph']['ha']['ports']['radosgw_ssl']
+  rgw_port      = node["ceph"]["ha"]["ports"]["radosgw_plain"]
+  rgw_port_ssl  = node["ceph"]["ha"]["ports"]["radosgw_ssl"]
 else
-  rgw_addr        = node['ceph']['radosgw']['rgw_addr']
-  rgw_port        = node['ceph']['radosgw']['rgw_port']
-  rgw_port_ssl    = node['ceph']['radosgw']['rgw_port_ssl']
+  rgw_addr        = node["ceph"]["radosgw"]["rgw_addr"]
+  rgw_port        = node["ceph"]["radosgw"]["rgw_port"]
+  rgw_port_ssl    = node["ceph"]["radosgw"]["rgw_port_ssl"]
 end
-use_ssl = node['ceph']['radosgw']['ssl']['enabled']
+use_ssl = node["ceph"]["radosgw"]["ssl"]["enabled"]
 
 node.normal[:apache][:listen_ports_crowbar] ||= {}
 if use_ssl
   include_recipe "apache2::mod_ssl"
   # the non-ssl port is needed to allow mod_status over http
-  node.normal[:apache][:listen_ports_crowbar][:ceph] = { :plain => [rgw_port], :ssl => [rgw_port_ssl] }
+  node.normal[:apache][:listen_ports_crowbar][:ceph] = { plain: [rgw_port], ssl: [rgw_port_ssl] }
 else
-  node.normal[:apache][:listen_ports_crowbar][:ceph] = { :plain => [rgw_port] }
+  node.normal[:apache][:listen_ports_crowbar][:ceph] = { plain: [rgw_port] }
 end
 node.save
 
 # Override what the apache2 cookbook does since it enforces the ports
-resource = resources(:template => "#{node[:apache][:dir]}/ports.conf")
-resource.variables({:apache_listen_ports => node.normal[:apache][:listen_ports_crowbar].values.map{ |p| p.values }.flatten.uniq.sort})
+resource = resources(template: "#{node[:apache][:dir]}/ports.conf")
+resource.variables({apache_listen_ports: node.normal[:apache][:listen_ports_crowbar].values.map{ |p| p.values }.flatten.uniq.sort})
 
 if use_ssl
-  certfile      = node['ceph']['radosgw']['ssl']['certfile']
-  keyfile       = node['ceph']['radosgw']['ssl']['keyfile']
-  if  node['ceph']['radosgw']['ssl']['generate_certs']
+  certfile      = node["ceph"]["radosgw"]["ssl"]["certfile"]
+  keyfile       = node["ceph"]["radosgw"]["ssl"]["keyfile"]
+  if  node["ceph"]["radosgw"]["ssl"]["generate_certs"]
     package "openssl"
     ruby_block "generate_certs for radosgw" do
         block do
@@ -125,42 +124,42 @@ if use_ssl
   end # if generate_certs
 end
 
-apache_module 'fastcgi' do
+apache_module "fastcgi" do
   conf true
 end
 
-apache_module 'rewrite' do
+apache_module "rewrite" do
   conf false
 end
 
-web_app 'rgw' do
-  template 'rgw.conf.erb'
+web_app "rgw" do
+  template "rgw.conf.erb"
   host rgw_addr
   port use_ssl ? rgw_port_ssl : rgw_port
   behind_proxy ha_enabled
 end
 
-directory node['ceph']['radosgw']['path'] do
-  owner 'root'
-  group 'root'
-  mode '0755'
+directory node["ceph"]["radosgw"]["path"] do
+  owner "root"
+  group "root"
+  mode "0755"
   action :create
 end
 
 template "#{node['ceph']['radosgw']['path']}/s3gw.fcgi" do
-  source 's3gw.fcgi.erb'
-  owner 'root'
-  group 'root'
-  mode '0755'
+  source "s3gw.fcgi.erb"
+  owner "root"
+  group "root"
+  mode "0755"
   variables(
-    :ceph_rgw_client => "client.radosgw.#{node['hostname']}"
+    ceph_rgw_client: "client.radosgw.#{node['hostname']}"
   )
 end
 
-if node['platform_family'] == 'suse'
-  bash 'Set MPM apache value' do
+if node["platform_family"] == "suse"
+  bash "Set MPM apache value" do
     code 'sed -i s/^[[:space:]]*APACHE_MPM=.*/APACHE_MPM=\"worker\"/ /etc/sysconfig/apache2'
     not_if 'grep -q "^[[:space:]]*APACHE_MPM=\"worker\"" /etc/sysconfig/apache2'
-    notifies :restart, 'service[apache2]'
+    notifies :restart, "service[apache2]"
   end
 end

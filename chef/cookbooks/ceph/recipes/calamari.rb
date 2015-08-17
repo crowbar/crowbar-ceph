@@ -9,7 +9,7 @@ begin
 rescue
 end
 
-node['ceph']['calamari']['packages'].each do |pkg|
+node["ceph"]["calamari"]["packages"].each do |pkg|
   package pkg
 end
 
@@ -30,16 +30,16 @@ ruby_block "initialize calamari server" do
       # sadly missing on SLE at the moment)
       init_cmd = Mixlib::ShellOut.new(
         "calamari-ctl", "initialize",
-          "--admin-username", node[:ceph][:calamari][:username],
-          "--admin-password", node[:ceph][:calamari][:password],
-          "--admin-email", node[:ceph][:calamari][:email])
+        "--admin-username", node[:ceph][:calamari][:username],
+        "--admin-password", node[:ceph][:calamari][:password],
+        "--admin-email", node[:ceph][:calamari][:email])
       init_cmd.run_command
       init_cmd.error!
     else
       # Check passed, so it's already configured.  Need to update admin user.
       # Is it unholy to generate python from ruby?
       Chef::Log.info("Ceph: Updating Calamari admin user")
-      update_cmd = Mixlib::ShellOut.new('/srv/www/calamari/manage.py shell', :input => <<eos)
+      update_cmd = Mixlib::ShellOut.new("/srv/www/calamari/manage.py shell", input: <<eos)
 from django.contrib.auth.models import User
 admin_user = User.objects.filter(is_superuser=True)[0]
 admin_user.username = #{node[:ceph][:calamari][:username].dump}
@@ -56,33 +56,33 @@ end
 # salt-master, carbon-cache, cthulhu and apache2 are all initially enabled
 # and started by the first `calamari-ctl initialize` invocation, but add them
 # as chef service resources regardless to make sure they're tracked.
-service 'salt-master' do
-  action [ :enable, :start ]
+service "salt-master" do
+  action [:enable, :start]
 end
 
-service 'carbon-cache' do
-  action [ :enable, :start ]
+service "carbon-cache" do
+  action [:enable, :start]
 end
 
-service 'cthulhu' do
-  action [ :enable, :start ]
+service "cthulhu" do
+  action [:enable, :start]
 end
 
-service 'apache2' do
-  action [ :enable, :start ]
+service "apache2" do
+  action [:enable, :start]
 end
 
 # TODO: Is there any way we can auto-auth salt minions?  This would be nice,
 # but is not critical given the user is prompted to authorize them the first
 # time they log in to Calamari.
 
-include_recipe 'apache2'
+include_recipe "apache2"
 
-use_ssl = node['ceph']['calamari']['ssl']['enabled']
+use_ssl = node["ceph"]["calamari"]["ssl"]["enabled"]
 if use_ssl
-  include_recipe 'apache2::mod_ssl'
+  include_recipe "apache2::mod_ssl"
 
-  certfile = node['ceph']['calamari']['ssl']['certfile']
+  certfile = node["ceph"]["calamari"]["ssl"]["certfile"]
   unless ::File.exists? certfile
     message = "Certificate \"#{certfile}\" is not present."
     Chef::Log.fatal(message)
@@ -95,12 +95,12 @@ end
 # /etc/apache2/vhosts.d/calamari.conf, but /etc/apache2/conf.d/calamari.conf
 # will still exist, and thus conflict (or be used as well), as that's what
 # came in the calamari-server package
-template '/etc/apache2/conf.d/calamari.conf' do
-  source 'calamari-httpd.conf.erb'
+template "/etc/apache2/conf.d/calamari.conf" do
+  source "calamari-httpd.conf.erb"
   variables(
-    :port => use_ssl ? 443 : 80
+    port: use_ssl ? 443 : 80
   )
-  mode '0644'
-  notifies :restart, resources(:service => "apache2"), :immediately
+  mode "0644"
+  notifies :restart, resources(service: "apache2"), :immediately
 end
 

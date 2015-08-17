@@ -1,9 +1,9 @@
 def upgrade ta, td, a, d
-  a['calamari']['ssl'] = ta['calamari']['ssl']
+  a["calamari"]["ssl"] = ta["calamari"]["ssl"]
   return a, d
 end
 
 def downgrade ta, td, a, d
-  a['calamari'].delete('ssl')
+  a["calamari"].delete("ssl")
   return a, d
 end

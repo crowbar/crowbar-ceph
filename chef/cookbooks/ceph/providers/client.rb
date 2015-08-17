@@ -8,7 +8,7 @@ action :add do
   admin_keyring = @new_resource.admin_keyring
   filename = @current_resource.filename
   keyname = @current_resource.keyname
-  caps = @new_resource.caps.map { |k, v| "#{k} '#{v}'" }.join(' ')
+  caps = @new_resource.caps.map { |k, v| "#{k} '#{v}'" }.join(" ")
   owner = @new_resource.owner
   group = @new_resource.group
   mode = @new_resource.mode
@@ -16,7 +16,6 @@ action :add do
     converge_by("Set caps for #{@new_resource}") do
       auth_set_key(ceph_conf, admin_keyring, keyname, caps)
       current_resource.key = get_key(ceph_conf, admin_keyring, keyname)
-
     end
   end
   # update the key in the file
@@ -26,7 +25,6 @@ action :add do
     group group
     mode mode
   end
-
 end
 
 def load_current_resource
@@ -66,7 +64,7 @@ def auth_set_key(ceph_conf, admin_keyring, keyname, caps)
   get_or_create = Mixlib::ShellOut.new(cmd)
   get_or_create.run_command
   if get_or_create.stderr.scan(/EINVAL.*but cap.*does not match/)
-    Chef::Log.info('Deleting old key with incorrect caps')
+    Chef::Log.info("Deleting old key with incorrect caps")
     # delete an old key if it exists and is wrong
     Mixlib::ShellOut.new("ceph -k #{admin_keyring} -c #{ceph_conf} auth del #{keyname}").run_command
     # try to create again
