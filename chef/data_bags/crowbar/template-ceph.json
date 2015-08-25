@@ -23,8 +23,8 @@
       "radosgw": {
         "ssl": {
             "enabled": false,
-            "certfile": "/etc/apache2/ssl.crt/ceph-radosgw.crt",
-            "keyfile": "/etc/apache2/ssl.key/ceph-radosgw.key",
+            "certfile": "/etc/ceph/ceph-radosgw.crt",
+            "keyfile": "/etc/ceph/ceph-radosgw.key",
             "generate_certs": false,
             "insecure": false
         }

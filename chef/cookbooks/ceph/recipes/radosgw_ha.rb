@@ -46,6 +46,4 @@ pacemaker_clone "cl-#{service_name}" do
   only_if { CrowbarPacemakerHelper.is_cluster_founder?(node) }
 end
 
-include_recipe "crowbar-pacemaker::apache"
-
 crowbar_pacemaker_sync_mark "create-ceph-radosgw_ha_resources"

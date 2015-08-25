@@ -21,11 +21,8 @@ default["ceph"]["radosgw"]["rgw_addr"] = "*"
 default["ceph"]["radosgw"]["rgw_port"] = 8080
 default["ceph"]["radosgw"]["rgw_port_ssl"] = 8081
 
-default["ceph"]["radosgw"]["path"] = "/var/www"
-
-if node["platform_family"] == "suse"
-  default["ceph"]["radosgw"]["path"] = "/srv/www/ceph-radosgw"
-end
+default["ceph"]["radosgw"]["user"] = "root"
+default["ceph"]["radosgw"]["group"] = "root"
 
 default["ceph"]["radosgw"]["nss_directory"] = "/var/lib/ceph/nss"
 
@@ -37,6 +34,8 @@ when "debian"
   end
 when "suse"
   default["ceph"]["radosgw"]["service_name"] = "ceph-radosgw@#{node["hostname"]}"
+  default["ceph"]["radosgw"]["user"] = "wwwrun"
+  default["ceph"]["radosgw"]["group"] = "www"
 else
   default["ceph"]["radosgw"]["service_name"] = "ceph-radosgw"
 end
@@ -53,8 +52,9 @@ case node["platform_family"]
 end
 
 default["ceph"]["radosgw"]["ssl"]["enabled"] = false
-default["ceph"]["radosgw"]["ssl"]["certfile"] = "/etc/apache2/ssl.crt/ceph-radosgw.crt"
-default["ceph"]["radosgw"]["ssl"]["keyfile"] = "/etc/apache2/ssl.key/ceph-radosgw.key"
+default["ceph"]["radosgw"]["ssl"]["certfile"] = "/etc/ceph/ceph-radosgw.crt"
+default["ceph"]["radosgw"]["ssl"]["keyfile"] = "/etc/ceph/ceph-radosgw.key"
+default["ceph"]["radosgw"]["ssl"]["pemfile"] = "/etc/ceph/ceph-radosgw.pem"
 default["ceph"]["radosgw"]["ssl"]["generate_certs"] = false
 default["ceph"]["radosgw"]["ssl"]["insecure"] = false
 
