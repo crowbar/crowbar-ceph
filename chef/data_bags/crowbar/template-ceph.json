@@ -1,5 +1,5 @@
 {
-  "id": "bc-template-ceph",
+  "id": "template-ceph",
   "description": "Distributed object store and file system",
   "attributes": {
     "ceph": {

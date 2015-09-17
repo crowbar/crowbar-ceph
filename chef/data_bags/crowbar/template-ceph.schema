@@ -2,7 +2,7 @@
   "type": "map",
   "required": true,
   "mapping": {
-    "id": { "type": "str", "required": true, "pattern": "/^bc-ceph-|^bc-template-ceph$/" },
+    "id": { "type": "str", "required": true, "pattern": "/^ceph-|^template-ceph$/" },
     "description": { "type": "str", "required": true },
     "attributes": {
       "type": "map",
