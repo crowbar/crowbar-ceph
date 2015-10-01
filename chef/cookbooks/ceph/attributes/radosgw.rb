@@ -29,15 +29,16 @@ end
 
 default["ceph"]["radosgw"]["nss_directory"] = "/var/lib/ceph/nss"
 
-case node["platform"]
-  when "ubuntu"
-    default["ceph"]["radosgw"]["service_name"]  = "radosgw-all-starter"
-  when "debian"
-    default["ceph"]["radosgw"]["service_name"]  = "radosgw"
-  when "suse"
-    default["ceph"]["radosgw"]["service_name"]  = "ceph-radosgw@#{node["hostname"]}"
-  else
-    default["ceph"]["radosgw"]["service_name"]  = "ceph-radosgw"
+case node[:platform_family]
+when "debian"
+  default["ceph"]["radosgw"]["service_name"] = "radosgw"
+  if node[:platform] == "ubuntu"
+    default["ceph"]["radosgw"]["service_name"] = "radosgw-all-starter"
+  end
+when "suse"
+  default["ceph"]["radosgw"]["service_name"] = "ceph-radosgw@#{node["hostname"]}"
+else
+  default["ceph"]["radosgw"]["service_name"] = "ceph-radosgw"
 end
 
 case node["platform_family"]
