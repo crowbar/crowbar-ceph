@@ -277,7 +277,7 @@ class CephService < PacemakerServiceObject
     unless nodes.nil? or nodes.length < 1
       provisioner_server_node = nodes[0]
       if provisioner_server_node[:platform] == "suse"
-        if (!provisioner_server_node[:provisioner][:suse][:storage_available] rescue true)
+        unless Crowbar::Repository.provided_and_enabled? "ceph"
           validation_error "The SUSE Enterprise Storage repositories have not been setup."
         end
       end
