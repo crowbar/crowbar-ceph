@@ -55,14 +55,14 @@ class CephService < PacemakerServiceObject
         },
         "ceph-mon" => {
           "unique" => false,
-          "count" => 3,
+          "count" => 9,
           "platform" => {
             "suse" => "12.0"
           },
         },
         "ceph-osd" => {
           "unique" => false,
-          "count" => 8,
+          "count" => 150,
           "platform" => {
             "suse" => "12.0"
           },
