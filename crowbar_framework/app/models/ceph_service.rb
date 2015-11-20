@@ -49,7 +49,7 @@ class CephService < PacemakerServiceObject
           "unique" => false,
           "count" => 1,
           "platform" => {
-            "suse" => "12.0"
+            "suse" => "12.1"
           },
           "conflicts_with" => ["ceph-mon", "ceph-osd", "ceph-radosgw", "nova_dashboard-server"]
         },
@@ -57,21 +57,21 @@ class CephService < PacemakerServiceObject
           "unique" => false,
           "count" => 9,
           "platform" => {
-            "suse" => "12.0"
+            "suse" => "12.1"
           },
         },
         "ceph-osd" => {
           "unique" => false,
           "count" => 150,
           "platform" => {
-            "suse" => "12.0"
+            "suse" => "12.1"
           },
         },
         "ceph-radosgw" => {
           "unique" => false,
           "count" => 1,
           "platform" => {
-            "suse" => "12.0"
+            "suse" => "12.1"
           },
           "cluster" => true
         }
