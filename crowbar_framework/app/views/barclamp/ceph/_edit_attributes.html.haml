@@ -12,7 +12,10 @@
       %legend
         = t(".radosgw.ssl.header")
 
-      = boolean_field %w(radosgw ssl enabled), :collection => :radosgw_ssl_protocols, "data-sslprefix" => "radosgw_ssl", "data-sslcert" => "/etc/apache2/ssl.crt/ceph-radosgw.crt", "data-sslkey" => "/etc/apache2/ssl.key/ceph-radosgw.key"
+      = boolean_field %w(radosgw ssl enabled), :collection => :radosgw_ssl_protocols,
+        "data-sslprefix" => "radosgw_ssl",
+        "data-sslcert" => "/etc/ceph/ceph-radosgw.crt",
+        "data-sslkey" => "/etc/ceph/ceph-radosgw.key"
 
       #radosgw_ssl_container
         = boolean_field %w(radosgw ssl generate_certs)

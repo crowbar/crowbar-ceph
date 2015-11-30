@@ -14,32 +14,32 @@ end
 hostname = node["hostname"]
 
 directory "/var/log/radosgw" do
-  owner node["apache"]["user"]
-  group node["apache"]["group"]
+  owner node["ceph"]["radosgw"]["user"]
+  group node["ceph"]["radosgw"]["group"]
   mode "0755"
   action :create
 end
 
 file "/var/log/radosgw/radosgw.log" do
-  owner node["apache"]["user"]
-  group node["apache"]["group"]
+  owner node["ceph"]["radosgw"]["user"]
+  group node["ceph"]["radosgw"]["group"]
 end
 
 directory "/var/run/ceph-radosgw" do
-  owner node["apache"]["user"]
-  group node["apache"]["group"]
+  owner node["ceph"]["radosgw"]["user"]
+  group node["ceph"]["radosgw"]["group"]
   mode "0755"
   action :create
 end
 
-include_recipe "ceph::radosgw_apache2"
+include_recipe "ceph::radosgw_civetweb"
 
 crowbar_pacemaker_sync_mark "wait-ceph_client_generate"
 
 ceph_client "radosgw" do
   caps("mon" => "allow rw", "osd" => "allow rwx")
   owner "root"
-  group node["apache"]["group"]
+  group node["ceph"]["radosgw"]["group"]
   mode 0640
 end
 

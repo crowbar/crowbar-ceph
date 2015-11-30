@@ -31,6 +31,16 @@ directory "/var/log/ceph" do
 end
 
 is_rgw = node.roles.include?("ceph-radosgw")
+rgw_port = rgw_pemfile = nil
+if is_rgw
+  rgw_use_ssl = node["ceph"]["radosgw"]["ssl"]["enabled"]
+  if node["ceph"]["ha"]["radosgw"]["enabled"]
+    rgw_port = rgw_use_ssl ? node["ceph"]["ha"]["ports"]["radosgw_ssl"] : node["ceph"]["ha"]["ports"]["radosgw_plain"]
+  else
+    rgw_port = rgw_use_ssl ? node["ceph"]["radosgw"]["rgw_port_ssl"] : node["ceph"]["radosgw"]["rgw_port"]
+  end
+  rgw_pemfile = node["ceph"]["radosgw"]["ssl"]["pemfile"] if rgw_use_ssl
+end
 
 keystone_settings = {}
 if is_rgw && !(node[:ceph][:keystone_instance].nil? || node[:ceph][:keystone_instance].empty?)
@@ -77,6 +87,8 @@ template "/etc/ceph/ceph.conf" do
     public_network: node["ceph"]["config"]["public-network"],
     cluster_network: node["ceph"]["config"]["cluster-network"],
     is_rgw: is_rgw,
+    rgw_port: rgw_port,
+    rgw_pemfile: rgw_pemfile,
     keystone_settings: keystone_settings
   )
   mode "0644"
