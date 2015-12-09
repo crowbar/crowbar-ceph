@@ -51,7 +51,7 @@ class CephService < PacemakerServiceObject
           "platform" => {
             "suse" => "12.1"
           },
-          "conflicts_with" => ["ceph-mon", "ceph-osd", "ceph-radosgw", "nova_dashboard-server"]
+          "conflicts_with" => ["ceph-mon", "ceph-osd", "ceph-radosgw", "horizon-server"]
         },
         "ceph-mon" => {
           "unique" => false,
