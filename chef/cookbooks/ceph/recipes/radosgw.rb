@@ -42,11 +42,40 @@ unless node[:ceph][:keystone_instance].nil? || node[:ceph][:keystone_instance].e
   include_recipe "ceph::radosgw_keystone"
 end
 
+rgw_conf = "ceph.conf"
+
+if node["platform_family"] == "suse"
+  rgw_conf = "ceph.conf.radosgw"
+  # When generating the override systemd unit file, we have to disable the
+  # radosgw service so that it gets re-enabled later, thus picking up the
+  # override unit file (if we didn't do this, a host that was already
+  # running radosgw and was then upgraded wouldn't pick up the new unit file).
+  # (see also the comments about this in conf.rb)
+  # The first sed strips any existing --conf option out of the ExecStart line
+  # (this was present in Hammer, but is no longer present in Jewel).  The
+  # second sed tells radosgw to explicitly use our radosgw specific conf file.
+  bash "generating override ceph-radosgw systemd unit file" do
+    code <<-EOH
+      sed -e 's%^\\(ExecStart=.*\\)\\(--conf [^ ]*\\)\\(.*\\)%\\1\\3%' \
+        /usr/lib/systemd/system/ceph-radosgw@.service | \
+      sed -e 's%^\\(ExecStart=.*\\)%\\1 --conf /etc/ceph/ceph.conf.radosgw%' \
+         > /etc/systemd/system/ceph-radosgw@.service
+      systemctl daemon-reload
+      systemctl disable #{node["ceph"]["radosgw"]["service_name"]}
+    EOH
+    not_if do
+      File.exist?("/etc/systemd/system/ceph-radosgw@.service") &&
+        File.mtime("/etc/systemd/system/ceph-radosgw@.service") >
+          File.mtime("/usr/lib/systemd/system/ceph-radosgw@.service")
+    end
+  end
+end
+
 service "radosgw" do
   service_name node["ceph"]["radosgw"]["service_name"]
   supports restart: true
   action [:enable, :start]
-  subscribes :restart, "template[/etc/ceph/ceph.conf]"
+  subscribes :restart, "template[/etc/ceph/#{rgw_conf}]"
 end
 
 # In the systemd case, need extra targets enabled
