@@ -67,7 +67,12 @@ def auth_set_key(ceph_conf, admin_keyring, keyname, caps)
   unless get_or_create.stderr.scan(/EINVAL.*but cap.*does not match/).empty?
     Chef::Log.info("Deleting old key with incorrect caps")
     # don't remove custom existing caps for osd pools
-    caps_osd = get_caps(ceph_conf, admin_keyring, keyname)["osd"] + "," + caps["osd"]
+    cur_caps = get_caps(ceph_conf, admin_keyring, keyname)
+    if cur_caps.empty?
+      caps_osd = caps["osd"]
+    else
+      caps_osd = cur_caps["osd"] + "," + caps["osd"]
+    end
     caps["osd"] = caps_osd.split(",").collect(&:strip).uniq.join(",")
     caps_str = caps.map { |k, v| "#{k} '#{v}'" }.join(" ")
     cmd = "ceph -k #{admin_keyring} -c #{ceph_conf} auth get-or-create #{keyname} #{caps_str}"
