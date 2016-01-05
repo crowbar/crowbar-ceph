@@ -31,18 +31,29 @@ crowbar_pacemaker_sync_mark "sync-ceph-radosgw_before_ha"
 # Avoid races when creating pacemaker resources
 crowbar_pacemaker_sync_mark "wait-ceph-radosgw_ha_resources"
 
-service_name = "ceph-radosgw"
+transaction_objects = []
 
+service_name = "ceph-radosgw"
 pacemaker_primitive service_name do
   agent node[:ceph][:ha][:radosgw][:agent]
   op node[:ceph][:ha][:radosgw][:op]
-  action :create
+  action :update
   only_if { CrowbarPacemakerHelper.is_cluster_founder?(node) }
 end
+transaction_objects << "pacemaker_primitive[#{service_name}]"
 
-pacemaker_clone "cl-#{service_name}" do
+clone_name = "cl-#{service_name}"
+pacemaker_clone clone_name do
   rsc service_name
-  action [:create, :start]
+  action :update
+  only_if { CrowbarPacemakerHelper.is_cluster_founder?(node) }
+end
+transaction_objects << "pacemaker_clone[#{clone_name}]"
+
+pacemaker_transaction "ceph-radosgw" do
+  cib_objects transaction_objects
+  # note that this will also automatically start the resources
+  action :commit_new
   only_if { CrowbarPacemakerHelper.is_cluster_founder?(node) }
 end
 
