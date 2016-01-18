@@ -261,14 +261,17 @@ class CephService < PacemakerServiceObject
 
     NodeObject.find("roles:ceph-osd").each do |n|
       unless osd_nodes.include? n.name
-        validation_error "The ceph-osd role cannot be removed from a node '#{n.name}'"
+        validation_error I18n.t(
+          "barclamp.ceph.validation.osd_removal",
+          node: n.name
+        )
       end
     end
 
     unless radosgw_nodes.empty?
       Proposal.where(barclamp: "swift").each {|p|
         if (p.status == "ready") || (p.status == "pending")
-          validation_error("Swift is already deployed. Only one of Ceph with RadosGW and Swift can be deployed at any time.")
+          validation_error I18n.t(barclamp.ceph.validation.swift_deployed)
         end
       }
     end
@@ -278,7 +281,7 @@ class CephService < PacemakerServiceObject
       provisioner_server_node = nodes[0]
       if provisioner_server_node[:platform] == "suse"
         unless Crowbar::Repository.provided_and_enabled? "ceph"
-          validation_error "The SUSE Enterprise Storage repositories have not been setup."
+          validation_error I18n.t(barclamp.ceph.validation.ses_repos)
         end
       end
     end
@@ -295,10 +298,16 @@ class CephService < PacemakerServiceObject
       end
       rgw_nodes.each do |n|
         if additional_roles["osd"] && !osd_nodes.include?(n)
-          validation_error("Nodes in cluster must have same roles: node #{n} is missing ceph-osd role.")
+          validation_error I18n.t(
+            "barclamp.ceph.validation.osd_role_missing",
+            node: n
+          )
         end
         if additional_roles["mon"] && !mon_nodes.include?(n)
-          validation_error("Nodes in cluster must have same roles: node #{n} is missing ceph-mon role.")
+          validation_error I18n.t(
+            "barclamp.ceph.validation.mon_role_missing",
+            node: n
+          )
         end
       end
     end
@@ -318,7 +327,11 @@ class CephService < PacemakerServiceObject
     end
 
     unless nodes_without_suitable_drives.empty?
-      validation_error("Nodes #{nodes_without_suitable_drives.to_sentence} for ceph-osd role are missing at least one unclaimed disk larger than #{min_size_gb}GB")
+      validation_error I18n.t(
+        "barclamp.ceph.validation.disk_missing",
+        nodes: nodes_without_suitable_drives.to_sentence,
+        size: min_size_gb
+      )
     end
 
     super

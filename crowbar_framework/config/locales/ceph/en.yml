@@ -43,3 +43,10 @@ en:
             enabled: 'Protocol'
             certfile: 'SSL Certificate File'
             keyfile: 'SSL (Private) Key File'
+      validation:
+        disk_missing: 'Nodes %{nodes} for ceph-osd role are missing at least one unclaimed disk larger than %{size}GB.'
+        mon_role_missing: 'Nodes in cluster must have same roles: node %{node} is missing ceph-mon role.'
+        osd_role_missing: 'Nodes in cluster must have same roles: node %{node} is missing ceph-osd role.'
+        osd_removal: 'The ceph-osd role cannot be removed from a node %{node}.'
+        ses_repos: 'The SUSE Enterprise Storage repositories have not been setup.'
+        swift_deployed: 'Swift is already deployed. Only one of Ceph with RadosGW and Swift can be deployed at any time.'
