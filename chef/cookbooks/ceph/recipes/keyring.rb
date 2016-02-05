@@ -7,17 +7,18 @@ if !File.exists?(keyring)
   mons = get_mon_nodes("ceph_admin-secret:*")
 
   if mons.empty? then
-    Chef::Log.fatal("No ceph-mon found")
-    raise "No ceph-mon found"
-  elsif mons[0]["ceph"]["admin-secret"].empty?
-    Chef::Log.fatal("No authorization keys found")
-    raise "No authorization keys found"
-  else
+    msg = "No ceph-mon found"
+    Chef::Log.fatal(msg)
+    raise msg
+  end
+
+  if !mons[0]["ceph"]["admin-secret"].empty?
     admin_key = mons[0]["ceph"]["admin-secret"]
 
     execute "create admin keyring" do
       command "ceph-authtool '#{keyring}' --create-keyring  --name=client.admin --add-key='#{admin_key}'"
     end
+  else
+    Chef::Log.warn("Ceph admin keyring was not generated yet")
   end
-
 end
