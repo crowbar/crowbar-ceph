@@ -59,15 +59,24 @@ unless File.exists?("/var/lib/ceph/mon/ceph-#{node["hostname"]}/done")
 
   ruby_block "get monitor-secret" do
     block do
+      require "timeout"
       monitor_key = ""
-      while monitor_key.empty?
-        mon_nodes = get_mon_nodes
-        mon_nodes.each do |mon|
-          if mon[:ceph][:master] && !mon["ceph"]["monitor-secret"].empty?
-            monitor_key = mon["ceph"]["monitor-secret"]
+      begin
+        Timeout.timeout(300) do
+          while monitor_key.empty?
+            mon_nodes = get_mon_nodes
+            mon_nodes.each do |mon|
+              if mon[:ceph][:master] && !mon["ceph"]["monitor-secret"].empty?
+                monitor_key = mon["ceph"]["monitor-secret"]
+              end
+            end
+            sleep 1
           end
         end
-        sleep 1
+      rescue Timeout::Error
+        message = "Cannot fetch monitor secret from master!"
+        Chef::Log.fatal(message)
+        raise message
       end
 
       add_key = Mixlib::ShellOut.new("ceph-authtool '#{keyring}' --create-keyring --name=mon. --add-key='#{monitor_key}' --cap mon 'allow *'")
@@ -142,11 +151,20 @@ end
 ["admin", "bootstrap-osd"].each do |auth|
   ruby_block "get #{auth}-secret" do
     block do
+      require "timeout"
       auth_key = ""
-      while auth_key.empty?
-        get_key = Mixlib::ShellOut.new("ceph auth get-key client.#{auth}")
-        auth_key = get_key.run_command.stdout.strip
-        sleep 1
+      begin
+        Timeout.timeout(300) do
+          while auth_key.empty?
+            get_key = Mixlib::ShellOut.new("ceph auth get-key client.#{auth}")
+            auth_key = get_key.run_command.stdout.strip
+            sleep 1
+          end
+        end
+      rescue Timeout::Error
+        message = "Cannot fetch #{auth}-secret!"
+        Chef::Log.fatal(message)
+        raise message
       end
 
       if node["ceph"]["#{auth}-secret"] != auth_key
