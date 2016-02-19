@@ -275,7 +275,7 @@ class CephService < PacemakerServiceObject
     unless radosgw_nodes.empty?
       Proposal.where(barclamp: "swift").each {|p|
         if (p.status == "ready") || (p.status == "pending")
-          validation_error I18n.t(barclamp.ceph.validation.swift_deployed)
+          validation_error I18n.t("barclamp.ceph.validation.swift_deployed")
         end
       }
     end
@@ -285,7 +285,7 @@ class CephService < PacemakerServiceObject
       provisioner_server_node = nodes[0]
       if provisioner_server_node[:platform] == "suse"
         unless Crowbar::Repository.provided_and_enabled? "ceph"
-          validation_error I18n.t(barclamp.ceph.validation.ses_repos)
+          validation_error I18n.t("barclamp.ceph.validation.ses_repos")
         end
       end
     end
