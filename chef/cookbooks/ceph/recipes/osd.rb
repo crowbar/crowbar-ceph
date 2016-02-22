@@ -180,10 +180,19 @@ else
 
         ruby_block "Get Ceph OSD ID for #{osd_device['device']}" do
           block do
-            osd_id = ""
-            while osd_id.empty?
-              osd_id = get_osd_id(osd_device["device"])
-              sleep 1
+            require "timeout"
+            begin
+              Timeout.timeout(300) do
+                osd_id = ""
+                while osd_id.empty?
+                  osd_id = get_osd_id(osd_device["device"])
+                  sleep 1
+                end
+              end
+            rescue Timeout::Error
+              message = "Cannot fetch OSD ID for #{osd_device["device"]}!"
+              Chef::Log.fatal(message)
+              raise message
             end
           end
         end
