@@ -68,7 +68,7 @@ def auth_set_key(ceph_conf, admin_keyring, keyname, caps)
   return get_or_create.error! unless get_or_create.stderr.scan(/EINVAL.*but cap.*does not match/)
   Chef::Log.info("Updating incorrect caps for #{keyname}")
   # create list of uniq pools
-  pools = caps["osd"].split(",").collect(&:strip).map{ |x| x.gsub(/allow [rwx]{1,3} /, "") }.uniq
+  pools = caps["osd"].split(",").collect(&:strip).map { |x| x.gsub(/allow [rwx]{1,3} /, "") }.uniq
   # get current existing capabilities
   cur_caps = get_caps(ceph_conf, admin_keyring, keyname)
   if cur_caps["osd"] && !cur_caps["osd"].empty?
@@ -76,7 +76,7 @@ def auth_set_key(ceph_conf, admin_keyring, keyname, caps)
       # skip if capability is in incorrect format
       next unless /allow [rwx]{1,3} pool=\w+$/ =~ cap
       # merge capabilities for other pools which were not provided in ceph client
-      caps["osd"] += ", " + cap unless pools.include? cap.gsub(/allow [rwx]{1,3} /, '')
+      caps["osd"] += ", " + cap unless pools.include? cap.gsub(/allow [rwx]{1,3} /, "")
     end
   end
   caps_str = caps.map { |k, v| "#{k} '#{v}'" }.join(" ")
