@@ -59,28 +59,30 @@ def get_caps(ceph_conf, admin_keyring, keyname)
 end
 
 def auth_set_key(ceph_conf, admin_keyring, keyname, caps)
+  raise "No caps defined for ceph_client resource!" if caps.empty?
   # try to add the key
   caps_str = caps.map { |k, v| "#{k} '#{v}'" }.join(" ")
   cmd = "ceph -k #{admin_keyring} -c #{ceph_conf} auth get-or-create #{keyname} #{caps_str}"
   get_or_create = Mixlib::ShellOut.new(cmd)
   get_or_create.run_command
-  unless get_or_create.stderr.scan(/EINVAL.*but cap.*does not match/).empty?
-    Chef::Log.info("Deleting old key with incorrect caps")
-    # don't remove custom existing caps for osd pools
-    cur_caps = get_caps(ceph_conf, admin_keyring, keyname)
-    if cur_caps.empty?
-      caps_osd = caps["osd"]
-    else
-      caps_osd = cur_caps["osd"] + "," + caps["osd"]
+  return get_or_create.error! unless get_or_create.stderr.scan(/EINVAL.*but cap.*does not match/)
+  Chef::Log.info("Updating incorrect caps for #{keyname}")
+  # create list of uniq pools
+  pools = caps["osd"].split(",").collect(&:strip).map { |x| x.gsub(/allow [rwx]{1,3} /, "") }.uniq
+  # get current existing capabilities
+  cur_caps = get_caps(ceph_conf, admin_keyring, keyname)
+  if cur_caps["osd"] && !cur_caps["osd"].empty?
+    cur_caps["osd"].split(",").collect(&:strip).sort.uniq.each do |cap|
+      # skip if capability is in incorrect format
+      next unless /allow [rwx]{1,3} pool=\w+$/ =~ cap
+      # merge capabilities for other pools which were not provided in ceph client
+      caps["osd"] += ", " + cap unless pools.include? cap.gsub(/allow [rwx]{1,3} /, "")
     end
-    caps["osd"] = caps_osd.split(",").collect(&:strip).uniq.join(",")
-    caps_str = caps.map { |k, v| "#{k} '#{v}'" }.join(" ")
-    cmd = "ceph -k #{admin_keyring} -c #{ceph_conf} auth get-or-create #{keyname} #{caps_str}"
-    # delete an old key if it exists and is wrong
-    Mixlib::ShellOut.new("ceph -k #{admin_keyring} -c #{ceph_conf} auth del #{keyname}").run_command
-    # try to create again
-    get_or_create = Mixlib::ShellOut.new(cmd)
-    get_or_create.run_command
   end
-  get_or_create.error!
+  caps_str = caps.map { |k, v| "#{k} '#{v}'" }.join(" ")
+  cmd = "ceph -k #{admin_keyring} -c #{ceph_conf} auth caps #{keyname} #{caps_str}"
+  # update caps and not delete client keyring
+  update_client_caps = Mixlib::ShellOut.new(cmd)
+  update_client_caps.run_command
+  update_client_caps.error!
 end
