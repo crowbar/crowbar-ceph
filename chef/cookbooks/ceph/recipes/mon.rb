@@ -91,7 +91,7 @@ unless File.exists?("/var/lib/ceph/mon/ceph-#{node["hostname"]}/done")
   end
 
   execute "ceph-mon mkfs" do
-    command "ceph-mon --mkfs -i #{node['hostname']} --keyring '#{keyring}'"
+    command "chown ceph:ceph #{keyring} ; ceph-mon --mkfs -i #{node['hostname']} --keyring '#{keyring}' --setuser ceph --setgroup ceph"
     action :nothing
   end
 
