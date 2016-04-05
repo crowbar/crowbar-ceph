@@ -61,6 +61,8 @@ unless node[:ceph][:keystone_instance].nil? || node[:ceph][:keystone_instance].e
   include_recipe "ceph::radosgw_keystone"
 end
 
+# TODO: we probably need to enable ceph-radosgw.target and
+# ceph.target here as well, in the systemd case
 service "radosgw" do
   service_name node["ceph"]["radosgw"]["service_name"]
   supports restart: true

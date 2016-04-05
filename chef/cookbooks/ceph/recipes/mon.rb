@@ -131,10 +131,15 @@ service "ceph_mon" do
   subscribes :restart, resources(template: "/etc/ceph/ceph.conf")
 end
 
-# In addition to the mon service, ceph.target must be enabled when using systemd
-service "ceph.target" do
-  action :enable
-end if service_type == "systemd"
+# In addition to the mon service, ceph targets must be enabled when using systemd
+if service_type == "systemd"
+  service "ceph-mon.target" do
+    action :enable
+  end
+  service "ceph.target" do
+    action :enable
+  end
+end
 
 execute "Create Ceph client.admin key when ceph-mon is ready" do
   command "ceph-create-keys -i #{node['hostname']}"

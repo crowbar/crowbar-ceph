@@ -222,10 +222,15 @@ else
         subscribes :restart, resources(template: "/etc/ceph/ceph.conf")
       end unless service_type == "systemd"
 
-      # In addition to the osd services, ceph.target must be enabled when using systemd
-      service "ceph.target" do
-        action :enable
-      end if service_type == "systemd"
+      # In addition to the osd services, ceph targets must be enabled when using systemd
+      if service_type == "systemd"
+        service "ceph-osd.target" do
+          action :enable
+        end
+        service "ceph.target" do
+          action :enable
+        end
+      end
     end
   end
 end
