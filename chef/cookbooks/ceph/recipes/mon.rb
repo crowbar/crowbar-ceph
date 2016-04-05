@@ -21,9 +21,9 @@ include_recipe "ceph::conf"
 service_type = node["ceph"]["mon"]["init_style"]
 
 directory "/var/lib/ceph/mon/ceph-#{node["hostname"]}" do
-  owner "root"
-  group "root"
-  mode "0755"
+  owner "ceph"
+  group "ceph"
+  mode "0750"
   recursive true
   action :create
 end

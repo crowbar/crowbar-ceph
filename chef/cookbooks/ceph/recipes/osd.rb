@@ -49,9 +49,9 @@ else
 
   ["tmp", "osd", "bootstrap-osd"].each do |name|
     directory "/var/lib/ceph/#{name}" do
-      owner "root"
-      group "root"
-      mode "0755"
+      owner "ceph"
+      group "ceph"
+      mode "0750"
       recursive true
       action :create
     end

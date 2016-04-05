@@ -9,6 +9,8 @@ mon_nodes.each do |monitor|
     mon_init << monitor.name.split(".")[0]
 end
 
+# These directories should all be created by the package, maybe we can
+# just remove this stuff...?  (same with the directories created in osd.rb)
 directory "/etc/ceph" do
   owner "root"
   group "root"
@@ -17,16 +19,16 @@ directory "/etc/ceph" do
 end
 
 directory "/var/run/ceph" do
-  owner "root"
-  group "root"
-  mode "0755"
+  owner "ceph"
+  group "ceph"
+  mode "0770"
   action :create
 end
 
 directory "/var/log/ceph" do
-  owner "root"
-  group "root"
-  mode "0755"
+  owner "ceph"
+  group "ceph"
+  mode "3770"
   action :create
 end
 
