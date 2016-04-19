@@ -61,13 +61,21 @@ unless node[:ceph][:keystone_instance].nil? || node[:ceph][:keystone_instance].e
   include_recipe "ceph::radosgw_keystone"
 end
 
-# TODO: we probably need to enable ceph-radosgw.target and
-# ceph.target here as well, in the systemd case
 service "radosgw" do
   service_name node["ceph"]["radosgw"]["service_name"]
   supports restart: true
   action [:enable, :start]
   subscribes :restart, "template[/etc/ceph/ceph.conf]"
+end
+
+# In the systemd case, need extra targets enabled
+service "ceph-radosgw.target" do
+  action :enable
+  only_if { File.exist?("/usr/lib/systemd/system/ceph-radosgw.target") }
+end
+service "ceph.target" do
+  action :enable
+  only_if { File.exist?("/usr/lib/systemd/system/ceph.target") }
 end
 
 if node[:ceph][:ha][:radosgw][:enabled]
