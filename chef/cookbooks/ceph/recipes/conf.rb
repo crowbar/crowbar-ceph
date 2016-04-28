@@ -59,22 +59,34 @@ else
   num_osds = node["ceph"]["config"]["osds_in_total"]
 end
 
-# calculate pg_num based on documentation
-# http://ceph.com/docs/master/rados/operations/placement-groups/
-case num_osds
-when 1..4
-  pg_num = 128
-when 5..9
-  pg_num = 512
-when 10..49
-  pg_num = 4096
-else
-  # Ensure you have a realistic number of placement groups. We recommend
-  # approximately 100 per OSD. E.g., total number of OSDs multiplied by 100
-  # divided by the number of replicas (i.e., osd pool default size).
-  # The result should be rounded up to the nearest power of two.
-  pg_num = 2 ** Math.log2(num_osds * 100 / rep_num).round
-end
+# There'll always be at least the default rbd pool (which Ceph always creates
+# with 64 PGs, irrespective of what "osd pool default pg num" is set to)
+expected_pools = 1
+
+rgw_host = search(:node, "roles:ceph-radosgw")
+# According to http://docs.ceph.com/docs/master/radosgw/config/, radosgw uses
+# 13 pools.  http://ceph.com/pgcalc/ suggests radosgw uses 12 pools.  Random
+# experimentation suggests it might actually be 11 pools (at least on Ceph
+# Jewel).  So let's pretend it's 12.
+expected_pools += 12 unless rgw_host.empty?
+
+mds_host = search(:node, "roles:ceph-mds")
+# If there's a ceph MDS (which actually isn't implemented in barclamp yet,
+# but might be in future), there'll be two more pools
+expected_pools += 2 unless mds_host.empty?
+
+# Figure out a sane number for "osd pool default pg num" based on the logic
+# at http://ceph.com/pgcalc/ -- for any given number of expected pools, this
+# results in "about 100" PGs per OSD, but experimentation indicates it can
+# go as low as 70 and as high as 150, depending on the exact number of OSDs
+# and expected number of pools.
+pg_calc = (100 * num_osds * (1.0 / expected_pools)) / rep_num
+# Get nearest power of 2
+pg_num = 2**Math.log2(pg_calc).round
+# Edge case with >=50 pools and 1 OSD gives pg_num of less than 1
+pg_num = 1 if pg_num < 1
+# If nearest power of 2 is more than 25% below original value, use next highest power
+pg_num *= 2 if pg_num < (pg_calc * 0.75)
 
 template "/etc/ceph/ceph.conf" do
   source "ceph.conf.erb"
