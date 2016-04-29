@@ -64,11 +64,14 @@ end
 expected_pools = 1
 
 rgw_host = search(:node, "roles:ceph-radosgw")
-# According to http://docs.ceph.com/docs/master/radosgw/config/, radosgw uses
-# 13 pools.  http://ceph.com/pgcalc/ suggests radosgw uses 12 pools.  Random
-# experimentation suggests it might actually be 11 pools (at least on Ceph
-# Jewel).  So let's pretend it's 12.
-expected_pools += 12 unless rgw_host.empty?
+# RGW will use up to 14 pools (try "RGW only" with http://ceph.com/pgcalc/)
+# These are not all created immediately though.  Six will be created when
+# the radosgw daemon starts for the first time.  The swift pool(s) will be
+# created when you create a swift subuser for the first time, and the usage
+# pool will only be created if the usage log is explicitly enabled.  Here,
+# to be conservative, we're assuming the full 14 pools will be used for RGW
+# deployments.
+expected_pools += 14 unless rgw_host.empty?
 
 mds_host = search(:node, "roles:ceph-mds")
 # If there's a ceph MDS (which actually isn't implemented in barclamp yet,
