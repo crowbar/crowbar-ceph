@@ -139,6 +139,8 @@ class CephService < PacemakerServiceObject
         "ceph-radosgw" => radosgw_node.nil? ? [] : [radosgw_node.name]
     }
 
+    base["attributes"]["ceph"]["service_password"] = random_password
+
     @logger.debug("Ceph create_proposal: exiting")
     base
   end

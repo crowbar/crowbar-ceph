@@ -137,7 +137,9 @@
   rgw frontends = civetweb port=<%= @rgw_port %><% if (@rgw_pemfile) %>s ssl_certificate=<%= @rgw_pemfile %><% end %>
   <% unless node[:ceph][:keystone_instance].nil? || node[:ceph][:keystone_instance].empty? -%>
   rgw keystone url =  <%= @keystone_settings['admin_auth_url'] %>
-  rgw keystone admin token = <%= @keystone_settings['admin_token'] %>
+  rgw keystone admin user = <%= @keystone_settings['service_user'] %>
+  rgw keystone admin tenant = <%= @keystone_settings['service_tenant'] %>
+  rgw keystone admin password = <%= @keystone_settings['service_password'] %>
   nss db path = <%= node['ceph']['radosgw']['nss_directory'] %>
   <% end -%>
 <% if (! node['ceph']['config']['rgw'].nil?) -%>
