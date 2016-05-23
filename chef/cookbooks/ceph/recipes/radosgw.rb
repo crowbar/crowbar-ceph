@@ -36,7 +36,7 @@ include_recipe "ceph::radosgw_civetweb"
 
 crowbar_pacemaker_sync_mark "wait-ceph_client_generate"
 
-ceph_client "radosgw" do
+ceph_client "rgw" do
   caps("mon" => "allow rw", "osd" => "allow rwx")
   owner "root"
   group node["ceph"]["radosgw"]["group"]

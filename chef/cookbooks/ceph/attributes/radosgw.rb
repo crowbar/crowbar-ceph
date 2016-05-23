@@ -33,8 +33,8 @@ when "debian"
     default["ceph"]["radosgw"]["service_name"] = "radosgw-all-starter"
   end
 when "suse"
-  # need "radosgw.HOSTNAME" for jewel; earlier versions just used "HOSTNAME"
-  default["ceph"]["radosgw"]["service_name"] = "ceph-radosgw@radosgw.#{node["hostname"]}"
+  # need "rgw.HOSTNAME" for jewel; earlier versions just used "HOSTNAME"
+  default["ceph"]["radosgw"]["service_name"] = "ceph-radosgw@rgw.#{node["hostname"]}"
   default["ceph"]["radosgw"]["user"] = "ceph"
   default["ceph"]["radosgw"]["group"] = "ceph"
 else
