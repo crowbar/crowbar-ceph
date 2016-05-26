@@ -47,6 +47,8 @@ elsif mons[0]["ceph"]["bootstrap-osd-secret"].empty?
   Chef::Log.fatal("No authorization keys found")
 else
 
+  # These directories are all created by the ceph packages on SUSE distros.
+  # TODO: Check if this is true for other distros (it probably is)
   ["tmp", "osd", "bootstrap-osd"].each do |name|
     directory "/var/lib/ceph/#{name}" do
       owner "ceph"
@@ -55,7 +57,7 @@ else
       recursive true
       action :create
     end
-  end
+  end unless node["platform_family"] == "suse"
 
   # TODO cluster name
   cluster = "ceph"
