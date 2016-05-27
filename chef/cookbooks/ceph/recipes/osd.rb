@@ -47,15 +47,17 @@ elsif mons[0]["ceph"]["bootstrap-osd-secret"].empty?
   Chef::Log.fatal("No authorization keys found")
 else
 
+  # These directories are all created by the ceph packages on SUSE distros.
+  # TODO: Check if this is true for other distros (it probably is)
   ["tmp", "osd", "bootstrap-osd"].each do |name|
     directory "/var/lib/ceph/#{name}" do
-      owner "root"
-      group "root"
-      mode "0755"
+      owner "ceph"
+      group "ceph"
+      mode "0750"
       recursive true
       action :create
     end
-  end
+  end unless node["platform_family"] == "suse"
 
   # TODO cluster name
   cluster = "ceph"
@@ -222,10 +224,15 @@ else
         subscribes :restart, resources(template: "/etc/ceph/ceph.conf")
       end unless service_type == "systemd"
 
-      # In addition to the osd services, ceph.target must be enabled when using systemd
-      service "ceph.target" do
-        action :enable
-      end if service_type == "systemd"
+      # In addition to the osd services, ceph targets must be enabled when using systemd
+      if service_type == "systemd"
+        service "ceph-osd.target" do
+          action :enable
+        end
+        service "ceph.target" do
+          action :enable
+        end
+      end
     end
   end
 end

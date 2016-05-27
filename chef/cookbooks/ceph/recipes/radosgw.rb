@@ -13,30 +13,11 @@ end
 
 hostname = node["hostname"]
 
-directory "/var/log/radosgw" do
-  owner node["ceph"]["radosgw"]["user"]
-  group node["ceph"]["radosgw"]["group"]
-  mode "0755"
-  action :create
-end
-
-file "/var/log/radosgw/radosgw.log" do
-  owner node["ceph"]["radosgw"]["user"]
-  group node["ceph"]["radosgw"]["group"]
-end
-
-directory "/var/run/ceph-radosgw" do
-  owner node["ceph"]["radosgw"]["user"]
-  group node["ceph"]["radosgw"]["group"]
-  mode "0755"
-  action :create
-end
-
 include_recipe "ceph::radosgw_civetweb"
 
 crowbar_pacemaker_sync_mark "wait-ceph_client_generate"
 
-ceph_client "radosgw" do
+ceph_client "rgw" do
   caps("mon" => "allow rw", "osd" => "allow rwx")
   owner "root"
   group node["ceph"]["radosgw"]["group"]
@@ -66,6 +47,16 @@ service "radosgw" do
   supports restart: true
   action [:enable, :start]
   subscribes :restart, "template[/etc/ceph/ceph.conf]"
+end
+
+# In the systemd case, need extra targets enabled
+service "ceph-radosgw.target" do
+  action :enable
+  only_if { File.exist?("/usr/lib/systemd/system/ceph-radosgw.target") }
+end
+service "ceph.target" do
+  action :enable
+  only_if { File.exist?("/usr/lib/systemd/system/ceph.target") }
 end
 
 if node[:ceph][:ha][:radosgw][:enabled]

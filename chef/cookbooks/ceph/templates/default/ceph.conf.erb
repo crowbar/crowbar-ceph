@@ -140,13 +140,9 @@
 <% end -%>
 
 <% if (@is_rgw) -%>
-[client.radosgw.<%= node['hostname'] %>]
+[client.rgw.<%= node['hostname'] %>]
   host = <%= node['hostname'] %>
-  rgw socket path = /var/run/ceph-radosgw/radosgw.<%= node['hostname'] %>
-  admin socket = /var/run/ceph-radosgw/ceph-client.radosgw.<%= node['hostname'] %>.asok
-  pid file = /var/run/ceph-radosgw/$name.pid
-  keyring = /etc/ceph/ceph.client.radosgw.<%= node['hostname'] %>.keyring
-  log file = /var/log/radosgw/radosgw.log
+  keyring = /etc/ceph/ceph.client.rgw.<%= node['hostname'] %>.keyring
   rgw frontends = civetweb port=<%= @rgw_port %><% if (@rgw_pemfile) %>s ssl_certificate=<%= @rgw_pemfile %><% end %>
   <% unless node[:ceph][:keystone_instance].nil? || node[:ceph][:keystone_instance].empty? -%>
   rgw keystone url =  <%= @keystone_settings['admin_auth_url'] %>

@@ -9,25 +9,29 @@ mon_nodes.each do |monitor|
     mon_init << monitor.name.split(".")[0]
 end
 
-directory "/etc/ceph" do
-  owner "root"
-  group "root"
-  mode "0755"
-  action :create
-end
+unless node["platform_family"] == "suse"
+  # These directories are all created by the ceph packages on SUSE distros.
+  # TODO: Check if this is true for other distros (it probably is)
+  directory "/etc/ceph" do
+    owner "root"
+    group "root"
+    mode "0755"
+    action :create
+  end
 
-directory "/var/run/ceph" do
-  owner "root"
-  group "root"
-  mode "0755"
-  action :create
-end
+  directory "/var/run/ceph" do
+    owner "ceph"
+    group "ceph"
+    mode "0770"
+    action :create
+  end
 
-directory "/var/log/ceph" do
-  owner "root"
-  group "root"
-  mode "0755"
-  action :create
+  directory "/var/log/ceph" do
+    owner "ceph"
+    group "ceph"
+    mode "3770"
+    action :create
+  end
 end
 
 is_rgw = node.roles.include?("ceph-radosgw")

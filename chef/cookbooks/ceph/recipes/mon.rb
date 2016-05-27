@@ -21,9 +21,9 @@ include_recipe "ceph::conf"
 service_type = node["ceph"]["mon"]["init_style"]
 
 directory "/var/lib/ceph/mon/ceph-#{node["hostname"]}" do
-  owner "root"
-  group "root"
-  mode "0755"
+  owner "ceph"
+  group "ceph"
+  mode "0750"
   recursive true
   action :create
 end
@@ -91,7 +91,7 @@ unless File.exists?("/var/lib/ceph/mon/ceph-#{node["hostname"]}/done")
   end
 
   execute "ceph-mon mkfs" do
-    command "ceph-mon --mkfs -i #{node['hostname']} --keyring '#{keyring}'"
+    command "chown ceph:ceph #{keyring} ; ceph-mon --mkfs -i #{node['hostname']} --keyring '#{keyring}' --setuser ceph --setgroup ceph"
     action :nothing
   end
 
@@ -131,10 +131,15 @@ service "ceph_mon" do
   subscribes :restart, resources(template: "/etc/ceph/ceph.conf")
 end
 
-# In addition to the mon service, ceph.target must be enabled when using systemd
-service "ceph.target" do
-  action :enable
-end if service_type == "systemd"
+# In addition to the mon service, ceph targets must be enabled when using systemd
+if service_type == "systemd"
+  service "ceph-mon.target" do
+    action :enable
+  end
+  service "ceph.target" do
+    action :enable
+  end
+end
 
 execute "Create Ceph client.admin key when ceph-mon is ready" do
   command "ceph-create-keys -i #{node['hostname']}"
