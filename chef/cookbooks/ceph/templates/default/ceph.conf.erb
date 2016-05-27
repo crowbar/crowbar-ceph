@@ -34,14 +34,6 @@
         ; default number of placement groups for placement for a pool
         osd pool default pgp num = <%= @pool_pg_num %>
 
-        # New warning was introduced in Ceph Hammer release
-        # For small RADOS clusters with less than 5 OSDs 
-        # and pools for glance, radosgw, we are getting 
-        # health HEALTH_WARN
-        #        too many PGs per OSD (1216 > max 300)
-        # https://bugzilla.suse.com/show_bug.cgi?id=948375
-        mon_pg_warn_max_per_osd = 0
-
         # Choose a reasonable crush leaf type.
         # 0 for a 1-node cluster.
         # 1 for a multi node cluster in a single rack
