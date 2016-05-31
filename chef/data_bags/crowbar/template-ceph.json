@@ -14,6 +14,8 @@
       "admin-secret": "",
       "clustername": "ceph",
       "keystone_instance": "none",
+      "service_user": "ceph",
+      "service_password": "",
       "osd": {
         "min_size_gb": 20,
         "journal_size"  : 5120,
@@ -45,7 +47,7 @@
     "ceph": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 31,
+      "schema-revision": 100,
       "element_states": {
         "ceph-calamari": [ "readying", "ready", "applying" ],
         "ceph-mon": [ "readying", "ready", "applying" ],

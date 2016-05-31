@@ -2,6 +2,9 @@
 
 # Keystone itself needs to be configured to point to the Ceph Object Gateway as an object-storage endpoint:
 keystone_settings = KeystoneHelper.keystone_settings(node, @cookbook_name)
+register_auth_hash = { user: keystone_settings["admin_user"],
+                       password: keystone_settings["admin_password"],
+                       tenant: keystone_settings["admin_tenant"] }
 
 crowbar_pacemaker_sync_mark "wait-radosgw_register"
 
@@ -10,8 +13,32 @@ keystone_register "radosgw wakeup keystone" do
   insecure keystone_settings["insecure"]
   host keystone_settings["internal_url_host"]
   port keystone_settings["admin_port"]
-  token keystone_settings["admin_token"]
+  auth register_auth_hash
   action :wakeup
+end
+
+keystone_register "register ceph user" do
+  protocol keystone_settings["protocol"]
+  insecure keystone_settings["insecure"]
+  host keystone_settings["internal_url_host"]
+  port keystone_settings["admin_port"]
+  auth register_auth_hash
+  user_name keystone_settings["service_user"]
+  user_password keystone_settings["service_password"]
+  tenant_name keystone_settings["service_tenant"]
+  action :add_user
+end
+
+keystone_register "give ceph user access" do
+  protocol keystone_settings["protocol"]
+  insecure keystone_settings["insecure"]
+  host keystone_settings["internal_url_host"]
+  port keystone_settings["admin_port"]
+  auth register_auth_hash
+  user_name keystone_settings["service_user"]
+  tenant_name keystone_settings["service_tenant"]
+  role_name "admin"
+  action :add_access
 end
 
 role = "ResellerAdmin"
@@ -20,7 +47,7 @@ keystone_register "add #{role} role" do
   insecure keystone_settings["insecure"]
   host keystone_settings["internal_url_host"]
   port keystone_settings["admin_port"]
-  token keystone_settings["admin_token"]
+  auth register_auth_hash
   role_name role
   action :add_role
 end
@@ -30,8 +57,8 @@ keystone_register "register swift service" do
   protocol keystone_settings["protocol"]
   insecure keystone_settings["insecure"]
   host keystone_settings["internal_url_host"]
-  token keystone_settings["admin_token"]
   port keystone_settings["admin_port"]
+  auth register_auth_hash
   service_name "swift"
   service_type "object-store"
   service_description "Openstack Swift Object Store Service API provided by RADOS Gateway"
@@ -54,17 +81,17 @@ admin_host = CrowbarHelper.get_host_for_admin_url(node, ha_enabled)
 public_host = CrowbarHelper.get_host_for_public_url(node, protocol == "https", ha_enabled)
 
 keystone_register "register radosgw endpoint" do
-    protocol keystone_settings["protocol"]
-    insecure keystone_settings["insecure"]
-    host keystone_settings["internal_url_host"]
-    token keystone_settings["admin_token"]
-    port keystone_settings["admin_port"]
-    endpoint_service "swift"
-    endpoint_region keystone_settings["endpoint_region"]
-    endpoint_publicURL "#{protocol}://#{public_host}:#{port}/swift/v1"
-    endpoint_adminURL "#{protocol}://#{admin_host}:#{port}/swift/v1"
-    endpoint_internalURL "#{protocol}://#{admin_host}:#{port}/swift/v1"
-   action :add_endpoint_template
+  protocol keystone_settings["protocol"]
+  insecure keystone_settings["insecure"]
+  host keystone_settings["internal_url_host"]
+  port keystone_settings["admin_port"]
+  auth register_auth_hash
+  endpoint_service "swift"
+  endpoint_region keystone_settings["endpoint_region"]
+  endpoint_publicURL "#{protocol}://#{public_host}:#{port}/swift/v1"
+  endpoint_adminURL "#{protocol}://#{admin_host}:#{port}/swift/v1"
+  endpoint_internalURL "#{protocol}://#{admin_host}:#{port}/swift/v1"
+  action :add_endpoint_template
 end
 
 crowbar_pacemaker_sync_mark "create-radosgw_register"
