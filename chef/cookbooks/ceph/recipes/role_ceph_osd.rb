@@ -1,5 +1,5 @@
 #
-# Copyright 2015, SUSE LINUX GmbH
+# Copyright 2016, SUSE LINUX GmbH
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,12 +14,4 @@
 # limitations under the License.
 #
 
-barclamp = "ceph"
-role = "ceph-osd"
-
-# if nil, then this means all states are valid
-states_for_role = node[barclamp]["element_states"][role]
-
-if states_for_role.nil? || states_for_role.include?("all") || states_for_role.include?(node[:state])
-  include_recipe "ceph::osd"
-end
+include_recipe "ceph::osd"
