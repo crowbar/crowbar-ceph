@@ -14,4 +14,6 @@
 # limitations under the License.
 #
 
-include_recipe "ceph::osd"
+if CrowbarRoleRecipe.node_state_valid_for_role?(node, "ceph", "ceph-osd")
+  include_recipe "ceph::osd"
+end

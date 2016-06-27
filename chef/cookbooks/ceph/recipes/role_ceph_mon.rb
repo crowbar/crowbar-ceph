@@ -14,4 +14,6 @@
 # limitations under the License.
 #
 
-include_recipe "ceph::mon"
+if CrowbarRoleRecipe.node_state_valid_for_role?(node, "ceph", "ceph-mon")
+  include_recipe "ceph::mon"
+end
