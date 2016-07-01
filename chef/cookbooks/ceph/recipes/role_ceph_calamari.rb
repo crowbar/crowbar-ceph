@@ -14,4 +14,6 @@
 # limitations under the License.
 #
 
-include_recipe "ceph::calamari"
+if CrowbarRoleRecipe.node_state_valid_for_role?(node, "ceph", "ceph-calamari")
+  include_recipe "ceph::calamari"
+end
