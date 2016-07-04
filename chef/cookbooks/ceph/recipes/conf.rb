@@ -59,21 +59,46 @@ else
   num_osds = node["ceph"]["config"]["osds_in_total"]
 end
 
-# calculate pg_num based on documentation
-# http://ceph.com/docs/master/rados/operations/placement-groups/
 case num_osds
-when 1..4
-  pg_num = 128
-when 5..9
-  pg_num = 512
-when 10..49
-  pg_num = 4096
+when 0
+  # This can only happen if the search in get_osd_nodes() doesn't find any OSDs, which
+  # should be impossible.  But if it *does* fail, pg_num needs to be set to something,
+  # so let's run with the default of 8 (see "osd pool default pg num" at
+  # http://docs.ceph.com/docs/master/rados/configuration/pool-pg-config-ref/)
+  Chef::Log.warn("Ceph recipe invoked but there are no OSDs!  Defaulting to pg_num = 8")
+  pg_num = 8
 else
-  # Ensure you have a realistic number of placement groups. We recommend
-  # approximately 100 per OSD. E.g., total number of OSDs multiplied by 100
-  # divided by the number of replicas (i.e., osd pool default size).
-  # The result should be rounded up to the nearest power of two.
-  pg_num = 2 ** Math.log2(num_osds * 100 / rep_num).round
+  # There'll always be at least the default rbd pool (which Ceph always creates
+  # with 64 PGs, irrespective of what "osd pool default pg num" is set to)
+  expected_pools = 1
+
+  rgw_host = search(:node, "roles:ceph-radosgw")
+  # RGW will use up to 14 pools (try "RGW only" with http://ceph.com/pgcalc/)
+  # These are not all created immediately though.  Six will be created when
+  # the radosgw daemon starts for the first time.  The swift pool(s) will be
+  # created when you create a swift subuser for the first time, and the usage
+  # pool will only be created if the usage log is explicitly enabled.  Here,
+  # to be conservative, we're assuming the full 14 pools will be used for RGW
+  # deployments.
+  expected_pools += 14 unless rgw_host.empty?
+
+  mds_host = search(:node, "roles:ceph-mds")
+  # If there's a ceph MDS (which actually isn't implemented in barclamp yet,
+  # but might be in future), there'll be two more pools
+  expected_pools += 2 unless mds_host.empty?
+
+  # Figure out a sane number for "osd pool default pg num" based on the logic
+  # at http://ceph.com/pgcalc/ -- for any given number of expected pools, this
+  # results in "about 100" PGs per OSD, but experimentation indicates it can
+  # go as low as 70 and as high as 150, depending on the exact number of OSDs
+  # and expected number of pools.
+  pg_calc = (100 * num_osds * (1.0 / expected_pools)) / rep_num
+  # Get nearest power of 2
+  pg_num = 2**Math.log2(pg_calc).round
+  # Edge case with >=50 pools and 1 OSD gives pg_num of less than 1
+  pg_num = 1 if pg_num < 1
+  # If nearest power of 2 is more than 25% below original value, use next highest power
+  pg_num *= 2 if pg_num < (pg_calc * 0.75)
 end
 
 template "/etc/ceph/ceph.conf" do

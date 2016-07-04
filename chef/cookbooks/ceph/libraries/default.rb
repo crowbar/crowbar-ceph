@@ -7,7 +7,7 @@ end
 
 def get_mon_nodes(extra_search=nil)
   if is_crowbar?
-    mon_roles = search(:role, 'name:crowbar-* AND run_list:role\[ceph-mon\]')
+    mon_roles = search(:role, "name:crowbar-* AND run_list_map:ceph-mon")
     if not mon_roles.empty?
       search_string = mon_roles.map { |role_object| "roles:"+role_object.name }.join(" OR ")
     else
@@ -130,7 +130,7 @@ end
 def get_osd_nodes()
   osds = []
   if is_crowbar?
-    osd_roles = search(:role, 'name:crowbar-* AND run_list:role\[ceph-osd\]')
+    osd_roles = search(:role, "name:crowbar-* AND run_list_map:ceph-osd")
     if not osd_roles.empty?
       search_string = osd_roles.map { |role_object| "roles:"+role_object.name }.join(" OR ")
     else
