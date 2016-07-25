@@ -140,6 +140,9 @@
   rgw keystone admin user = <%= @keystone_settings['service_user'] %>
   rgw keystone admin tenant = <%= @keystone_settings['service_tenant'] %>
   rgw keystone admin password = <%= @keystone_settings['service_password'] %>
+<% if @keystone_settings['insecure'] -%>
+  rgw keystone verify ssl = false
+<% end -%>
   nss db path = <%= node['ceph']['radosgw']['nss_directory'] %>
   <% end -%>
 <% if (! node['ceph']['config']['rgw'].nil?) -%>
