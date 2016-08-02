@@ -1,0 +1,9 @@
+namespace :api,
+  constraints: ApiConstraint.new(2.0) do
+  resources :storages,
+    only: [:index, :show] do
+    collection do
+      get :repocheck
+    end
+  end
+end
