@@ -62,7 +62,7 @@ unless File.exists?("/var/lib/ceph/mon/ceph-#{node["hostname"]}/done")
       require "timeout"
       monitor_key = ""
       begin
-        Timeout.timeout(300) do
+        Timeout.timeout(600) do
           while monitor_key.empty?
             mon_nodes = get_mon_nodes
             mon_nodes.each do |mon|
@@ -159,7 +159,7 @@ end
       require "timeout"
       auth_key = ""
       begin
-        Timeout.timeout(300) do
+        Timeout.timeout(600) do
           while auth_key.empty?
             get_key = Mixlib::ShellOut.new("ceph auth get-key client.#{auth}")
             auth_key = get_key.run_command.stdout.strip

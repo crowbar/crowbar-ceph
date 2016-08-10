@@ -184,7 +184,7 @@ else
           block do
             require "timeout"
             begin
-              Timeout.timeout(300) do
+              Timeout.timeout(600) do
                 osd_id = ""
                 while osd_id.empty?
                   osd_id = get_osd_id(osd_device["device"])
