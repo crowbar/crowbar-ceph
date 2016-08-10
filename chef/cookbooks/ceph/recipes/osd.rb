@@ -38,7 +38,7 @@ include_recipe "ceph::conf"
 package "gdisk"
 
 service_type = node["ceph"]["osd"]["init_style"]
-mons = get_mon_nodes("ceph_bootstrap-osd-secret:*")
+mons = get_mon_nodes
 
 if mons.empty? then
   Chef::Log.fatal("No ceph-mon found")
