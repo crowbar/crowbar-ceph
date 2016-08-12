@@ -1,5 +1,6 @@
 require "ipaddr"
 require "json"
+require "timeout"
 
 def is_crowbar?()
   return defined?(Chef::Recipe::Barclamp) != nil
@@ -21,6 +22,18 @@ def get_mon_nodes(extra_search=nil)
     search_string = "(#{search_string}) AND (#{extra_search})"
   end
   mons = search(:node, search_string)
+
+  begin
+    Timeout.timeout(60) do
+      while mons.empty?
+        mons = search(:node, search_string)
+        sleep(2)
+      end
+    end
+  rescue Timeout::Error
+    Chef::Log.warn("No monitor nodes were found within a minute")
+  end
+
   return mons
 end
 
