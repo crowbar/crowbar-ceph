@@ -39,6 +39,7 @@ if is_rgw
   else
     rgw_port = rgw_use_ssl ? node["ceph"]["radosgw"]["rgw_port_ssl"] : node["ceph"]["radosgw"]["rgw_port"]
   end
+  rgw_port = rgw_port.to_s + "s" if rgw_use_ssl
   rgw_pemfile = node["ceph"]["radosgw"]["ssl"]["pemfile"] if rgw_use_ssl
 end
 
