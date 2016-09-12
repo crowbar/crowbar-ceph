@@ -49,7 +49,7 @@ class CephService < PacemakerServiceObject
           "unique" => false,
           "count" => 1,
           "platform" => {
-            "suse" => "12.1",
+            "suse" => "/^12.*/",
             "opensuse" => "/.*/"
           },
           "conflicts_with" => ["ceph-mon", "ceph-osd", "ceph-radosgw", "horizon-server"]
@@ -58,7 +58,7 @@ class CephService < PacemakerServiceObject
           "unique" => false,
           "count" => 9,
           "platform" => {
-            "suse" => "12.1",
+            "suse" => "/^12.*/",
             "opensuse" => "/.*/"
           },
         },
@@ -66,7 +66,7 @@ class CephService < PacemakerServiceObject
           "unique" => false,
           "count" => 150,
           "platform" => {
-            "suse" => "12.1",
+            "suse" => "/^12.*/",
             "opensuse" => "/.*/"
           },
         },
@@ -74,7 +74,7 @@ class CephService < PacemakerServiceObject
           "unique" => false,
           "count" => 1,
           "platform" => {
-            "suse" => "12.1",
+            "suse" => "/^12.*/",
             "opensuse" => "/.*/"
           },
           "cluster" => true
