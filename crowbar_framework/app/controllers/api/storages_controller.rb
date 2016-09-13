@@ -15,6 +15,8 @@
 #
 
 class Api::StoragesController < ApiController
+  before_action :set_ceph
+
   api :GET, "/api/storages", "List all Ceph storages"
   api_version "2.0"
   def index
@@ -31,6 +33,12 @@ class Api::StoragesController < ApiController
   api :GET, "/api/storages/repocheck", "Sanity check ceph repositories"
   api_version "2.0"
   def repocheck
-    render json: {}, status: :not_implemented
+    render json: @ceph.repocheck
+  end
+
+  protected
+
+  def set_ceph
+    @ceph = Api::Storage.new
   end
 end
