@@ -15,7 +15,7 @@
 #
 
 module Api
-  class Storage < Tableless
+  class Ceph < Tableless
     class << self
       def repocheck
         Api::Node.repocheck(addon: "ceph")
