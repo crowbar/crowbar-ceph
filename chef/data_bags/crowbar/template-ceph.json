@@ -16,6 +16,7 @@
       "keystone_instance": "none",
       "service_user": "ceph",
       "service_password": "",
+      "client_network": "public",
       "osd": {
         "min_size_gb": 20,
         "journal_size"  : 5120,
@@ -52,7 +53,7 @@
     "ceph": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 101,
+      "schema-revision": 102,
       "element_states": {
         "ceph-calamari": [ "readying", "ready", "applying" ],
         "ceph-mon": [ "readying", "ready", "applying" ],

@@ -93,7 +93,11 @@ def get_mon_addresses()
 
     mons += get_mon_nodes()
     if is_crowbar?
-      mon_ips = mons.map { |node| Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address }
+      mon_ips = mons.map do |node|
+        Chef::Recipe::Barclamp::Inventory.get_network_by_type(
+          node, node["ceph"]["client_network"]
+        ).address
+      end
     else
       if node["ceph"]["config"] && node["ceph"]["config"]["public-network"]
         mon_ips = mons.map { |nodeish| find_node_ip_in_network(node["ceph"]["config"]["public-network"], nodeish) }
@@ -158,8 +162,12 @@ def get_osd_nodes()
     cluster_addr = ""
     public_addr = ""
 
-    public_addr = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "admin").address
-    cluster_addr = Chef::Recipe::Barclamp::Inventory.get_network_by_type(node, "storage").address
+    public_addr = Chef::Recipe::Barclamp::Inventory.get_network_by_type(
+      node, node["ceph"]["client_network"]
+    ).address
+    cluster_addr = Chef::Recipe::Barclamp::Inventory.get_network_by_type(
+      node, "storage"
+    ).address
 
     osd = {}
     osd[:hostname] = node.name.split(".")[0]
