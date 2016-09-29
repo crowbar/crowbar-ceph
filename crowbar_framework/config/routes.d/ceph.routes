@@ -1,7 +1,6 @@
 namespace :api,
   constraints: ApiConstraint.new(2.0) do
-  resources :storages,
-    only: [:index, :show] do
+  resource :ceph, controller: :ceph, only: [] do
     collection do
       get :repocheck
     end

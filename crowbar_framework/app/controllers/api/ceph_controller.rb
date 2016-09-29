@@ -14,23 +14,12 @@
 # limitations under the License.
 #
 
-class Api::StoragesController < ApiController
-  api :GET, "/api/storages", "List all Ceph storages"
-  api_version "2.0"
-  def index
-    render json: [], status: :not_implemented
-  end
-
-  api :GET, "/api/storages/:id", "Show a single Ceph storage"
-  param :id, Integer, desc: "Ceph Storage ID", required: true
-  api_version "2.0"
-  def show
-    render json: {}, status: :not_implemented
-  end
-
-  api :GET, "/api/storages/repocheck", "Sanity check ceph repositories"
-  api_version "2.0"
-  def repocheck
-    render json: Api::Storage.repocheck
+module Api
+  class CephController < ApiController
+    api :GET, "/api/ceph/repocheck", "Sanity check ceph repositories"
+    api_version "2.0"
+    def repocheck
+      render json: Api::Ceph.repocheck
+    end
   end
 end
