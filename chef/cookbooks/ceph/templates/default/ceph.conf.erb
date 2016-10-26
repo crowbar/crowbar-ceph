@@ -71,16 +71,6 @@
   <% end -%>
 <% end -%>
 
-; mds
-;  You need at least one.  Define two to get a standby.
-[mds]
-    ; where the mds keeps it's secret encryption keys
-    keyring = /etc/ceph/$name.keyring
-
-    ; mds logging to debug issues.
-    ;debug ms = 1
-    ;debug mds = 20
-
 ; osd
 ;  You need at least one.  Two if you want data to be replicated.
 ;  Define as many as you like.

@@ -40,6 +40,11 @@
           "certfile": "/etc/apache2/ssl.crt/calamari-server.crt",
           "keyfile": "/etc/apache2/ssl.key/calamari-server.key"
         }
+      },
+      "cephfs": {
+        "fs_name": "cephfs",
+        "data_pool": "cephfs_data",
+        "metadata_pool": "cephfs_metadata"
       }
     }
   },
@@ -47,25 +52,28 @@
     "ceph": {
       "crowbar-revision": 0,
       "crowbar-applied": false,
-      "schema-revision": 100,
+      "schema-revision": 101,
       "element_states": {
         "ceph-calamari": [ "readying", "ready", "applying" ],
         "ceph-mon": [ "readying", "ready", "applying" ],
         "ceph-osd": [ "readying", "ready", "applying" ],
-        "ceph-radosgw": [ "readying", "ready", "applying" ]
+        "ceph-radosgw": [ "readying", "ready", "applying" ],
+        "ceph-mds": [ "readying", "ready", "applying" ]
       },
       "elements": {},
       "element_order": [
         [ "ceph-calamari" ],
         [ "ceph-mon" ],
         [ "ceph-osd" ],
-        [ "ceph-radosgw" ]
+        [ "ceph-radosgw" ],
+        [ "ceph-mds" ]
       ],
       "element_run_list_order": {
         "ceph-calamari": 79,
         "ceph-mon": 80,
         "ceph-osd": 81,
-        "ceph-radosgw": 82
+        "ceph-radosgw": 82,
+        "ceph-mds": 83
       },
       "config": {
         "environment": "ceph-base-config",

@@ -77,6 +77,15 @@
                   }
                 }
               }
+            },
+            "cephfs": {
+              "type": "map",
+              "required": true,
+              "mapping": {
+                "fs_name": { "type": "str", "required": true },
+                "data_pool": { "type": "str", "required": true },
+                "metadata_pool": { "type": "str", "required": true }
+              }
             }
           }
         }

@@ -78,6 +78,15 @@ class CephService < PacemakerServiceObject
             "opensuse" => "/.*/"
           },
           "cluster" => true
+        },
+        "ceph-mds" => {
+          "unique" => false,
+          "count" => 3,
+          "platform" => {
+            "suse" => "/^12.*/",
+            "opensuse" => "/.*/"
+          },
+          "conflicts_with" => ["ceph-osd"]
         }
       }
     end
