@@ -133,6 +133,8 @@ class CephService < PacemakerServiceObject
     end
     mon_nodes = mon_nodes.take(mon_nodes.length > 2 ? 3 : 1)
 
+    mds_node = select_nodes_for_role(nodes, "ceph-mds", "controller").first
+
     radosgw_node = select_nodes_for_role(nodes, "ceph-radosgw", "controller").first
 
     # Any spare node after allocating mons and osds is fair game
@@ -145,6 +147,7 @@ class CephService < PacemakerServiceObject
         "ceph-calamari" => calamari_node.nil? ? [] : [calamari_node.name],
         "ceph-mon" => mon_nodes.map { |x| x.name },
         "ceph-osd" => osd_nodes.map { |x| x.name },
+        "ceph-mds" => mds_node.nil? ? [] : [mds_node.name],
         "ceph-radosgw" => radosgw_node.nil? ? [] : [radosgw_node.name]
     }
 
