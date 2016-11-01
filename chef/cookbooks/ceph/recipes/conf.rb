@@ -119,9 +119,55 @@ template "/etc/ceph/ceph.conf" do
     is_rgw: is_rgw,
     rgw_port: rgw_port,
     rgw_pemfile: rgw_pemfile,
-    keystone_settings: keystone_settings
+    keystone_settings: node["platform_family"] == "suse" ? {} : keystone_settings
   )
   mode "0644"
+end
+
+if is_rgw && node["platform_family"] == "suse"
+  # We create a separate ceph.conf file for use only by the radosgw daemon,
+  # and an override systemd unit file which makes radosgw use this config file,
+  # so we can limit its permissions as it may include the keystone admin token.
+  #
+  # It's not sufficient to just set the main ceph.conf to 0640, because other
+  # services (glance/cinder/nova) may need to read ceph.conf.
+  #
+  # Note that ceph.conf still includes a radosgw section, because that's necessary
+  # for the ceph-radosgw-prestart.sh script to read.  ceph.conf.radosgw is thus
+  # almost identical to ceph.conf, but it also includes the keystone settings
+  # if applicable.
+  #
+  # (The override systemd unit file is created in radosgw.rb, rather than here,
+  # because this needs to happen *after* the radosgw pacakge is installed, or
+  # the main systemd unit file doesn't exist yet)
+  #
+  # The separate, radosgw specific config file must be named ceph.conf.radosgw,
+  # or, at least, not look like it's named "*.conf", because otherwise it may be
+  # picked up erroneously when the ceph command line tools are scanning /etc/ceph
+  # for viable config files.  We *only* want this to be used when the radosgw
+  # daemon runs, not for anything else (an earlier attempt, where the file was
+  # named "ceph-radosgw.conf", made `ceph-disk activate` think the cluster was
+  # named "ceph-radosgw", and then it couldn't find a key for that cluster name...)
+  #
+  template "/etc/ceph/ceph.conf.radosgw" do
+    source "ceph.conf.erb"
+    variables(
+      mon_initial: mon_init,
+      mon_addresses: mon_addr,
+      pool_size: rep_num,
+      pool_pg_num: pg_num,
+      osd_nodes_count: osd_nodes.length,
+      public_network: node["ceph"]["config"]["public-network"],
+      cluster_network: node["ceph"]["config"]["cluster-network"],
+      is_rgw: is_rgw,
+      rgw_port: rgw_port,
+      rgw_pemfile: rgw_pemfile,
+      keystone_settings: keystone_settings
+    )
+    owner "root"
+    group node["ceph"]["radosgw"]["group"]
+    mode "0640"
+  end
 end
 
 # Need salt minion on osd and mon nodes to hook up to calamari.  Note: in one
