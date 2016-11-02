@@ -161,9 +161,11 @@ class CephService < PacemakerServiceObject
     @logger.debug("ceph apply_role_pre_chef_call: entering #{all_nodes.inspect}")
     monitors = role.override_attributes["ceph"]["elements"]["ceph-mon"] || []
     osd_nodes = role.override_attributes["ceph"]["elements"]["ceph-osd"] || []
+    ceph_client = role.default_attributes["ceph"]["client_network"]
 
     @logger.debug("monitors: #{monitors.inspect}")
     @logger.debug("osd_nodes: #{osd_nodes.inspect}")
+    @logger.debug("client_network: #{ceph_client}")
 
     radosgw_elements, radosgw_nodes, ha_enabled = role_expand_elements(role, "ceph-radosgw")
 
@@ -178,10 +180,16 @@ class CephService < PacemakerServiceObject
 
     osd_nodes.each do |n|
       net_svc.allocate_ip "default", "storage", "host", n
+      unless ceph_client == "admin" || ceph_client == "storage"
+        net_svc.allocate_ip "default", ceph_client, "host", n
+      end
     end
 
     radosgw_nodes.each do |n|
       net_svc.allocate_ip "default", "public", "host", n
+      unless ceph_client == "admin" || ceph_client == "public"
+        net_svc.allocate_ip "default", ceph_client, "host", n
+      end
     end
 
     # No specific need to call sync dns here, as the cookbook doesn't require
@@ -191,11 +199,11 @@ class CephService < PacemakerServiceObject
     # Save net info in attributes if we're applying
     unless all_nodes.empty?
       node = NodeObject.find_node_by_name osd_nodes[0]
-      admin_net = node.get_network_by_type("admin")
+      client_net = node.get_network_by_type(ceph_client)
       cluster_net = node.get_network_by_type("storage")
 
       role.default_attributes["ceph"]["config"]["public-network"] =
-        "#{admin_net['subnet']}/#{mask_to_bits(admin_net['netmask'])}"
+        "#{client_net["subnet"]}/#{mask_to_bits(client_net["netmask"])}"
       role.default_attributes["ceph"]["config"]["cluster-network"] =
         "#{cluster_net['subnet']}/#{mask_to_bits(cluster_net['netmask'])}"
 
