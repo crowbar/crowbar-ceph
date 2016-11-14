@@ -33,7 +33,7 @@ end
 execute "create mds keyring" do
   command "ceph auth get-or-create mds.#{node["hostname"]} \
              osd 'allow rwx' mds 'allow' mon 'allow profile mds' \
-             -o /var/lib/ceph/mds/ceph-#{node["hostname"]}/keyring ; \
+             -o /var/lib/ceph/mds/ceph-#{node["hostname"]}/keyring && \
            chown ceph.ceph /var/lib/ceph/mds/ceph-#{node["hostname"]}/keyring"
   not_if { File.exist?("/var/lib/ceph/mds/ceph-#{node["hostname"]}/keyring") }
 end
