@@ -141,3 +141,10 @@
   <% end -%>
 <% end -%>
 <% end -%>
+
+<% if (! node['ceph']['config_sections'].nil?) -%>
+  <% node['ceph']['config_sections'].each do |section_name, section_content| -%>
+[<%= section_name -%>]
+<%= section_content %>
+  <% end -%>
+<% end -%>
