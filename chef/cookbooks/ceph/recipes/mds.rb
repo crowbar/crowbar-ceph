@@ -38,13 +38,6 @@ execute "create mds keyring" do
   not_if { File.exist?("/var/lib/ceph/mds/ceph-#{node["hostname"]}/keyring") }
 end
 
-service "ceph_mds" do
-  service_name "ceph-mds@#{node["hostname"]}"
-  supports restart: true, status: true
-  action [:enable, :start]
-  subscribes :restart, resources(template: "/etc/ceph/ceph.conf")
-end
-
 service "ceph-mds.target" do
   action :enable
 end
@@ -65,9 +58,18 @@ execute "create metadata pool" do
   not_if "rados lspools|grep -q '^#{node[:ceph][:cephfs][:metadata_pool]}$'"
 end
 
-execute "create cephfs filesystem" do
+service "ceph_mds" do
+  service_name "ceph-mds@#{node["hostname"]}"
+  supports restart: true, status: true
+  action [:enable, :start]
+  subscribes :restart, resources(template: "/etc/ceph/ceph.conf")
+  notifies :run, "execute[create-cephfs]", :immediately
+end
+
+execute "create-cephfs" do
   # NOTE: not_if condition will be fragile if `ceph fs ls` output ever changes
   command "ceph fs new #{node[:ceph][:cephfs][:fs_name]} \
              #{node[:ceph][:cephfs][:metadata_pool]} #{node[:ceph][:cephfs][:data_pool]}"
+  action :nothing
   not_if "ceph fs ls|grep -q 'name: #{node[:ceph][:cephfs][:fs_name]},"
 end
