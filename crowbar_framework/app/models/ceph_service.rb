@@ -161,6 +161,7 @@ class CephService < PacemakerServiceObject
     @logger.debug("ceph apply_role_pre_chef_call: entering #{all_nodes.inspect}")
     monitors = role.override_attributes["ceph"]["elements"]["ceph-mon"] || []
     osd_nodes = role.override_attributes["ceph"]["elements"]["ceph-osd"] || []
+    mds_nodes = role.override_attributes["ceph"]["elements"]["ceph-mds"] || []
     ceph_client = role.default_attributes["ceph"]["client_network"]
 
     @logger.debug("monitors: #{monitors.inspect}")
@@ -177,6 +178,18 @@ class CephService < PacemakerServiceObject
 
     # Make sure to use the storage network
     net_svc = NetworkService.new @logger
+
+    monitors.each do |n|
+      unless ceph_client == "admin"
+        net_svc.allocate_ip "default", ceph_client, "host", n
+      end
+    end
+
+    mds_nodes.each do |n|
+      unless ceph_client == "admin"
+        net_svc.allocate_ip "default", ceph_client, "host", n
+      end
+    end
 
     osd_nodes.each do |n|
       net_svc.allocate_ip "default", "storage", "host", n

@@ -158,23 +158,8 @@ def get_osd_nodes()
   end
 
   search(:node, search_string).each do |node|
-    port_counter = 6799
-    cluster_addr = ""
-    public_addr = ""
-
-    public_addr = Chef::Recipe::Barclamp::Inventory.get_network_by_type(
-      node, node["ceph"]["client_network"]
-    ).address
-    cluster_addr = Chef::Recipe::Barclamp::Inventory.get_network_by_type(
-      node, "storage"
-    ).address
-
     osd = {}
     osd[:hostname] = node.name.split(".")[0]
-    osd[:cluster_addr] = cluster_addr
-    osd[:cluster_port] = (port_counter += 1)
-    osd[:public_addr] = public_addr
-    osd[:public_port] = (port_counter += 1)
     osds << osd
   end
 
