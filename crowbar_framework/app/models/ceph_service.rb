@@ -52,7 +52,8 @@ class CephService < PacemakerServiceObject
             "suse" => "/^12.*/",
             "opensuse" => "/.*/"
           },
-          "conflicts_with" => ["ceph-mon", "ceph-osd", "ceph-radosgw", "horizon-server"]
+          "conflicts_with" => ["ceph-mon", "ceph-osd", "ceph-radosgw",
+                               "database-server", "horizon-server"]
         },
         "ceph-mon" => {
           "unique" => false,
