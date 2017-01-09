@@ -109,30 +109,31 @@ directory nss_dir do
   action :create
 end
 
-keystone_node = search_env_filtered(:node, "roles:keystone-server AND keystone_pki_content:*").first
+keystone_node = search_env_filtered(:node, "roles:keystone-server
+  AND keystone_certificates_content:*").first
 
 if !keystone_node.nil?
-  file "#{nss_dir}/keystone_pki_ca.pem" do
-    content keystone_node[:keystone][:pki][:content][:ca]
+  file "#{nss_dir}/keystone_ca.pem" do
+    content keystone_node[:keystone][:certificates][:content][:ca]
   end
 
   bash "convert signing ca certificate to nss db format" do
     code <<-EOH
-openssl x509 -in #{nss_dir}/keystone_pki_ca.pem -pubkey | certutil -d #{nss_dir} -A -n ca -t 'TCu,Cu,Tuw'
+openssl x509 -in #{nss_dir}/keystone_ca.pem -pubkey | certutil -d #{nss_dir} -A -n ca -t 'TCu,Cu,Tuw'
 chown #{node[:apache][:user]}:#{node[:apache][:group]} #{nss_dir}/*.db
     EOH
-    subscribes :run, "file[#{nss_dir}/keystone_pki_ca.pem]"
+    subscribes :run, "file[#{nss_dir}/keystone_ca.pem]"
   end
 
-  file "#{nss_dir}/keystone_pki_signing_cert.pem" do
-    content keystone_node[:keystone][:pki][:content][:signing_cert]
+  file "#{nss_dir}/keystone_signing_cert.pem" do
+    content keystone_node[:keystone][:certificates][:content][:signing_cert]
   end
 
   bash "convert signing certificate to nss db format" do
     code <<-EOH
-openssl x509 -in #{nss_dir}/keystone_pki_signing_cert.pem -pubkey | certutil -A -d #{nss_dir} -n signing_cert -t 'P,P,P'
+openssl x509 -in #{nss_dir}/keystone_signing_cert.pem -pubkey | certutil -A -d #{nss_dir} -n signing_cert -t 'P,P,P'
 chown #{node[:apache][:user]}:#{node[:apache][:group]} #{nss_dir}/*.db
     EOH
-    subscribes :run, "file[#{nss_dir}/keystone_pki_signing_cert.pem]"
+    subscribes :run, "file[#{nss_dir}/keystone_signing_cert.pem]"
   end
 end
