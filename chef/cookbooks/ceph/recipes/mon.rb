@@ -32,7 +32,7 @@ end
 # TODO cluster name
 cluster = "ceph"
 
-unless File.exists?("/var/lib/ceph/mon/ceph-#{address}/done")
+unless File.exist?("/var/lib/ceph/mon/ceph-#{address}/done")
   keyring = "#{Chef::Config[:file_cache_path]}/#{cluster}-#{address}.mon.keyring"
 
   execute "create monitor keyring" do
@@ -92,14 +92,15 @@ unless File.exists?("/var/lib/ceph/mon/ceph-#{address}/done")
   end
 
   execute "ceph-mon mkfs" do
-    command "chown ceph:ceph #{keyring} ; ceph-mon --mkfs -i #{address} --keyring '#{keyring}' --setuser ceph --setgroup ceph"
+    command "chown ceph:ceph #{keyring} ; ceph-mon --mkfs -i #{address} " \
+  "--keyring '#{keyring}' --setuser ceph --setgroup ceph"
     action :nothing
   end
 
   ruby_block "finalise" do
     block do
       ["done", service_type].each do |ack|
-        File.open("/var/lib/ceph/mon/ceph-#{address}/#{ack}", "w").close()
+        File.open("/var/lib/ceph/mon/ceph-#{address}/#{ack}", "w").close
       end
     end
   end
@@ -122,7 +123,7 @@ service "ceph_mon" do
   when "upstart"
     service_name "ceph-mon-all-starter"
     provider Chef::Provider::Service::Upstart
-    when "systemd"
+  when "systemd"
     service_name "ceph-mon@#{address}"
   else
     service_name "ceph"
@@ -149,7 +150,8 @@ end
 
 get_mon_addresses.each do |addr|
   execute "peer #{addr}" do
-    command "ceph --admin-daemon '/var/run/ceph/ceph-mon.#{address}.asok' add_bootstrap_peer_hint #{addr}"
+    command "ceph --admin-daemon '/var/run/ceph/ceph-mon.#{address}.asok' " \
+  "add_bootstrap_peer_hint #{addr}"
     ignore_failure true
   end
 end
