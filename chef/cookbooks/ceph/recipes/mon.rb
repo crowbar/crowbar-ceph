@@ -19,7 +19,7 @@ include_recipe "ceph::server"
 include_recipe "ceph::conf"
 
 service_type = node["ceph"]["mon"]["init_style"]
-address = node["crowbar"]["network"]["public"] || node["hostname"]
+address = Barclamp::Inventory.get_network_by_type(node, node["ceph"]["client_network"]).address
 
 directory "/var/lib/ceph/mon/ceph-#{address}" do
   owner "ceph"
