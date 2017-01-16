@@ -19,8 +19,9 @@ include_recipe "ceph::server"
 include_recipe "ceph::conf"
 
 service_type = node["ceph"]["mon"]["init_style"]
+address = node["crowbar"]["network"]["public"] || node["hostname"]
 
-directory "/var/lib/ceph/mon/ceph-#{node["hostname"]}" do
+directory "/var/lib/ceph/mon/ceph-#{address}" do
   owner "ceph"
   group "ceph"
   mode "0750"
@@ -31,8 +32,8 @@ end
 # TODO cluster name
 cluster = "ceph"
 
-unless File.exists?("/var/lib/ceph/mon/ceph-#{node["hostname"]}/done")
-  keyring = "#{Chef::Config[:file_cache_path]}/#{cluster}-#{node['hostname']}.mon.keyring"
+unless File.exists?("/var/lib/ceph/mon/ceph-#{address}/done")
+  keyring = "#{Chef::Config[:file_cache_path]}/#{cluster}-#{address}.mon.keyring"
 
   execute "create monitor keyring" do
     command "ceph-authtool '#{keyring}' --create-keyring --name=mon. --add-key='#{node["ceph"]["monitor-secret"]}' --cap mon 'allow *'"
@@ -91,14 +92,14 @@ unless File.exists?("/var/lib/ceph/mon/ceph-#{node["hostname"]}/done")
   end
 
   execute "ceph-mon mkfs" do
-    command "chown ceph:ceph #{keyring} ; ceph-mon --mkfs -i #{node['hostname']} --keyring '#{keyring}' --setuser ceph --setgroup ceph"
+    command "chown ceph:ceph #{keyring} ; ceph-mon --mkfs -i #{address} --keyring '#{keyring}' --setuser ceph --setgroup ceph"
     action :nothing
   end
 
   ruby_block "finalise" do
     block do
       ["done", service_type].each do |ack|
-        File.open("/var/lib/ceph/mon/ceph-#{node["hostname"]}/#{ack}", "w").close()
+        File.open("/var/lib/ceph/mon/ceph-#{address}/#{ack}", "w").close()
       end
     end
   end
@@ -121,8 +122,8 @@ service "ceph_mon" do
   when "upstart"
     service_name "ceph-mon-all-starter"
     provider Chef::Provider::Service::Upstart
-  when "systemd"
-    service_name "ceph-mon@#{node["hostname"]}"
+    when "systemd"
+    service_name "ceph-mon@#{address}"
   else
     service_name "ceph"
   end
@@ -142,13 +143,13 @@ if service_type == "systemd"
 end
 
 execute "Create Ceph client.admin key when ceph-mon is ready" do
-  command "ceph-create-keys -i #{node['hostname']}"
+  command "ceph-create-keys -i #{address}"
   not_if { File.exists?("/etc/ceph/#{cluster}.client.admin.keyring") }
 end
 
 get_mon_addresses.each do |addr|
   execute "peer #{addr}" do
-    command "ceph --admin-daemon '/var/run/ceph/ceph-mon.#{node['hostname']}.asok' add_bootstrap_peer_hint #{addr}"
+    command "ceph --admin-daemon '/var/run/ceph/ceph-mon.#{address}.asok' add_bootstrap_peer_hint #{addr}"
     ignore_failure true
   end
 end
