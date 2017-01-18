@@ -19,8 +19,8 @@
         fsid =  <%= node["ceph"]["config"]["fsid"] %>
 
         ; specify the initial monitors of the cluster in to establish a quorum
-        mon initial members = <%= @mon_addresses.join(', ') %>
-        mon host = <%= @mon_addresses.join(', ') %>
+        mon initial members = <%= @mon_initial.join(', ') %>
+        mon host = <%= @mon_addresses.join(', ') %>    
         
         ; configure a public and cluster network
         public network = <%= @public_network %>

@@ -6,7 +6,9 @@ mon_addr = get_mon_addresses
 
 mon_init = []
 mon_nodes.each do |monitor|
-    mon_init << monitor.name.split(".")[0]
+  mon_name = monitor.name.split(".")[0]
+  mon_name = "public." + mon_name if node["ceph"]["client_network"] == "public"
+  mon_init << mon_name
 end
 
 unless node["platform_family"] == "suse"
