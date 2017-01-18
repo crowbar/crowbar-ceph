@@ -6,8 +6,12 @@ mon_addr = get_mon_addresses
 
 mon_init = []
 mon_nodes.each do |monitor|
-  mon_name = monitor.name.split(".")[0]
-  mon_name = "public." + mon_name if node["ceph"]["client_network"] == "public"
+  nodename = monitor.name.split(".")[0]
+  mon_name = if node["ceph"]["client_network"] == "admin"
+               nodename
+             else
+               node["ceph"]["client_network"] + "." + nodename
+             end
   mon_init << mon_name
 end
 

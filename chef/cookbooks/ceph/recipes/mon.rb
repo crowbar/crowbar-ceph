@@ -20,8 +20,11 @@ include_recipe "ceph::conf"
 
 service_type = node["ceph"]["mon"]["init_style"]
 
-mon_name = node["hostname"]
-mon_name = "public." + mon_name if node["ceph"]["client_network"] == "public"
+mon_name = if node["ceph"]["client_network"] == "admin"
+             node["hostname"]
+           else
+             node["ceph"]["client_network"] + "." + node["hostname"]
+           end
 
 directory "/var/lib/ceph/mon/ceph-#{mon_name}" do
   owner "ceph"
