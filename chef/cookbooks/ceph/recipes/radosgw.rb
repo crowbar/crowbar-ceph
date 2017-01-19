@@ -11,7 +11,8 @@ node["ceph"]["radosgw"]["packages"].each do |pkg|
   package pkg
 end
 
-hostname = node["hostname"]
+rgw_hostname = get_ceph_client_name(node)
+service_name = "ceph-radosgw@rgw.#{rgw_hostname}"
 
 include_recipe "ceph::radosgw_civetweb"
 
@@ -26,13 +27,13 @@ end
 
 crowbar_pacemaker_sync_mark "create-ceph_client_generate"
 
-directory "/var/lib/ceph/radosgw/ceph-radosgw.#{hostname}" do
+directory "/var/lib/ceph/radosgw/ceph-radosgw.#{rgw_hostname}" do
   recursive true
   only_if { node["platform"] == "ubuntu" }
 end
 
 # needed by https://github.com/ceph/ceph/blob/master/src/upstart/radosgw-all-starter.conf
-file "/var/lib/ceph/radosgw/ceph-radosgw.#{hostname}/done" do
+file "/var/lib/ceph/radosgw/ceph-radosgw.#{rgw_hostname}/done" do
   action :create
   only_if { node["platform"] == "ubuntu" }
 end
@@ -61,7 +62,7 @@ if node["platform_family"] == "suse"
       sed -e 's%^\\(ExecStart=.*\\)%\\1 --conf /etc/ceph/ceph.conf.radosgw%' \
          > /etc/systemd/system/ceph-radosgw@.service
       systemctl daemon-reload
-      systemctl disable #{node["ceph"]["radosgw"]["service_name"]}
+      systemctl disable #{service_name}
     EOH
     not_if do
       File.exist?("/etc/systemd/system/ceph-radosgw@.service") &&
@@ -72,7 +73,7 @@ if node["platform_family"] == "suse"
 end
 
 service "radosgw" do
-  service_name node["ceph"]["radosgw"]["service_name"]
+  service_name service_name
   supports restart: true
   action [:enable, :start]
   subscribes :restart, "template[/etc/ceph/#{rgw_conf}]"

@@ -117,6 +117,7 @@ template "/etc/ceph/ceph.conf" do
     public_network: node["ceph"]["config"]["public-network"],
     cluster_network: node["ceph"]["config"]["cluster-network"],
     is_rgw: is_rgw,
+    rgw_hostname: get_ceph_client_name(node),
     rgw_port: rgw_port,
     rgw_pemfile: rgw_pemfile,
     keystone_settings: node["platform_family"] == "suse" ? {} : keystone_settings
@@ -160,6 +161,7 @@ if is_rgw && node["platform_family"] == "suse"
       public_network: node["ceph"]["config"]["public-network"],
       cluster_network: node["ceph"]["config"]["cluster-network"],
       is_rgw: is_rgw,
+      rgw_hostname: get_ceph_client_name(node),
       rgw_port: rgw_port,
       rgw_pemfile: rgw_pemfile,
       keystone_settings: keystone_settings
