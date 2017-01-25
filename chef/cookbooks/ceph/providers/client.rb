@@ -28,14 +28,16 @@ action :add do
 end
 
 def load_current_resource
+  node_name = get_ceph_client_name(node)
   @current_resource = Chef::Resource::CephClient.new(@new_resource.name)
   @current_resource.ceph_conf(@new_resource.ceph_conf)
   @current_resource.admin_keyring(@new_resource.admin_keyring)
   @current_resource.name(@new_resource.name)
   @current_resource.as_keyring(@new_resource.as_keyring)
-  @current_resource.keyname(@new_resource.keyname || "client.#{current_resource.name}.#{node['hostname']}")
+  @current_resource.keyname(@new_resource.keyname || "client.#{current_resource.name}.#{node_name}")
   @current_resource.caps(get_caps(@current_resource.ceph_conf, @current_resource.admin_keyring, @current_resource.keyname))
-  default_filename = "/etc/ceph/ceph.client.#{@new_resource.name}.#{node['hostname']}.#{@new_resource.as_keyring ? 'keyring' : 'secret'}"
+  default_filename = "/etc/ceph/ceph.client.#{@new_resource.name}.#{node_name}." \
+                                            "#{@new_resource.as_keyring ? 'keyring' : 'secret'}"
   @current_resource.filename(@new_resource.filename || default_filename)
   @current_resource.key = get_key(@current_resource.ceph_conf, @current_resource.admin_keyring, @current_resource.keyname)
   @current_resource.caps_match = true if @current_resource.caps == @new_resource.caps

@@ -6,13 +6,7 @@ mon_addr = get_mon_addresses
 
 mon_init = []
 mon_nodes.each do |monitor|
-  nodename = monitor.name.split(".")[0]
-  mon_name = if node["ceph"]["client_network"] == "admin"
-               nodename
-             else
-               node["ceph"]["client_network"] + "." + nodename
-             end
-  mon_init << mon_name
+  mon_init << get_ceph_client_name(monitor)
 end
 
 unless node["platform_family"] == "suse"

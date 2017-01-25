@@ -6,6 +6,23 @@ def is_crowbar?()
   return defined?(Chef::Recipe::Barclamp) != nil
 end
 
+def get_ceph_client_name(cnode)
+  if cnode["ceph"] && cnode["ceph"]["client_network"]
+    net_name = cnode["ceph"]["client_network"]
+  elsif node["ceph"] && node["ceph"]["client_network"]
+    net_name = node["ceph"]["client_network"]
+  else
+    mons = get_mon_nodes
+    net_name = mons[0]["ceph"]["client_network"]
+  end
+  node_name = cnode["hostname"]
+  if net_name == "admin"
+    node_name
+  else
+    net_name + "." + node_name
+  end
+end
+
 def get_mon_nodes(extra_search=nil)
   if is_crowbar?
     mon_roles = search(:role, "name:crowbar-* AND run_list_map:ceph-mon")
@@ -79,8 +96,8 @@ end
 
 def get_mon_addresses()
   mon_ips = []
-
-  if File.exists?("/var/run/ceph/ceph-mon.#{node['hostname']}.asok")
+  node_name = get_ceph_client_name(node)
+  if File.exist?("/var/run/ceph/ceph-mon.#{node_name}.asok")
     mon_ips = get_quorum_members_ips()
   else
     mons = []
@@ -111,7 +128,8 @@ end
 
 def get_quorum_members_ips()
   mon_ips = []
-  mon_status = %x[ceph --admin-daemon /var/run/ceph/ceph-mon.#{node["hostname"]}.asok mon_status]
+  node_name = get_ceph_client_name(node)
+  mon_status = `ceph --admin-daemon /var/run/ceph/ceph-mon.#{node_name}.asok mon_status`
   raise "getting quorum members failed" unless $?.exitstatus == 0
 
   mons = JSON.parse(mon_status)["monmap"]["mons"]
@@ -123,19 +141,20 @@ end
 
 QUORUM_STATES = ["leader", "peon"]
 def have_quorum?()
-    # "ceph auth get-or-create-key" would hang if the monitor wasn't
-    # in quorum yet, which is highly likely on the first run. This
-    # helper lets us delay the key generation into the next
-    # chef-client run, instead of hanging.
-    #
-    # Also, as the UNIX domain socket connection has no timeout logic
-    # in the ceph tool, this exits immediately if the ceph-mon is not
-    # running for any reason; trying to connect via TCP/IP would wait
-    # for a relatively long timeout.
-    mon_status = %x[ceph --admin-daemon /var/run/ceph/ceph-mon.#{node["hostname"]}.asok mon_status]
-    raise "getting monitor state failed" unless $?.exitstatus == 0
-    state = JSON.parse(mon_status)["state"]
-    return QUORUM_STATES.include?(state)
+  # "ceph auth get-or-create-key" would hang if the monitor wasn't
+  # in quorum yet, which is highly likely on the first run. This
+  # helper lets us delay the key generation into the next
+  # chef-client run, instead of hanging.
+  #
+  # Also, as the UNIX domain socket connection has no timeout logic
+  # in the ceph tool, this exits immediately if the ceph-mon is not
+  # running for any reason; trying to connect via TCP/IP would wait
+  # for a relatively long timeout.
+  node_name = get_ceph_client_name(node)
+  mon_status = `ceph --admin-daemon /var/run/ceph/ceph-mon.#{node_name}.asok mon_status`
+  raise "getting monitor state failed" unless $?.exitstatus.zero?
+  state = JSON.parse(mon_status)["state"]
+  QUORUM_STATES.include?(state)
 end
 
 def get_osd_id(device)
