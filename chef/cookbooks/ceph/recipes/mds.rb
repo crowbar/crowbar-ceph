@@ -22,7 +22,9 @@ else
 end
 include_recipe "ceph::server"
 
-directory "/var/lib/ceph/mds/ceph-#{node["hostname"]}" do
+mds_name = get_ceph_client_name(node)
+
+directory "/var/lib/ceph/mds/ceph-#{mds_name}" do
   owner "ceph"
   group "ceph"
   mode "0750"
@@ -31,11 +33,11 @@ directory "/var/lib/ceph/mds/ceph-#{node["hostname"]}" do
 end
 
 execute "create mds keyring" do
-  command "ceph auth get-or-create mds.#{node["hostname"]} \
+  command "ceph auth get-or-create mds.#{mds_name} \
              osd 'allow rwx' mds 'allow' mon 'allow profile mds' \
-             -o /var/lib/ceph/mds/ceph-#{node["hostname"]}/keyring && \
-           chown ceph.ceph /var/lib/ceph/mds/ceph-#{node["hostname"]}/keyring"
-  not_if { File.exist?("/var/lib/ceph/mds/ceph-#{node["hostname"]}/keyring") }
+             -o /var/lib/ceph/mds/ceph-#{mds_name}/keyring && \
+           chown ceph.ceph /var/lib/ceph/mds/ceph-#{mds_name}/keyring"
+  not_if { File.exist?("/var/lib/ceph/mds/ceph-#{mds_name}/keyring") }
 end
 
 service "ceph-mds.target" do
@@ -59,7 +61,7 @@ execute "create metadata pool" do
 end
 
 service "ceph_mds" do
-  service_name "ceph-mds@#{node["hostname"]}"
+  service_name "ceph-mds@#{mds_name}"
   supports restart: true, status: true
   action [:enable, :start]
   subscribes :restart, resources(template: "/etc/ceph/ceph.conf")
