@@ -52,7 +52,7 @@ class CephService < PacemakerServiceObject
             "suse" => "/^12.*/",
             "opensuse" => "/.*/"
           },
-          "conflicts_with" => ["ceph-mon", "ceph-osd", "ceph-radosgw",
+          "conflicts_with" => ["ceph-mds", "ceph-mon", "ceph-osd", "ceph-radosgw",
                                "database-server", "horizon-server"]
         },
         "ceph-mon" => {
@@ -62,6 +62,7 @@ class CephService < PacemakerServiceObject
             "suse" => "/^12.*/",
             "opensuse" => "/.*/"
           },
+          "conflicts_with" => ["ceph-calamari"]
         },
         "ceph-osd" => {
           "unique" => false,
@@ -70,6 +71,7 @@ class CephService < PacemakerServiceObject
             "suse" => "/^12.*/",
             "opensuse" => "/.*/"
           },
+          "conflicts_with" => ["ceph-mds", "ceph-calamari"]
         },
         "ceph-radosgw" => {
           "unique" => false,
@@ -78,7 +80,8 @@ class CephService < PacemakerServiceObject
             "suse" => "/^12.*/",
             "opensuse" => "/.*/"
           },
-          "cluster" => true
+          "cluster" => true,
+          "conflicts_with" => ["ceph-calamari"]
         },
         "ceph-mds" => {
           "unique" => false,
@@ -87,7 +90,7 @@ class CephService < PacemakerServiceObject
             "suse" => "/^12.*/",
             "opensuse" => "/.*/"
           },
-          "conflicts_with" => ["ceph-osd"]
+          "conflicts_with" => ["ceph-osd", "ceph-calamari"]
         }
       }
     end
