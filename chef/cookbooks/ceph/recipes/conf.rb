@@ -3,6 +3,10 @@ raise "fsid must be set in config" if node["ceph"]["config"]["fsid"].nil?
 mon_nodes = get_mon_nodes
 osd_nodes = get_osd_nodes
 mon_addr = get_mon_addresses
+public_addr = Chef::Recipe::Barclamp::Inventory.get_network_by_type(
+  node,
+  node["ceph"]["client_network"]
+).address
 
 mon_init = []
 mon_nodes.each do |monitor|
@@ -114,6 +118,7 @@ template "/etc/ceph/ceph.conf" do
     pool_size: rep_num,
     pool_pg_num: pg_num,
     osd_nodes_count: osd_nodes.length,
+    public_addr: public_addr,
     public_network: node["ceph"]["config"]["public-network"],
     cluster_network: node["ceph"]["config"]["cluster-network"],
     is_rgw: is_rgw,
@@ -158,6 +163,7 @@ if is_rgw && node["platform_family"] == "suse"
       pool_size: rep_num,
       pool_pg_num: pg_num,
       osd_nodes_count: osd_nodes.length,
+      public_addr: public_addr,
       public_network: node["ceph"]["config"]["public-network"],
       cluster_network: node["ceph"]["config"]["cluster-network"],
       is_rgw: is_rgw,
