@@ -13,7 +13,12 @@ def get_ceph_client_name(cnode)
     net_name = node["ceph"]["client_network"]
   else
     mons = get_mon_nodes
-    net_name = mons[0]["ceph"]["client_network"]
+    net_name = if mons.empty?
+      # case of external clusters
+      "admin"
+    else
+      mons[0]["ceph"]["client_network"]
+    end
   end
   node_name = cnode["hostname"]
   if net_name == "admin"
