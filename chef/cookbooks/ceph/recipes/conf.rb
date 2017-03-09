@@ -81,7 +81,7 @@ else
   # with 64 PGs, irrespective of what "osd pool default pg num" is set to)
   expected_pools = 1
 
-  rgw_host = search(:node, "roles:ceph-radosgw")
+  rgw_roles = search(:role, "name:crowbar-* AND run_list_map:ceph-radosgw")
   # RGW will use up to 14 pools (try "RGW only" with http://ceph.com/pgcalc/)
   # These are not all created immediately though.  Six will be created when
   # the radosgw daemon starts for the first time.  The swift pool(s) will be
@@ -89,12 +89,12 @@ else
   # pool will only be created if the usage log is explicitly enabled.  Here,
   # to be conservative, we're assuming the full 14 pools will be used for RGW
   # deployments.
-  expected_pools += 14 unless rgw_host.empty?
+  expected_pools += 14 unless rgw_roles.empty?
 
-  mds_host = search(:node, "roles:ceph-mds")
+  mds_roles = search(:role, "name:crowbar-* AND run_list_map:ceph-mds")
   # If there's a ceph MDS (which actually isn't implemented in barclamp yet,
   # but might be in future), there'll be two more pools
-  expected_pools += 2 unless mds_host.empty?
+  expected_pools += 2 unless mds_roles.empty?
 
   # Figure out a sane number for "osd pool default pg num" based on the logic
   # at http://ceph.com/pgcalc/ -- for any given number of expected pools, this
