@@ -72,24 +72,24 @@ if node["platform_family"] == "suse"
   end
 end
 
-service "radosgw" do
-  service_name service_name
-  supports restart: true
-  action [:enable, :start]
-  subscribes :restart, "template[/etc/ceph/#{rgw_conf}]"
-end
-
-# In the systemd case, need extra targets enabled
-service "ceph-radosgw.target" do
-  action :enable
-  only_if { File.exist?("/usr/lib/systemd/system/ceph-radosgw.target") }
-end
-service "ceph.target" do
-  action :enable
-  only_if { File.exist?("/usr/lib/systemd/system/ceph.target") }
-end
-
 if node[:ceph][:ha][:radosgw][:enabled]
   log "HA support for ceph-radosgw is enabled"
   include_recipe "ceph::radosgw_ha"
+else
+  service "radosgw" do
+    service_name service_name
+    supports restart: true
+    action [:enable, :start]
+    subscribes :restart, "template[/etc/ceph/#{rgw_conf}]"
+  end
+
+  # In the systemd case, need extra targets enabled
+  service "ceph-radosgw.target" do
+    action :enable
+    only_if { File.exist?("/usr/lib/systemd/system/ceph-radosgw.target") }
+  end
+  service "ceph.target" do
+    action :enable
+    only_if { File.exist?("/usr/lib/systemd/system/ceph.target") }
+  end
 end
