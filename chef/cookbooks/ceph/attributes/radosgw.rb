@@ -60,7 +60,6 @@ default["ceph"]["radosgw"]["ssl"]["generate_certs"] = false
 default["ceph"]["radosgw"]["ssl"]["insecure"] = false
 
 default["ceph"]["ha"]["radosgw"]["enabled"] = false
-default["ceph"]["ha"]["radosgw"]["agent"] = "systemd:#{default['ceph']['radosgw']['service_name']}"
 default["ceph"]["ha"]["radosgw"]["op"]["monitor"]["interval"] = "10s"
 default["ceph"]["ha"]["ports"]["radosgw_plain"] = 5590
 default["ceph"]["ha"]["ports"]["radosgw_ssl"] = 5591
