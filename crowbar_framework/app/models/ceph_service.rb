@@ -37,7 +37,7 @@ def mask_to_bits(mask)
 end
 
 class CephService < PacemakerServiceObject
-  def initialize(thelogger)
+  def initialize(thelogger = nil)
     super(thelogger)
     @bc_name = "ceph"
   end
