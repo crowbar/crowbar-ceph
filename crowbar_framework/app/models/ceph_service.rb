@@ -122,29 +122,41 @@ class CephService < PacemakerServiceObject
     if osd_nodes.size < 2
       osd_nodes_controller = select_nodes_for_role(nodes, "ceph-osd", "controller")
       osd_nodes_all = select_nodes_for_role(nodes, "ceph-osd")
-      # avoid controllers if possible (will likely be used for mon)
+      # avoid controllers if possible (ceph should not be used with openstack roles)
       osd_nodes_no_controller = osd_nodes_all - osd_nodes_controller
-      osd_nodes = [osd_nodes, osd_nodes_no_controller, osd_nodes_all].flatten.uniq{ |n| n.name }
+      osd_nodes = [osd_nodes, osd_nodes_no_controller, osd_nodes_all].flatten.uniq(&:name)
       osd_nodes = osd_nodes.take(2)
     end
 
-    mon_nodes = select_nodes_for_role(nodes, "ceph-mon", "controller")
+    mon_nodes = select_nodes_for_role(nodes, "ceph-mon", "storage")
 
     if mon_nodes.size < 3
-      mon_nodes_storage = select_nodes_for_role(nodes, "ceph-mon", "storage")
-      mon_nodes_all = select_nodes_for_role(nodes, "ceph-mon")
-      mon_nodes = [mon_nodes, mon_nodes_storage, mon_nodes_all].flatten.uniq{ |n| n.name }
+      mon_nodes_more = select_nodes_for_role(nodes, "ceph-mon").reject do |n|
+        n.intended_role == "controller"
+      end
+      mon_nodes = [mon_nodes, mon_nodes_more].flatten.uniq(&:name)
     end
     mon_nodes = mon_nodes.take(mon_nodes.length > 2 ? 3 : 1)
 
-    mds_node = select_nodes_for_role(nodes, "ceph-mds", "controller").first
+    mds_node = select_nodes_for_role(nodes, "ceph-mds").reject do |n|
+      n.intended_role == "controller" or osd_nodes.include? n
+    end.first
+    if mds_node.nil?
+      mds_node = select_nodes_for_role(nodes, "ceph-mds", "controller").first
+      @logger.debug("Not enought nodes: putting ceph-mds on controller node (unsupported scenario)")
+    end
 
-    radosgw_node = select_nodes_for_role(nodes, "ceph-radosgw", "controller").first
+    radosgw_node = select_nodes_for_role(nodes, "ceph-radosgw", "storage").first
 
     # Any spare node after allocating mons and osds is fair game
     # to automatically use as the calamari server
     calamari_nodes = select_nodes_for_role(nodes, "ceph-calamari")
-    calamari_nodes.reject! { |n| osd_nodes.include? n or mon_nodes.include? n }
+    calamari_nodes.reject! do |n|
+      osd_nodes.include? n or
+      mon_nodes.include? n or
+      mds_node.name == n.name or
+      n.intended_role == "controller"
+    end
     calamari_node = calamari_nodes.first
 
     base["deployment"]["ceph"]["elements"] = {
