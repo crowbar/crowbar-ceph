@@ -49,7 +49,7 @@ class CephService < PacemakerServiceObject
           "unique" => false,
           "count" => 1,
           "platform" => {
-            "suse" => "/^12.*/",
+            "suse" => "<= 12.2",
             "opensuse" => "/.*/"
           },
           "conflicts_with" => ["ceph-mds", "ceph-mon", "ceph-osd", "ceph-radosgw",
@@ -59,7 +59,7 @@ class CephService < PacemakerServiceObject
           "unique" => false,
           "count" => 9,
           "platform" => {
-            "suse" => "/^12.*/",
+            "suse" => "<= 12.2",
             "opensuse" => "/.*/"
           },
           "conflicts_with" => ["ceph-calamari"]
@@ -68,7 +68,7 @@ class CephService < PacemakerServiceObject
           "unique" => false,
           "count" => 150,
           "platform" => {
-            "suse" => "/^12.*/",
+            "suse" => "<= 12.2",
             "opensuse" => "/.*/"
           },
           "conflicts_with" => ["ceph-mds", "ceph-calamari"]
@@ -77,7 +77,7 @@ class CephService < PacemakerServiceObject
           "unique" => false,
           "count" => 1,
           "platform" => {
-            "suse" => "/^12.*/",
+            "suse" => "<= 12.2",
             "opensuse" => "/.*/"
           },
           "cluster" => true,
@@ -87,7 +87,7 @@ class CephService < PacemakerServiceObject
           "unique" => false,
           "count" => 3,
           "platform" => {
-            "suse" => "/^12.*/",
+            "suse" => "<= 12.2",
             "opensuse" => "/.*/"
           },
           "conflicts_with" => ["ceph-osd", "ceph-calamari"]
