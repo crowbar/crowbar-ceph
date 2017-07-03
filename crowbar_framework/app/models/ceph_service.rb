@@ -106,27 +106,6 @@ class CephService < PacemakerServiceObject
     answer
   end
 
-  # Helper to find a suitable node for ceph-mds role.
-  # ceph-mds conflicts with ceph-osd, and should not be assigned to the cluster node
-  def select_node_for_mds_role(nodes)
-    # do not modify array given by caller
-    mds_nodes = nodes.dup
-    mds_nodes.delete_if(&:nil?)
-    mds_nodes.reject! do |n|
-      node_is_valid_for_role(n.name, "ceph-mds")
-    end
-
-    mds_node = mds_nodes.find { |n| n.intended_role != "controller" }
-    if mds_node.nil? && !mds_nodes.empty?
-      mds_node = mds_nodes.first
-      @logger.debug("Not enough nodes: putting ceph-mds on controller node (unsupported scenario)")
-    end
-    if mds_node.nil?
-      @logger.warn("Not enough nodes: there seems to be no node for ceph-mds role!")
-    end
-    mds_node
-  end
-
   def create_proposal
     @logger.debug("Ceph create_proposal: entering")
     base = super
@@ -142,9 +121,11 @@ class CephService < PacemakerServiceObject
       n.roles.include?("pacemaker-cluster-member")
     end
 
-    osd_nodes = select_nodes_for_role(nodes, "ceph-osd", "storage")
+    mds_node = select_nodes_for_role(nodes, "ceph-mds").first
+
+    osd_nodes = select_nodes_for_role(nodes - [mds_node], "ceph-osd", "storage")
     if osd_nodes.size < 2
-      osd_nodes_all = select_nodes_for_role(nodes, "ceph-osd")
+      osd_nodes_all = select_nodes_for_role(nodes - [mds_node], "ceph-osd")
       # avoid controllers if possible (ceph should not be used with openstack roles)
       osd_nodes_no_controller = osd_nodes_all.reject do |n|
         n.intended_role == "controller"
@@ -162,8 +143,6 @@ class CephService < PacemakerServiceObject
       mon_nodes = [mon_nodes, mon_nodes_more].flatten.uniq(&:name)
     end
     mon_nodes = mon_nodes.take(mon_nodes.length > 2 ? 3 : 1)
-
-    mds_node = select_node_for_mds_role(nodes - osd_nodes)
 
     radosgw_node = select_nodes_for_role(nodes, "ceph-radosgw", "storage").first
 
