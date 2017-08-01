@@ -69,13 +69,19 @@ else
   end
 
   if is_crowbar?
-    node.set["ceph"]["osd_devices"] = [] if node["ceph"]["osd_devices"].nil?
+    dirty = false
+
+    node.set["ceph"]["osd_devices"] ||= []
     min_size_blocks = node["ceph"]["osd"]["min_size_gb"] * 1024 * 1024 * 2
     unclaimed_disks = BarclampLibrary::Barclamp::Inventory::Disk.unclaimed(node).sort.select { |d| d.size >= min_size_blocks }
 
     # if devices for journal are explicitely listed, do not use automatic journal assigning to SSD
     if !node["ceph"]["osd"]["journal_devices"].empty?
-      node.set["ceph"]["osd"]["use_ssd_for_journal"]        = false
+      # explicit comparison because we don't want a condition that uses nil
+      if node["ceph"]["osd"]["use_ssd_for_journal"] != false
+        node.set["ceph"]["osd"]["use_ssd_for_journal"] = false
+        dirty = true
+      end
     end
 
     # If no OSDs have yet been deployed, check what type of disks are available.
@@ -88,7 +94,11 @@ else
       has_ssds = unclaimed_disks.any? { |d| node[:block_device][d.name.gsub("/dev/", "")]["rotational"] == "0" }
       has_hdds = unclaimed_disks.any? { |d| node[:block_device][d.name.gsub("/dev/", "")]["rotational"] == "1" }
 
-      node.set["ceph"]["osd"]["use_ssd_for_journal"] = false unless has_ssds && has_hdds
+      use_ssd_for_journal = has_ssds && has_hdds
+      if node["ceph"]["osd"]["use_ssd_for_journal"] != use_ssd_for_journal
+        node.set["ceph"]["osd"]["use_ssd_for_journal"] = use_ssd_for_journal
+        dirty = true
+      end
     end
 
     if node["ceph"]["disk_mode"] == "first" && node["ceph"]["osd_devices"].empty?
@@ -127,7 +137,7 @@ else
         end
         device["device"] = d.name
         node.set["ceph"]["osd_devices"].push(device)
-        node.save
+        dirty = true
       else
         Chef::Log.info("Ceph: Ignoring #{d.name}")
       end
@@ -198,8 +208,15 @@ else
             end
           end
         end
-        node.set["ceph"]["osd_devices"][index]["status"] = "deployed"
-        node.set["ceph"]["osd_devices"][index]["journal"] = journal_device unless journal_device.nil?
+        if node["ceph"]["osd_devices"][index]["status"] != "deployed"
+          node.set["ceph"]["osd_devices"][index]["status"] = "deployed"
+          dirty = true
+        end
+        # if journal_device is nil, this will still work as expected
+        if node["ceph"]["osd_devices"][index]["journal"] != journal_device
+          node.set["ceph"]["osd_devices"][index]["journal"] = journal_device
+          dirty = true
+        end
 
         execute "Writing Ceph OSD device mappings to fstab" do
           command "tail -n1 /etc/mtab >> /etc/fstab"
@@ -209,7 +226,6 @@ else
         # No need to specifically enable ceph-osd@N on systemd systems, as this
         # is done automatically by ceph-disk-activate
       end
-      node.save
 
       service "ceph_osd" do
         case service_type
@@ -234,5 +250,7 @@ else
         end
       end
     end
+
+    node.save if dirty
   end
 end
