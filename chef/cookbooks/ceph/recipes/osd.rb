@@ -71,7 +71,7 @@ else
   if is_crowbar?
     dirty = false
 
-    node.set["ceph"]["osd_devices"] ||= []
+    node.set["ceph"]["osd_devices"] = [] if node["ceph"]["osd_devices"].nil?
     min_size_blocks = node["ceph"]["osd"]["min_size_gb"] * 1024 * 1024 * 2
     unclaimed_disks = BarclampLibrary::Barclamp::Inventory::Disk.unclaimed(node).sort.select { |d| d.size >= min_size_blocks }
 
