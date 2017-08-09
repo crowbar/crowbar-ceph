@@ -52,6 +52,8 @@ unless File.exist?("/var/lib/ceph/mon/ceph-#{mon_name}/done")
       add_key.run_command
       add_key.error!
 
+      # no need to check if the attribute is already set: it's part of the
+      # only_if
       node.set["ceph"]["monitor-secret"] = monitor_key
       node.save
     end
@@ -85,10 +87,12 @@ unless File.exist?("/var/lib/ceph/mon/ceph-#{mon_name}/done")
       add_key.run_command
       add_key.error!
 
+      # no need to check if the attribute is already set: it's part of the
+      # only_if
       node.set["ceph"]["monitor-secret"] = monitor_key
       node.save
     end
-    only_if { node["ceph"]["monitor-secret"].empty? }
+    only_if { node["ceph"]["monitor-secret"].empty? && !node[:ceph][:master] }
     notifies :run, "execute[ceph-mon mkfs]", :immediately
   end
 
