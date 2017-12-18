@@ -218,11 +218,6 @@ else
           dirty = true
         end
 
-        execute "Writing Ceph OSD device mappings to fstab" do
-          command "tail -n1 /etc/mtab >> /etc/fstab"
-          action :run
-        end
-
         # No need to specifically enable ceph-osd@N on systemd systems, as this
         # is done automatically by ceph-disk-activate
       end
