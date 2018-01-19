@@ -16,4 +16,5 @@
 
 if CrowbarRoleRecipe.node_state_valid_for_role?(node, "ceph", "ceph-mon")
   include_recipe "ceph::mon"
+  include_recipe "ceph::monitor_monasca"
 end
