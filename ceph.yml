@@ -20,7 +20,7 @@ barclamp:
   display: 'Ceph'
   description: 'Distributed object store and file system'
   version: 0
-  user_managed: true
+  user_managed: false
   member:
     - 'openstack'
     - 'suse_enterprise_storage'
