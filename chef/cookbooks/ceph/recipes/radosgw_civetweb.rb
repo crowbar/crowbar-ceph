@@ -22,7 +22,7 @@ if node["ceph"]["radosgw"]["ssl"]["generate_certs"]
       end
 
       # Generate private key
-      `openssl genrsa -out #{keyfile} 4096`
+      `openssl genrsa -out #{keyfile} 2048`
       if $?.exitstatus != 0
         message = "SSL private key generation failed"
         Chef::Log.fatal(message)
