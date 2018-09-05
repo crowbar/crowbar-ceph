@@ -12,48 +12,48 @@ if node["ceph"]["radosgw"]["ssl"]["generate_certs"]
   package "openssl"
   ruby_block "generate_certs for radosgw" do
     block do
-      unless ::File.exist?(certfile) && ::File.exist?(keyfile)
-        require "fileutils"
+      require "fileutils"
 
-        Chef::Log.info("Generating SSL certificate for radosgw...")
+      Chef::Log.info("Generating SSL certificate for radosgw...")
 
-        [:certfile, :keyfile].each do |k|
-          dir = File.dirname(node[:ceph][:radosgw][:ssl][k])
-          FileUtils.mkdir_p(dir) unless File.exist?(dir)
-        end
+      [:certfile, :keyfile].each do |k|
+        dir = File.dirname(node[:ceph][:radosgw][:ssl][k])
+        FileUtils.mkdir_p(dir) unless File.exist?(dir)
+      end
 
-        # Generate private key
-        `openssl genrsa -out #{keyfile} 4096`
-        if $?.exitstatus != 0
-          message = "SSL private key generation failed"
-          Chef::Log.fatal(message)
-          raise message
-        end
-        FileUtils.chown "root", node[:ceph][:group], keyfile
-        FileUtils.chmod 0640, keyfile
+      # Generate private key
+      `openssl genrsa -out #{keyfile} 2048`
+      if $?.exitstatus != 0
+        message = "SSL private key generation failed"
+        Chef::Log.fatal(message)
+        raise message
+      end
+      FileUtils.chown "root", node[:ceph][:group], keyfile
+      FileUtils.chmod 0640, keyfile
 
-        # Generate certificate signing requests (CSR)
-        conf_dir = File.dirname certfile
-        ssl_csr_file = "#{conf_dir}/signing_key.csr"
-        ssl_subject = "\"/C=US/ST=Unset/L=Unset/O=Unset/CN=#{node[:fqdn]}\""
-        `openssl req -new -key #{keyfile} -out #{ssl_csr_file} -subj #{ssl_subject}`
-        if $?.exitstatus != 0
-          message = "SSL certificate signed requests generation failed"
-          Chef::Log.fatal(message)
-          raise message
-        end
+      # Generate certificate signing requests (CSR)
+      conf_dir = File.dirname certfile
+      ssl_csr_file = "#{conf_dir}/signing_key.csr"
+      ssl_subject = "\"/C=US/ST=Unset/L=Unset/O=Unset/CN=#{node[:fqdn]}\""
+      `openssl req -new -key #{keyfile} -out #{ssl_csr_file} -subj #{ssl_subject}`
+      if $?.exitstatus != 0
+        message = "SSL certificate signed requests generation failed"
+        Chef::Log.fatal(message)
+        raise message
+      end
 
-        # Generate self-signed certificate with above CSR
-        `openssl x509 -req -days 3650 -in #{ssl_csr_file} -signkey #{keyfile} -out #{certfile}`
-        if $?.exitstatus != 0
-          message = "SSL self-signed certificate generation failed"
-          Chef::Log.fatal(message)
-          raise message
-        end
+      # Generate self-signed certificate with above CSR
+      `openssl x509 -req -days 3650 -in #{ssl_csr_file} -signkey #{keyfile} -out #{certfile}`
+      if $?.exitstatus != 0
+        message = "SSL self-signed certificate generation failed"
+        Chef::Log.fatal(message)
+        raise message
+      end
 
-        File.delete ssl_csr_file # Nobody should even try to use this
-      end # unless files exist
+      File.delete ssl_csr_file # Nobody should even try to use this
     end # block
+    not_if { ::File.exist?(certfile) && ::File.exist?(keyfile) }
+    notifies :restart, "service[radosgw]"
   end # ruby_block
 else # if generate_certs
   unless ::File.exist? certfile
