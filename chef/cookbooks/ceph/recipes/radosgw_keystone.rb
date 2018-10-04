@@ -4,7 +4,8 @@
 keystone_settings = KeystoneHelper.keystone_settings(node, @cookbook_name)
 register_auth_hash = { user: keystone_settings["admin_user"],
                        password: keystone_settings["admin_password"],
-                       tenant: keystone_settings["admin_tenant"] }
+                       domain: keystone_settings["admin_domain"],
+                       project: keystone_settings["admin_project"] }
 
 crowbar_pacemaker_sync_mark "wait-radosgw_register"
 
@@ -25,7 +26,7 @@ keystone_register "register ceph user" do
   auth register_auth_hash
   user_name keystone_settings["service_user"]
   user_password keystone_settings["service_password"]
-  tenant_name keystone_settings["service_tenant"]
+  project_name keystone_settings["service_tenant"]
   action :add_user
 end
 
@@ -36,7 +37,7 @@ keystone_register "give ceph user access" do
   port keystone_settings["admin_port"]
   auth register_auth_hash
   user_name keystone_settings["service_user"]
-  tenant_name keystone_settings["service_tenant"]
+  project_name keystone_settings["service_tenant"]
   role_name "admin"
   action :add_access
 end
@@ -91,7 +92,7 @@ keystone_register "register radosgw endpoint" do
   endpoint_publicURL "#{protocol}://#{public_host}:#{port}/swift/v1"
   endpoint_adminURL "#{protocol}://#{admin_host}:#{port}/swift/v1"
   endpoint_internalURL "#{protocol}://#{admin_host}:#{port}/swift/v1"
-  action :add_endpoint_template
+  action :add_endpoint
 end
 
 crowbar_pacemaker_sync_mark "create-radosgw_register"
